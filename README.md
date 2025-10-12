@@ -14,9 +14,9 @@
 
 ## 🌌 THE CONVERGENCE
 
-> *The year is 2025. The membrane between digital and physical reality has shattered. In the aftermath, a new domain emerged—a network grid overlaying the physical world where movement creates power, territory translates to value, and every step you take writes data into the blockchain.*
+> *The year is 2025. The membrane between digital and physical reality has shattered. In the aftermath, a new domain emerged—a network grid overlaying the physical world where movement creates power and territory translates to victory.*
 
-You are now a **Grid Runner**—an operator capable of manifesting digital constructs in physical space through pure movement. Your body becomes the interface. Your path becomes the code. Your territory becomes immutable proof of your dominance, forever etched into the Stacks blockchain, secured by Bitcoin's computational fortress.
+You are now a **Grid Runner**—an operator capable of manifesting digital constructs in physical space through pure movement. Your body becomes the interface. Your path becomes the code. Your goal is to capture more territory than anyone else to win the prize.
 
 This isn't augmented reality. This is **reality amplified**.
 
@@ -24,9 +24,11 @@ This isn't augmented reality. This is **reality amplified**.
 
 ## ⚡ THE PROTOCOL
 
+The game is session-based. Players pay an entry fee in STX to join, which contributes to a prize pool. The winner at the end of the session takes the prize.
+
 ### 🔹 PHASE ONE: TRAIL EMISSION
 
-Your physical presence bleeds data. As you move through the world, your neural interface generates a **Quantum Trail**—a cryptographically signed path visible to all Grid Runners in your sector. This trail exists simultaneously in physical space and on-chain, a bridge between meat and mathematics.
+Your physical presence bleeds data. As you move through the world, your neural interface generates a **Quantum Trail**—a cryptographically signed path visible to all Grid Runners in your sector.
 
 ```
 [PHYSICAL MOVEMENT] → [GPS CAPTURE] → [DIGITAL TRAIL GENERATION] → [REAL-TIME BROADCAST]
@@ -34,26 +36,24 @@ Your physical presence bleeds data. As you move through the world, your neural i
 
 ### 🔹 PHASE TWO: TERRITORIAL CAPTURE
 
-**Loop Formation**: Complete the circuit. Return to any point on your own trail to close the loop, initiating a **Territory Capture Protocol**. The enclosed area becomes yours—claimed, locked, and minted as a unique territorial NFT on the Stacks blockchain.
+**Loop Formation**: Complete the circuit. Return to any point on your own trail to close the loop, initiating a **Territory Capture Protocol**. The enclosed area becomes yours for the duration of the game.
 
 Each captured zone is:
-- **Immutable**: Recorded permanently on Bitcoin through Stacks
-- **Tradeable**: Your territories are NFTs—buy, sell, merge, or hold
-- **Strategic**: Control key sectors to dominate the grid economy
+- **Session-Persistent**: Recorded for the duration of the game session.
+- **Strategic**: Control key sectors to dominate the grid and expand your area.
 
 ### 🔹 PHASE THREE: INTERFERENCE WARFARE
 
-You're not alone on the grid. Other runners are creating their own trails, capturing their own territories, building their own empires. 
+You're not alone on the grid. Other runners are creating their own trails, capturing their own territories.
 
 **Trail Severing**: Intersect an opponent's active trail to cut it, collapsing their loop potential and forcing them to restart. Territory capture is zero-sum. Show no mercy.
 
-### 🔹 PHASE FOUR: SYNCHRONIZATION
+### 🔹 PHASE FOUR: POWER-UPS & PAYMENTS
 
-Physical **Sync Nodes** appear throughout your city—quantum-stabilized points where the digital and physical fully merge. At these nodes:
-- Mint your captured territories as NFTs
-- Claim your STX rewards
-- Purchase tactical upgrades
-- Access the territory marketplace
+The Web3 integration is focused on the game's economy. At **Sync Nodes** that appear throughout your city, you can:
+- Purchase tactical upgrades (Power-ups) using STX.
+- View the current prize pool.
+- Manage your wallet for entry fees and potential winnings.
 
 ---
 
@@ -68,103 +68,11 @@ Physical **Sync Nodes** appear throughout your city—quantum-stabilized points 
 | 💻 **Interface** | React + Vite + TypeScript | Real-time GPS tracking, tactical visualization, neural feedback |
 | ⚡ **Core Logic** | FastAPI (Python) | Game state management, collision detection, territory calculation |
 | 🔐 **Identity Matrix** | Supabase Auth | Secure runner authentication and session management |
-| ⛓️ **Consensus Layer** | Stacks Blockchain | NFT minting, smart contracts, territory ownership |
+| ⛓️ **Web3 Layer** | Stacks Blockchain | Entry Fees, Power-ups, and Prize Distribution |
 | 💾 **State Archive** | PostgreSQL (PostGIS) | Persistent storage of trails, territories, and runner data |
 | 📡 **Communication** | WebSocket | Real-time position updates and trail synchronization |
 
 </div>
-
-### 🔷 SYSTEM TOPOLOGY
-
-```mermaid
-graph TB
-    subgraph "Client Domain"
-        A[🎮 Web Interface]
-        B[📍 GPS Sensor Array]
-        C[🔐 Wallet Integration]
-    end
-    
-    subgraph "Processing Core"
-        D[⚡ FastAPI Gateway]
-        E[🎯 Game Logic Engine]
-        F[🗺️ Geospatial Processor]
-        G[🔄 Real-time Event Bus]
-    end
-    
-    subgraph "Persistence Layer"
-        H[💾 PostgreSQL + PostGIS]
-        I[🔐 Supabase Auth]
-    end
-    
-    subgraph "Blockchain Domain"
-        J[⛓️ Stacks Network]
-        K[🏦 Smart Contracts]
-        L[🖼️ NFT Minting Engine]
-    end
-    
-    A --> B
-    B --> D
-    A --> C
-    C --> J
-    D --> E
-    D --> G
-    E --> F
-    F --> H
-    D --> I
-    E --> K
-    K --> L
-    L --> J
-    G --> A
-    H --> E
-```
-
-### 🔷 DATA FLOW ARCHITECTURE
-
-```mermaid
-sequenceDiagram
-    participant R as Grid Runner
-    participant C as Client Interface
-    participant B as Backend Core
-    participant DB as Database
-    participant BC as Stacks Blockchain
-    
-    R->>C: Movement Detected (GPS)
-    C->>B: Stream Position Data
-    B->>DB: Store Trail Points
-    B->>C: Broadcast Updated Trail
-    
-    Note over R,C: Loop Detection
-    R->>C: Return to Trail Point
-    C->>B: Loop Closure Detected
-    B->>B: Calculate Territory Area
-    B->>DB: Lock Territory Data
-    
-    Note over B,BC: Blockchain Synchronization
-    B->>BC: Initialize NFT Mint
-    BC->>BC: Execute Smart Contract
-    BC->>B: Confirm Token ID
-    B->>C: Territory Captured
-    C->>R: NFT Acquired
-```
-
-### 🔷 GEOSPATIAL PROCESSING
-
-```mermaid
-graph LR
-    A[GPS Coordinates] --> B[Coordinate Validation]
-    B --> C[PostGIS Geometry Engine]
-    C --> D{Loop Detected?}
-    D -->|Yes| E[Polygon Formation]
-    D -->|No| F[Extend Trail]
-    E --> G[Area Calculation]
-    G --> H[Territory NFT Generation]
-    F --> I[Update Trail State]
-    
-    style A fill:#4a90e2
-    style E fill:#7ed321
-    style H fill:#f5a623
-    style I fill:#d0021b
-```
 
 ---
 
@@ -193,14 +101,13 @@ SUPABASE_JWT_SECRET="your_jwt_secret"
 STACKS_NETWORK="testnet"  # or "mainnet"
 STACKS_RPC_URL="https://api.testnet.hiro.so"
 CONTRACT_ADDRESS="your_deployed_contract_address"
-CONTRACT_NAME="loopin-territory-v1"
+CONTRACT_NAME="loopin-game-v1"
 DEPLOYER_PRIVATE_KEY="your_private_key"
 
 # === GRID ECONOMICS ===
 ENTRY_FEE_STX="2"
 SHIELD_COST_STX="2"
 STEALTH_COST_STX="5"
-TERRITORY_MINT_FEE="0.5"
 
 # === GEOSPATIAL CONFIG ===
 MAX_TRAIL_POINTS="10000"
@@ -255,55 +162,44 @@ npm run dev
 ### 🔻 GRID ENTRY PROTOCOL
 
 1. **🔗 WALLET SYNCHRONIZATION**
-   - Connect your Hiro Wallet to establish your Grid Runner identity
-   - Your wallet address becomes your immutable operator ID
+   - Connect your Hiro Wallet to establish your Grid Runner identity.
+   - Your wallet address becomes your immutable operator ID.
 
 2. **💳 ENTRY FEE**
-   - Pay entry fee in STX to join an active game session
-   - Entry fee contributes to the reward pool
+   - Pay an entry fee in STX to join an active game session.
+   - The entry fee contributes to the prize pool for the winner.
 
 3. **📡 GPS ACTIVATION**
-   - Enable location services for trail emission
-   - Your movement data is encrypted and transmitted in real-time
+   - Enable location services for trail emission.
+   - Your movement data is encrypted and transmitted in real-time.
 
 ### 🔻 TERRITORIAL OPERATIONS
 
 4. **🏃 TRAIL GENERATION**
-   - Begin movement to emit your quantum trail
-   - Trail persists for the duration of the game session
-   - Each coordinate is timestamped and cryptographically signed
+   - Begin movement to emit your quantum trail.
+   - The trail persists for the duration of the game session.
 
 5. **➰ LOOP FORMATION**
-   - Return to any previous point on your trail
-   - System automatically detects loop closure
-   - Territory area is calculated via PostGIS geometry engine
-
-6. **🖼️ NFT MINTING**
-   - Captured territory is immediately minted as NFT
-   - NFT metadata includes: coordinates, area, capture timestamp
-   - NFT appears in your wallet within 1-2 blocks
+   - Return to any previous point on your trail.
+   - The system automatically detects loop closure and calculates the captured area, adding it to your score.
 
 ### 🔻 TACTICAL WARFARE
 
-7. **⚔️ TRAIL SEVERING**
-   - Cross an opponent's trail to cut it
-   - Severed trails collapse, preventing loop formation
-   - Strategic positioning is crucial
+6. **⚔️ TRAIL SEVERING**
+   - Cross an opponent's trail to cut it.
+   - Severed trails collapse, preventing loop formation.
 
-8. **🛡️ DEFENSIVE UPGRADES**
-   - **Shield (2 STX)**: One-time protection against trail severing
-   - **Stealth (5 STX)**: Temporary trail invisibility (60 seconds)
-   - Upgrades are consumable and must be repurchased
+7. **🛡️ DEFENSIVE UPGRADES (POWER-UPS)**
+   - **Shield (2 STX)**: One-time protection against trail severing.
+   - **Stealth (5 STX)**: Temporary trail invisibility (60 seconds).
+   - Upgrades are purchased with STX and are consumable.
 
 ### 🔻 REWARD ACQUISITION
 
-9. **💰 SYNC NODE CLAIMS**
-   - Navigate to physical Sync Nodes to claim rewards
-   - Rewards distributed based on:
-     - Total territory captured
-     - Territory strategic value
-     - Opponent trails severed
-     - Time held
+8. **🏆 END OF GAME**
+   - The game session ends after a predetermined time.
+   - The player with the largest total captured area is declared the winner.
+   - The prize pool (funded by entry fees) is automatically transferred to the winner's wallet.
 
 ---
 
@@ -312,25 +208,24 @@ npm run dev
 <div align="center">
 
 ### **⚡ PHASE ALPHA: FOUNDATION** ✅
-*Core gameplay loop. Stacks integration. GPS trail mechanics.*
+*Core gameplay loop. Stacks integration for payments. GPS trail mechanics.*
 
 ### **🔥 PHASE BETA: WARFARE** 🔄
-- [ ] **Real-time PvP Combat**: Live trail warfare with collision detection
-- [ ] **Squad Formation**: Team-based territorial conquest
-- [ ] **Global Leaderboards**: Rankings by territory value and STX earned
-- [ ] **Dynamic Sync Nodes**: Rotating node locations for strategic gameplay
+- [ ] **Real-time PvP Combat**: Live trail warfare with collision detection.
+- [ ] **Squad Formation**: Team-based territorial conquest.
+- [ ] **Global Leaderboards**: Rankings by area captured and games won.
+- [ ] **Dynamic Sync Nodes**: Rotating node locations for strategic gameplay.
 
 ### **🌐 PHASE GAMMA: EXPANSION** 🔮
-- [ ] **Bitcoin Lightning Integration**: Instant micropayments for upgrades
-- [ ] **Territory Marketplace**: Trade, merge, and auction your territories
-- [ ⚙️ **Advanced Smart Contracts**: Rental territories, staking mechanisms
-- [ ] **Mobile Native Apps**: iOS and Android grid interfaces
+- [ ] **Bitcoin Lightning Integration**: Instant micropayments for upgrades.
+- [ ] **Advanced Game Modes**: New rulesets, larger maps, and bigger tournaments.
+- [ ] **Mobile Native Apps**: iOS and Android grid interfaces.
 
 ### **🏆 PHASE OMEGA: ASCENSION** 🌟
-- [ ] **Mainnet Deployment**: Full security audit and Stacks mainnet launch
-- [ ] **Global Grid Network**: Synchronized worldwide gameplay
-- [ ] **Territory Governance**: DAO voting for grid rule modifications
-- [ ] **Cross-chain Bridges**: Expand beyond Stacks ecosystem
+- [ ] **Mainnet Deployment**: Full security audit and Stacks mainnet launch.
+- [ ] **Global Grid Network**: Synchronized worldwide gameplay.
+- [ ] **Player Governance**: DAO voting for grid rule modifications.
+- [ ] **Cross-chain Bridges**: Expand beyond the Stacks ecosystem for payments.
 
 </div>
 

@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Loopin Design System - Light Mode */
+    --background: 0 0% 97.3%;
+    --foreground: 210 11% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 11% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 11% 15%;
+
+    --primary: 210 11% 15%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 17% 91%;
+    --secondary-foreground: 210 11% 15%;
+
+    --muted: 210 17% 91%;
+    --muted-foreground: 210 6% 46%;
+
+    --accent: 74 88% 62%;
+    --accent-foreground: 210 11% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 17% 88%;
+    --input: 210 17% 88%;
+    --ring: 74 88% 62%;
+
+    --radius: 0.5rem;
+
+    /* Loopin specific tokens */
+    --lime: 74 88% 62%;
+    --lime-glow: 74 88% 62%;
+    --grid-line: 210 17% 91%;
+    
+    /* Gradients */
+    --gradient-lime: linear-gradient(135deg, hsl(74 88% 62%), hsl(74 88% 72%));
+    --gradient-dark: linear-gradient(180deg, hsl(210 11% 15%), hsl(210 11% 25%));
+    --glow-lime: 0 0 30px hsl(74 88% 62% / 0.5);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 210 11% 15%;
+    --foreground: 0 0% 97.3%;
+
+    --card: 210 11% 18%;
+    --card-foreground: 0 0% 97.3%;
+
+    --popover: 210 11% 18%;
+    --popover-foreground: 0 0% 97.3%;
+
+    --primary: 0 0% 97.3%;
+    --primary-foreground: 210 11% 15%;
+
+    --secondary: 210 11% 25%;
+    --secondary-foreground: 0 0% 97.3%;
+
+    --muted: 210 11% 25%;
+    --muted-foreground: 210 6% 65%;
+
+    --accent: 74 88% 62%;
+    --accent-foreground: 210 11% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 11% 25%;
+    --input: 210 11% 25%;
+    --ring: 74 88% 62%;
+    
+    --grid-line: 210 11% 20%;
+    --glow-lime: 0 0 30px hsl(74 88% 62% / 0.6);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .text-lime {
+    color: hsl(var(--accent));
+  }
+  
+  .bg-lime {
+    background-color: hsl(var(--accent));
+  }
+  
+  .border-lime {
+    border-color: hsl(var(--accent));
+  }
+  
+  .glow-lime {
+    box-shadow: var(--glow-lime);
+  }
+  
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+  
+  .hover-lift:hover {
+    @apply -translate-y-1 shadow-lg;
+  }
+  
+  .gradient-lime {
+    background: var(--gradient-lime);
+  }
+  
+  .grid-bg {
+    background-image: 
+      linear-gradient(hsl(var(--grid-line)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid-line)) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+}

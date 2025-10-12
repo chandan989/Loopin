@@ -1,0 +1,33 @@
+/* Leaflet custom styles for Loopin */
+
+.leaflet-container {
+  font-family: 'Inter', sans-serif;
+}
+
+.custom-marker,
+.start-marker {
+  background: transparent;
+  border: none;
+}
+
+.leaflet-popup-content-wrapper {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+}
+
+.leaflet-popup-tip {
+  background: hsl(var(--card));
+}
+
+.leaflet-control-zoom a {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+}
+
+.leaflet-control-zoom a:hover {
+  background: hsl(var(--accent));
+  border-color: hsl(var(--lime));
+}
