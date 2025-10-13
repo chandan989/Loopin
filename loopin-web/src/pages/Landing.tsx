@@ -70,12 +70,12 @@ const Landing = () => {
                     --secondary-foreground: 0 0% 98%;
                     --muted: 240 3.7% 15.9%;
                     --muted-foreground: 240 5% 64.9%;
-                    --accent: 120 90% 40%;
+                    --accent: 74 89% 61%;
                     --destructive: 0 84.2% 60.2%;
                     --destructive-foreground: 0 0% 98%;
                     --border: 240 3.7% 15.9%;
                     --input: 240 3.7% 15.9%;
-                    --ring: 120 90% 45%;
+                    --ring: 74 89% 66%;
                 }
                 html { scroll-behavior: smooth; scroll-padding-top: 80px; }
                 body { background-color: var(--bg-color); font-family: 'Inter', sans-serif; }
@@ -90,10 +90,10 @@ const Landing = () => {
 
             <div className="bg-[var(--bg-color)] text-[var(--text-color)]">
                 {/* Header - Styled like landing.html */}
-                <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[var(--border-color)]">
+                <header className="fixed top-0 left-0 right-0 z-50  backdrop-blur-md border-[var(--border-color)]">
                     <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                         <a href="#home" className="flex items-center gap-3">
-                            <Logo />
+                            <img src={"logo.svg"} className="h-auto w-10" />
                             <span className="text-2xl font-black tracking-wide font-primary text-gray-900">LOOPIN</span>
                         </a>
                         <nav className="hidden md:flex items-center gap-6">

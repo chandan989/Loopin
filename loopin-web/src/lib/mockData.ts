@@ -1,4 +1,4 @@
-import { User, GameSession, PowerUp, PlayerInGame } from './gameTypes';
+import { User, GameSession, PlayerInGame } from './gameTypes';
 
 export const mockUser: User = {
   id: 'user_123',
@@ -9,23 +9,6 @@ export const mockUser: User = {
     stealth: { active: false, expiresAt: null, count: 0 }
   }
 };
-
-export const POWER_UPS: PowerUp[] = [
-  {
-    type: 'shield',
-    name: 'SHIELD',
-    cost: 2,
-    description: 'Protect your trail from being cut once',
-    icon: 'Shield'
-  },
-  {
-    type: 'stealth',
-    name: 'STEALTH',
-    cost: 5,
-    description: 'Hide your trail for 60 seconds',
-    icon: 'Eye'
-  }
-];
 
 export const PLAYER_COLORS = [
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', 

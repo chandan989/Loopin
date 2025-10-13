@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, X, Shield, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import MapView from '@/components/game/MapView';
@@ -228,7 +228,7 @@ const Game = () => {
             <Leaderboard players={players} currentUserId={user.id} />
           </div>
           <div className="pointer-events-auto w-full md:w-64">
-            <PowerUpShop user={user} onPurchase={handlePurchasePowerUp} />
+            <PowerUpShop user={user} onPurchase={handlePurchasePowerUp} powerUps={POWER_UPS} />
           </div>
         </div>
       </div>
@@ -238,8 +238,8 @@ const Game = () => {
 
 // Add POWER_UPS mock data to be self-contained
 const POWER_UPS = [
-    { type: 'shield', name: 'Shield', description: 'Protect your trail from being cut.', cost: 5, icon: 'Shield' },
-    { type: 'stealth', name: 'Stealth', description: 'Temporarily hide your trail.', cost: 10, icon: 'Eye' },
+    { type: 'shield', name: 'Shield', description: 'Protect your trail from being cut.', cost: 5, icon: Shield },
+    { type: 'stealth', name: 'Stealth', description: 'Temporarily hide your trail.', cost: 10, icon: EyeOff },
 ];
 
 export default Game;

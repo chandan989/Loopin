@@ -24,7 +24,7 @@ const Lobby = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card">
+      <header>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link to="/">
@@ -34,9 +34,7 @@ const Lobby = () => {
               </Button>
             </Link>
             
-            <h1 className="text-2xl font-black uppercase font-mono">
-              LOOPIN
-            </h1>
+            <img src={"logo.svg"} className="h-auto w-10"/>
 
             {walletConnected ? (
               <div className="flex items-center gap-3 bg-lime/10 border border-lime/20 rounded-lg px-4 py-2">
