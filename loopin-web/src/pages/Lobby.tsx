@@ -208,7 +208,7 @@ const Lobby = () => {
               POWER-UPS AVAILABLE
             </h4>
             <p className="text-sm text-muted-foreground">
-              Purchase shields and stealth mode during gameplay to gain tactical advantages.
+              Purchase shields (0.5 STX) and stealth mode (1 STX) during gameplay to gain tactical advantages.
             </p>
           </Card>
         </div>

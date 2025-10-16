@@ -8,14 +8,21 @@ import GameHUD from '@/components/game/GameHUD';
 import Leaderboard from '@/components/game/Leaderboard';
 import PowerUpShop from '@/components/game/PowerUpShop';
 import { mockUser, generateMockSession, PLAYER_COLORS } from '@/lib/mockData';
-import { TrailPoint, Territory, PowerUpType, User, PlayerInGame } from '@/lib/gameTypes';
-import * as turf from '@turf/turf';
+import { PowerUpType, User, PlayerInGame, H3Index } from '@/lib/gameTypes';
+import * as h3 from "h3-js";
 import { toast } from 'sonner';
+import { useStacksWallet } from '@/hooks/useStacksWallet';
+import { buyShield, buyStealth } from '@/lib/contractInteractions';
+import { ENABLE_WEB3, COSTS, MICRO_STX } from '@/lib/stacksConfig';
+
+const H3_RESOLUTION = 12; // 12 is roughly 300m² per hexagon, good for a city block level
+const AREA_PER_CELL_SQ_M = h3.getHexagonAreaAvg(H3_RESOLUTION, 'm2');
 
 const Game = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams();
   const [user, setUser] = useState<User>(mockUser);
+  const { userSession, balance } = useStacksWallet();
   
   const [players, setPlayers] = useState<PlayerInGame[]>(() => 
     [mockUser, ...generateMockSession(sessionId || 'session_1', 'active').players.filter(p => p.userId !== mockUser.id)]
@@ -38,12 +45,7 @@ const Game = () => {
 
   const userPlayer = players.find(p => p.userId === user.id)!;
 
-  const totalWalked = userPlayer?.trail.reduce((dist, point, i, arr) => {
-    if (i === 0) return 0;
-    const prevPoint = arr[i-1];
-    return dist + turf.distance(turf.point([prevPoint.lng, prevPoint.lat]), turf.point([point.lng, point.lat]), { units: 'meters' });
-  }, 0) || 0;
-  const caloriesBurned = totalWalked * 0.05;
+  // REMOVED: totalWalked and caloriesBurned which used turf
 
   const handleGameEnd = useCallback(() => {
     toast.success('Game Over!');
@@ -66,35 +68,7 @@ const Game = () => {
 
   const MOVE_DISTANCE = 0.0001;
 
-  const checkLoopClosure = (player: PlayerInGame): Territory | null => {
-    if (player.trail.length < 4) return null;
-
-    const start = player.trail[0];
-    const current = player.trail[player.trail.length - 1];
-    const distance = turf.distance([start.lng, start.lat], [current.lng, current.lat], { units: 'meters' });
-
-    if (distance < 20) {
-      const trailCoords = player.trail.map(p => [p.lng, p.lat]);
-      trailCoords.push([start.lng, start.lat]);
-
-      try {
-        const newPolygon = turf.polygon([trailCoords]);
-        const area = turf.area(newPolygon);
-
-        if (area > 0) {
-          toast.success(`${player.name} captured ${Math.floor(area)} m²!`);
-          return {
-            coordinates: trailCoords.map(c => [c[1], c[0]]),
-            area,
-            capturedAt: new Date().toISOString(),
-          };
-        }
-      } catch (error) {
-        console.error('Error creating territory:', error);
-      }
-    }
-    return null;
-  };
+  // REMOVED: checkLoopClosure function
 
   const movePlayer = useCallback((playerId: string, direction: 'north' | 'south' | 'east' | 'west') => {
     setPlayers(prevPlayers => {
@@ -112,24 +86,23 @@ const Game = () => {
         case 'west': newPos.lng -= distance; break;
       }
 
-      const newPoint: TrailPoint = { lat: newPos.lat, lng: newPos.lng, timestamp: new Date().toISOString() };
+      const currentCell = h3.latLngToCell(newPos.lat, newPos.lng, H3_RESOLUTION);
       
       let updatedPlayer = { 
         ...player, 
         currentPosition: newPos, 
-        trail: [...player.trail, newPoint] 
       };
 
-      const newTerritory = checkLoopClosure(updatedPlayer);
-
-      if (newTerritory) {
-        updatedPlayer = {
-          ...updatedPlayer,
-          trail: [],
-          territories: [...updatedPlayer.territories, newTerritory],
-          totalArea: updatedPlayer.totalArea + newTerritory.area,
-        };
+      // Claim the new cell if it's not already in the current trail
+      if (!updatedPlayer.trail.includes(currentCell)) {
+        updatedPlayer.trail = [...updatedPlayer.trail, currentCell];
+        toast.info(`${player.name} claimed a new cell!`);
       }
+
+      // TODO: Implement "banking" logic.
+      // For now, we just accumulate cells in the trail.
+      // When a player visits a "checkpoint", we would move cells from `trail` to `territories`
+      // and update `totalArea`.
 
       const newPlayers = [...prevPlayers];
       newPlayers[playerIndex] = updatedPlayer;
@@ -161,19 +134,56 @@ const Game = () => {
 
   const handleToggleDemoMode = () => setIsDemoMode(prev => !prev);
 
-  const handlePurchasePowerUp = (type: PowerUpType) => {
-    const powerUp = POWER_UPS.find(p => p.type === type);
-    if (!powerUp || user.stxBalance < powerUp.cost) return;
+  const handlePurchasePowerUp = async (type: PowerUpType) => {
+    if (!ENABLE_WEB3) {
+      // Mock mode
+      const powerUp = POWER_UPS.find(p => p.type === type);
+      if (!powerUp || user.stxBalance < powerUp.cost) return;
 
-    setUser(prev => ({
-      ...prev,
-      stxBalance: prev.stxBalance - powerUp.cost,
-      powerUps: {
-        ...prev.powerUps,
-        [type]: { ...prev.powerUps[type], count: prev.powerUps[type].count + 1 },
-      },
-    }));
-    toast.success(`${powerUp.name} purchased!`);
+      setUser(prev => ({
+        ...prev,
+        stxBalance: prev.stxBalance - powerUp.cost,
+        powerUps: {
+          ...prev.powerUps,
+          [type]: { ...prev.powerUps[type], count: prev.powerUps[type].count + 1 },
+        },
+      }));
+      toast.success(`${powerUp.name} purchased!`);
+      return;
+    }
+
+    // Web3 mode - real transaction
+    try {
+      const gameId = parseInt(sessionId?.replace('session_', '') || '1');
+      const powerUp = POWER_UPS.find(p => p.type === type);
+      const cost = type === 'shield' ? COSTS.SHIELD : COSTS.STEALTH;
+      const costSTX = cost / MICRO_STX;
+
+      if (balance < costSTX) {
+        toast.error(`Insufficient balance. Need ${costSTX} STX`);
+        return;
+      }
+
+      toast.info(`Purchasing ${powerUp?.name}...`);
+
+      if (type === 'shield') {
+        await buyShield(gameId, userSession);
+      } else if (type === 'stealth') {
+        await buyStealth(gameId, userSession);
+      }
+
+      // Update local state optimistically
+      setUser(prev => ({
+        ...prev,
+        powerUps: {
+          ...prev.powerUps,
+          [type]: { ...prev.powerUps[type], count: prev.powerUps[type].count + 1 },
+        },
+      }));
+    } catch (error) {
+      console.error('Power-up purchase failed:', error);
+      toast.error('Purchase failed. Please try again.');
+    }
   };
 
   return (
@@ -215,8 +225,8 @@ const Game = () => {
                 timeRemaining={timeRemaining}
                 totalArea={userPlayer.totalArea}
                 territoriesCount={userPlayer.territories.length}
-                totalWalked={totalWalked}
-                caloriesBurned={caloriesBurned}
+                totalWalked={0} // FIXME: Re-implement or remove
+                caloriesBurned={0} // FIXME: Re-implement or remove
               />
             </div>
           }
@@ -238,8 +248,8 @@ const Game = () => {
 
 // Add POWER_UPS mock data to be self-contained
 const POWER_UPS = [
-    { type: 'shield', name: 'Shield', description: 'Protect your trail from being cut.', cost: 5, icon: Shield },
-    { type: 'stealth', name: 'Stealth', description: 'Temporarily hide your trail.', cost: 10, icon: EyeOff },
+    { type: 'shield', name: 'Shield', description: 'Protect your trail from being cut.', cost: 0.5, icon: Shield },
+    { type: 'stealth', name: 'Stealth', description: 'Temporarily hide your trail.', cost: 1, icon: EyeOff },
 ];
 
 export default Game;

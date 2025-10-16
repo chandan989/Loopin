@@ -1,0 +1,11 @@
+{
+  "name": "Loopin Game",
+  "start_url": "/",
+  "description": "GPS-based territorial capture game on Stacks blockchain",
+  "icons": [{
+    "src": "/logo.svg",
+    "sizes": "512x512",
+    "type": "image/svg+xml"
+  }]
+}
+

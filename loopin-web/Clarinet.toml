@@ -1,0 +1,20 @@
+[project]
+name = "loopin-game"
+description = "Location-based territory capture game on Stacks"
+authors = []
+telemetry = true
+cache_dir = "./.cache"
+requirements = []
+boot_contracts = []
+
+[contracts.loopin-game]
+path = "contracts/loopin-game.clar"
+clarity_version = 2
+epoch = 2.5
+
+[repl]
+costs_version = 3
+parser_version = 2
+
+
+

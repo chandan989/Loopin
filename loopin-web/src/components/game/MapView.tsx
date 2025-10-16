@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { PlayerInGame } from '@/lib/gameTypes';
+import { PlayerInGame, H3Index } from '@/lib/gameTypes';
+import * as h3 from 'h3-js';
 
 // Fix for default marker icons in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -71,19 +72,19 @@ const MapView = ({ center, allPlayers, currentUserId }: MapViewProps) => {
             ? `
               <style>
                 @keyframes pulse-glow {
-                  0%, 100% { box-shadow: 0 0 12px ${player.color}; }
-                  50% { box-shadow: 0 0 24px ${player.color}, 0 0 12px ${player.color}; }
+                  0%, 100% { box-shadow: 0 0 15px ${player.color}, 0 0 30px ${player.color}; }
+                  50% { box-shadow: 0 0 25px ${player.color}, 0 0 50px ${player.color}; }
                 }
               </style>
-              <div style="animation: pulse-glow 1.5s infinite; background-color: ${player.color}; width: 20px; height: 20px; border-radius: 50%; border: 4px solid white;"></div>
+              <div style="animation: pulse-glow 1.5s infinite; background-color: ${player.color}; width: 24px; height: 24px; border-radius: 50%; border: 5px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>
               `
-            : `<div style="background-color: ${player.color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white;"></div>`;
+            : `<div style="background-color: ${player.color}; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.2);"></div>`;
           
           const icon = L.divIcon({
             className: 'custom-marker',
             html: iconHtml,
-            iconSize: isUser ? [20, 20] : [14, 14],
-            iconAnchor: isUser ? [10, 10] : [7, 7],
+            iconSize: isUser ? [24, 24] : [18, 18],
+            iconAnchor: isUser ? [12, 12] : [9, 9],
           });
 
           playerMarkers.current[player.userId] = L.marker(position, { icon }).addTo(mapInstance.current!);
@@ -94,25 +95,32 @@ const MapView = ({ center, allPlayers, currentUserId }: MapViewProps) => {
         }
       }
 
-      // Draw trail
-      if (player.trail.length > 1) {
-        const trailCoords: [number, number][] = player.trail.map(p => [p.lat, p.lng]);
-        L.polyline(trailCoords, {
+      // Draw Realistic Trail Lines
+      if (player.trail.length > 1 && player.trailCoordinates && player.trailCoordinates.length > 1) {
+        // Draw lines between actual coordinates
+        L.polyline(player.trailCoordinates, {
           color: player.color,
-          weight: 4,
-          opacity: 0.8,
-          dashArray: '10, 5',
+          weight: player.userId === currentUserId ? 5 : 3,
+          opacity: player.userId === currentUserId ? 0.9 : 0.7,
+          dashArray: player.userId === currentUserId ? '0' : '5, 5',
+          lineCap: 'round',
+          lineJoin: 'round'
         }).addTo(trailLayers.current);
       }
 
-      // Draw territories
-      player.territories.forEach(territory => {
-        const coords: [number, number][] = territory.coordinates.map(c => [c[0], c[1]]);
-        L.polygon(coords, {
-          color: '#00ff00', // Bright green for glow
-          weight: 3,
+      // Draw Simple Territory Circles
+      player.territories.forEach((cellIndex: H3Index, index) => {
+        // Generate simple circular territory around player position
+        const centerLat = (player.currentPosition?.lat || 37.7749) + (index * 0.002);
+        const centerLng = (player.currentPosition?.lng || -122.4194) + (index * 0.002);
+        
+        L.circle([centerLat, centerLng], {
+          color: player.color,
+          weight: 2,
+          opacity: 0.8,
           fillColor: player.color,
-          fillOpacity: 0.6,
+          fillOpacity: 0.5,
+          radius: 50 // 50 meter radius
         }).addTo(territoryLayers.current);
       });
     });

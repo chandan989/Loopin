@@ -8,26 +8,26 @@ export interface User {
   };
 }
 
-export interface TrailPoint {
-  lat: number;
-  lng: number;
-  timestamp: string;
-}
-
-export interface Territory {
-  coordinates: [number, number][];
-  area: number;
-  capturedAt: string;
-}
+export type H3Index = string;
 
 export interface PlayerInGame {
   userId: string;
   name: string;
   color: string;
-  trail: TrailPoint[];
-  territories: Territory[];
-  totalArea: number;
+  trail: H3Index[]; // Unbanked cells claimed in the current run
+  trailCoordinates?: [number, number][]; // Actual lat/lng coordinates for trail rendering
+  territories: H3Index[]; // Banked cells that are permanently owned
+  totalArea: number; // Can now be calculated as territories.length * area_per_cell
   isActive: boolean;
+  currentPosition?: { lat: number; lng: number };
+  ai?: any;
+  score: number; // Total score from captured territories
+  rank: number; // Current ranking in the game
+  isShielded: boolean; // Shield power-up active
+  isStealthed: boolean; // Stealth power-up active
+  stealthExpiresAt?: number; // When stealth expires
+  kills: number; // Number of enemy trails cut
+  deaths: number; // Number of times own trail was cut
 }
 
 export interface GameSession {
@@ -36,10 +36,15 @@ export interface GameSession {
   entryFee: number;
   prizePool: number;
   startTime: string;
-  duration: number;
+  endTime?: string;
+  duration: number; // Game duration in seconds
+  timeRemaining: number; // Time remaining in seconds
   players: PlayerInGame[];
   maxPlayers: number;
   winner?: string;
+  gamePhase: 'waiting' | 'countdown' | 'active' | 'ending' | 'ended';
+  countdownSeconds?: number; // Countdown before game starts
+  leaderboard: PlayerInGame[]; // Sorted by score
 }
 
 export type PowerUpType = 'shield' | 'stealth';
