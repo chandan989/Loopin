@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loopin - Pitch Deck | India MVP Launch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --accent-color: #C7F441;
+        --bg-color: #F8F9FA;
+        --text-color: #212529;
+        --muted-text-color: #6C757D;
+        --border-color: #DEE2E6;
+        --card-bg-color: #FFFFFF;
+      }
+      .dark {
+        --bg-color: #111827;
+        --text-color: #F9FAFB;
+        --muted-text-color: #9CA3AF;
+        --border-color: #374151;
+        --card-bg-color: #1F2937;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden; /* Prevent scrolling the whole page */
+      }
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: 'Inter', sans-serif;
+      }
+      .font-primary { font-family: 'Inter', sans-serif; }
+      .font-mono { font-family: 'Roboto Mono', monospace; }
+      .highlight { color: var(--accent-color); text-shadow: 0 0 8px rgba(199, 244, 65, 0.5); }
+
+      .slide-container {
+        width: 100%;
+        height: 100vh;
+        position: relative;
+      }
+      .slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.6s ease-in-out, visibility 0.6s;
+        text-align: center;
+      }
+      .slide.active {
+        opacity: 1;
+        visibility: visible;
+      }
+      .slide-nav {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        z-index: 100;
+      }
+      .nav-button {
+        background-color: rgba(255, 255, 255, 0.8);
+        border: 1px solid var(--border-color);
+        border-radius: 9999px;
+        width: 2.5rem;
+        height: 2.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .nav-button:hover {
+        background-color: var(--accent-color);
+      }
+      .dark .nav-button {
+        background-color: rgba(31, 41, 55, 0.8);
+        color: white;
+      }
+      .dark .nav-button:hover {
+        background-color: var(--accent-color);
+        color: var(--text-color);
+      }
+      .pagination-dots {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .dot {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        background-color: var(--border-color);
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .dot.active {
+        background-color: var(--accent-color);
+      }
+    </style>
+</head>
+<body class="bg-[var(--bg-color)] text-[var(--text-color)] dark">
+
+    <div class="slide-container">
+
+        <!-- Slide 1: Title -->
+        <section class="slide active" id="slide-1">
+            <img src="/logo.svg" alt="Loopin Logo" class="w-24 h-24 mb-6">
+            <h1 class="text-7xl md:text-9xl font-black uppercase tracking-tight">LOOPIN</h1>
+            <p class="text-2xl text-[var(--muted-text-color)] mt-2 font-mono">Your World. Your Empire.</p>
+        </section>
+
+        <!-- Slide 2: The Pitch -->
+        <section class="slide" id="slide-2">
+            <h2 class="text-5xl md:text-6xl font-bold font-primary uppercase mb-4">Redefining <span class="highlight">Mobile Gaming</span>.</h2>
+            <p class="text-xl max-w-3xl mx-auto text-[var(--muted-text-color)]">
+                Loopin is a location-based MVP where your movement is power. We're launching in India to test a new category of real-world, blockchain-powered competitive gaming.
+            </p>
+        </section>
+
+        <!-- Slide 3: Core Mechanics -->
+        <section class="slide" id="slide-3">
+            <h2 class="text-5xl font-bold font-primary uppercase mb-12">Core Mechanics</h2>
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl">
+                <div class="bg-[var(--card-bg-color)] p-6 border border-[var(--border-color)] rounded-lg">
+                    <h3 class="text-xl font-bold text-[var(--accent-color)] mb-3 font-mono">GPS_TO_TERRITORY</h3>
+                    <p class="text-[var(--muted-text-color)] leading-relaxed font-primary">Your physical movements draw a path. Close the loop to capture the enclosed area.</p>
+                </div>
+                <div class="bg-[var(--card-bg-color)] p-6 border border-[var(--border-color)] rounded-lg">
+                    <h3 class="text-xl font-bold text-[var(--accent-color)] mb-3 font-mono">WEB3_ECONOMY</h3>
+                    <p class="text-[var(--muted-text-color)] leading-relaxed font-primary">A transparent economy on Stacks. Entry fees fund a prize pool managed by smart contracts.</p>
+                </div>
+                <div class="bg-[var(--card-bg-color)] p-6 border border-[var(--border-color)] rounded-lg">
+                    <h3 class="text-xl font-bold text-[var(--accent-color)] mb-3 font-mono">STRATEGIC_WARFARE</h3>
+                    <p class="text-[var(--muted-text-color)] leading-relaxed font-primary">Cut rival trails, use on-chain power-ups, and defend your domain to win.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: India MVP Launch -->
+        <section class="slide" id="slide-4">
+             <h2 class="text-5xl font-bold font-primary uppercase mb-4">MVP Launch: <span class="highlight">India</span></h2>
+             <p class="text-xl max-w-3xl mx-auto text-[var(--muted-text-color)] mb-8">The grid activates first in India. We are targeting key metropolitan hubs with massive mobile gaming populations and a growing interest in Web3 technology.</p>
+             <div class="flex flex-wrap justify-center gap-4 font-mono text-lg">
+                <span class="bg-[var(--accent-color)]/20 text-[var(--accent-color)] px-4 py-1 rounded-full">Bangalore</span>
+                <span class="bg-[var(--accent-color)]/20 text-[var(--accent-color)] px-4 py-1 rounded-full">Mumbai</span>
+                <span class="bg-[var(--accent-color)]/20 text-[var(--accent-color)] px-4 py-1 rounded-full">Delhi</span>
+                <span class="bg-[var(--accent-color)]/20 text-[var(--accent-color)] px-4 py-1 rounded-full">Hyderabad</span>
+             </div>
+        </section>
+
+        <!-- Slide 5: The India Opportunity -->
+        <section class="slide" id="slide-5">
+            <h2 class="text-5xl font-bold font-primary uppercase mb-12">The India Opportunity</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center max-w-5xl">
+                <div>
+                    <h4 class="text-5xl font-bold font-mono text-[var(--accent-color)]">500M+</h4>
+                    <p class="font-mono text-lg text-[var(--muted-text-color)]">Mobile Gamers</p>
+                </div>
+                <div>
+                    <h4 class="text-5xl font-bold font-mono text-[var(--accent-color)]">$5B+</h4>
+                    <p class="font-mono text-lg text-[var(--muted-text-color)]">Market Size by 2025</p>
+                </div>
+                <div>
+                    <h4 class="text-5xl font-bold font-mono text-[var(--accent-color)]">Top 5</h4>
+                    <p class="font-mono text-lg text-[var(--muted-text-color)]">in Global Web3 Adoption</p>
+                </div>
+                <div>
+                    <h4 class="text-5xl font-bold font-mono text-[var(--accent-color)]">Phase 1</h4>
+                    <p class="font-mono text-lg text-[var(--muted-text-color)]">Launch in Tier-1 Cities</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: MVP Rollout Plan -->
+        <section class="slide" id="slide-6">
+            <h2 class="text-5xl font-bold font-primary uppercase mb-12">MVP Rollout Plan</h2>
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl">
+                <div class="text-left p-6 border-l-4 border-[var(--accent-color)]">
+                    <h3 class="font-bold text-xl mb-2">Foundation</h3>
+                    <p class="text-sm text-[var(--muted-text-color)]">Core gameplay, Stacks integration, and GPS systems are built and tested.</p>
+                    <span class="font-mono text-xs text-[var(--accent-color)]">COMPLETE</span>
+                </div>
+                 <div class="text-left p-6 border-l-4 border-[var(--accent-color)]">
+                    <h3 class="font-bold text-xl mb-2">India MVP Launch</h3>
+                    <p class="text-sm text-[var(--muted-text-color)]">Initial rollout in key Indian cities. Focus on user feedback and network stability.</p>
+                    <span class="font-mono text-xs text-[var(--accent-color)]">IN PROGRESS</span>
+                </div>
+                 <div class="text-left p-6 border-l-4 border-[var(--border-color)]">
+                    <h3 class="font-bold text-xl mb-2">National Expansion</h3>
+                    <p class="text-sm text-[var(--muted-text-color)]">Introduce new features and expand arenas to more cities based on MVP learnings.</p>
+                     <span class="font-mono text-xs text-[var(--muted-text-color)]">UPCOMING</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Call to Action -->
+        <section class="slide" id="slide-7">
+            <h2 class="text-5xl font-bold font-primary uppercase mb-4">Join the India Genesis Loop</h2>
+            <p class="max-w-2xl mx-auto mb-8 font-primary text-[var(--muted-text-color)]">Be among the first to play Loopin in India. Sign up for early access and exclusive rewards.</p>
+            <form class="max-w-md w-full flex flex-col sm:flex-row gap-0 relative" onsubmit="return false;">
+                <input type="email" placeholder="your.email@example.com" class="w-full px-5 py-3 rounded-l-md rounded-r-none bg-white text-black placeholder-gray-400 outline-none border-2 border-gray-300 focus:border-[var(--accent-color)] transition-all focus:ring-2 focus:ring-[var(--accent-color)]/50 font-mono" required />
+                <button type="submit" class="px-6 py-3 font-bold rounded-r-md bg-[var(--accent-color)] text-black hover:bg-[#b0d635] transition-all duration-300 focus:outline-none whitespace-nowrap font-mono border-2 border-l-0 border-[var(--accent-color)] hover:border-[#b0d635]">SUBMIT</button>
+            </form>
+        </section>
+
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="slide-nav">
+        <button id="prev-btn" class="nav-button">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <div id="pagination-dots" class="pagination-dots"></div>
+        <button id="next-btn" class="nav-button">
+             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const nextBtn = document.getElementById('next-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const dotsContainer = document.getElementById('pagination-dots');
+            let currentSlide = 0;
+
+            function createDots() {
+                slides.forEach((_, i) => {
+                    const dot = document.createElement('div');
+                    dot.classList.add('dot');
+                    dot.addEventListener('click', () => showSlide(i));
+                    dotsContainer.appendChild(dot);
+                });
+            }
+
+            function updateDots() {
+                const dots = document.querySelectorAll('.dot');
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentSlide);
+                });
+            }
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+                currentSlide = index;
+                updateDots();
+            }
+
+            nextBtn.addEventListener('click', () => {
+                const next = (currentSlide + 1) % slides.length;
+                showSlide(next);
+            });
+
+            prevBtn.addEventListener('click', () => {
+                const prev = (currentSlide - 1 + slides.length) % slides.length;
+                showSlide(prev);
+            });
+
+            // Keyboard navigation
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') {
+                    nextBtn.click();
+                } else if (e.key === 'ArrowLeft') {
+                    prevBtn.click();
+                }
+            });
+
+            createDots();
+            showSlide(0);
+        });
+    </script>
+</body>
+</html>
+
