@@ -4,9 +4,9 @@
 
 <div align="center">
 
-**🌐 COMMAND CENTER**: [https://loopin.game](https://loopin.game)  
-**📡 TACTICAL INTERFACE**: [https://loopin.game/demo](https://loopin.game/demo)  
-**⚙️ SOURCE VAULT**: [https://github.com/your-username/loopin](https://github.com/your-username/loopin)
+**🌐 COMMAND CENTER**: [https://www.loopin.fit](https://www.loopin.fit)  
+**📡 TACTICAL INTERFACE**: [https://www.loopin.fit/demo](https://www.loopin.fit/demo)  
+**⚙️ SOURCE VAULT**: [https://github.com/chandan989/Loopin](https://github.com/chandan989/Loopin)
 
 </div>
 
@@ -256,7 +256,7 @@ MIT License - The grid belongs to everyone and no one.
 *Your territory is power.*  
 *Your time is now.*
 
-**[CONNECT TO GRID](https://loopin.game)** | **[VIEW PROTOCOL](https://github.com/your-username/loopin)** | **[DEPLOY NODE](https://docs.loopin.game)**
+**[CONNECT TO GRID](https://www.loopin.fit)** | **[VIEW PROTOCOL](https://github.com/your-username/loopin)** | **[DEPLOY NODE](https://docs.loopin.fit)**
 
 </div>
 
