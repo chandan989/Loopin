@@ -210,17 +210,25 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
             ))}
             <div className="pt-8 border-t border-gray-100 mt-4">
               {isSignedIn ? (
-                <Button
-                  onClick={handleDisconnect}
-                  className="w-full bg-black text-white hover:bg-black/90 font-display font-black text-lg h-14 rounded-xl"
-                >
-                  <Wallet className="w-5 h-5 mr-2 text-[#D4FF00]" />
-                  {truncateAddress(userAddress || "")}
-                </Button>
+                <div className="flex flex-col gap-3">
+                  <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                    <Button className="w-full bg-white border-2 border-black text-black hover:bg-black/5 font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
+                      <User className="w-5 h-5 mr-2" />
+                      PROFILE
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={handleDisconnect}
+                    className="w-full bg-black text-white hover:bg-black/90 font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(212,255,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+                  >
+                    <LogOut className="w-5 h-5 mr-2 text-[#D4FF00]" />
+                    LOG OUT ({truncateAddress(userAddress || "")})
+                  </Button>
+                </div>
               ) : (
                 <Button
                   onClick={handleConnect}
-                  className="w-full bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-black text-lg h-14 rounded-xl"
+                  className="w-full bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
                 >
                   <Wallet className="w-5 h-5 mr-2" />
                   CONNECT WALLET

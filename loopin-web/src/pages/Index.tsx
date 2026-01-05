@@ -72,7 +72,7 @@ const Index = () => {
 
         {/* The Live Demo Component */}
         <div className="w-full max-w-md mx-auto md:max-w-7xl md:grid md:grid-cols-2 md:gap-12 md:px-24 items-center">
-          <div className="relative shadow-2xl rounded-[40px] overflow-hidden border-8 border-black mx-6 md:mx-0 bg-black aspect-[9/19.5] md:aspect-[9/19] h-[80vh] max-h-[850px]">
+          <div className="relative shadow-2xl rounded-[40px] overflow-hidden border-8 border-black mx-auto md:mx-0 bg-black aspect-[9/19.5] md:aspect-[9/19] h-[80vh] max-h-[850px]">
             <AppSimulation />
           </div>
 

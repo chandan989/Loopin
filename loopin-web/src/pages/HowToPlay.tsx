@@ -51,8 +51,8 @@ const HowToPlay = () => {
       <Header />
 
       {/* 1. HERO: The Protocol */}
-      <main className="pt-32 pb-16">
-        <div className="px-6 mb-8 text-center md:px-24 md:mb-12 max-w-7xl mx-auto">
+      <main className="pt-32 pb-6 md:pb-16">
+        <div className="px-6 text-center md:px-24 md:mb-12 max-w-7xl mx-auto">
           <div className="inline-block px-4 py-1 rounded-full border border-black/10 bg-gray-50 text-gray-500 font-display text-xs font-bold tracking-widest mb-6">
             OPERATIONAL MANUAL v1.0
           </div>
@@ -68,12 +68,12 @@ const HowToPlay = () => {
       </main>
 
       {/* 2. CORE MECHANICS: The Tactile Steps */}
-      <section className="py-24 bg-white relative overflow-hidden">
+      <section className="py-6 md:py-24 bg-white relative overflow-hidden">
         {/* Decorative Track Line */}
         <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-gray-100 hidden md:block" />
 
         <div className="container mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-20 md:gap-12 max-w-7xl mx-auto">
             {/* Step 1: Connect */}
             <div className="relative group">
               <div className="absolute -top-12 -left-4 font-display text-[120px] font-bold text-gray-50 transition-colors group-hover:text-[#0047FF]/5 select-none z-0">
@@ -141,7 +141,7 @@ const HowToPlay = () => {
       </section>
 
       {/* 3. TACTICS & ARSENAL */}
-      <section className="py-24 bg-[#F8F9FA]">
+      <section className="py-12 md:py-24 bg-[#F8F9FA]">
         <div className="container mx-auto px-6">
           <div className="mb-16">
             <h2 className="font-display text-4xl font-bold mb-4 uppercase">Tactical Arsenal</h2>
@@ -179,7 +179,7 @@ const HowToPlay = () => {
       </section>
 
       {/* 4. FAQ */}
-      <section className="py-24 bg-white">
+      <section className="py-12 md:py-24 bg-white">
         <div className="container mx-auto px-6 max-w-3xl">
           <h2 className="font-display text-3xl font-bold mb-12 text-center">SYSTEM FAQ</h2>
           <div className="space-y-4">
@@ -213,7 +213,7 @@ const HowToPlay = () => {
       </section>
 
       {/* 5. MISSION CONTROL (CTA) */}
-      <section className="py-32 bg-[#09090B] text-white relative overflow-hidden border-t-4 border-[#D4FF00]">
+      <section className="py-20 md:py-32 bg-[#09090B] text-white relative overflow-hidden border-t-4 border-[#D4FF00]">
         <div className="absolute inset-0 opacity-10"
           style={{
             backgroundImage: `linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)`,
