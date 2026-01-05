@@ -3,293 +3,596 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loopin - Your World. Your Empire.</title>
+    <title>➰ LOOPIN ➰ - Where Reality Becomes Territory</title>
+
+    <!-- 1. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 2. Load Custom Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
+    <!-- 3. Define the LOOPIN Design System via Tailwind Config & Custom CSS -->
     <style>
-      :root {
-        --accent-color: #C7F441;
-        --bg-color: #F8F9FA;
-        --text-color: #212529;
-        --muted-text-color: #6C757D;
-        --border-color: #DEE2E6;
-        --card-bg-color: #FFFFFF;
-      }
+        /* Custom CSS variables for easier use */
+        :root {
+            --glitch-green: #C7F441;
+            --deep-grid: #1A1A1A;
+            --ghosted: #EAEAEA;
+            --grid-white: #FFFFFF;
+            --alert-blue: #007BFF;
+            --error-red: #FF4136;
+        }
 
-      html {
-        scroll-behavior: smooth;
-        scroll-padding-top: 80px; /* Offset for fixed header */
-      }
+        /* Apply base font and text color */
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--deep-grid);
+            background-color: var(--grid-white);
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
 
-      body {
-        background-color: var(--bg-color);
-        font-family: 'Inter', sans-serif;
-      }
+        /* Style headings as per the design language */
+        h1, h2, h3 {
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
 
-      .font-primary { font-family: 'Inter', sans-serif; }
-      .font-mono { font-family: 'Roboto Mono', monospace; }
+        /* The Grid Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background-image:
+                linear-gradient(to right, var(--ghosted) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--ghosted) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.2; /* Subtle grid */
+        }
 
-      .highlight {
-        color: var(--accent-color);
-        text-shadow: 0 0 8px rgba(199, 244, 65, 0.5);
-      }
+        /* The dynamic canvas background */
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.6;
+        }
 
-      /* Scroll Animation Classes */
-      .scroll-animate {
-        opacity: 0;
-        transform: translateY(30px);
-        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-      }
-      .scroll-animate.is-visible {
-        opacity: 1;
-        transform: translateY(0);
-      }
+        /* Glitch hover effect for the main H1 */
+        .glitch-hover {
+            position: relative;
+            display: inline-block;
+        }
+
+        .glitch-hover::before,
+        .glitch-hover::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--grid-white);
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        .glitch-hover::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--glitch-green);
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+
+        .glitch-hover::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--alert-blue), 2px 2px var(--error-red);
+            animation: glitch-anim-2 2s infinite linear alternate-reverse;
+        }
+
+        .glitch-hover:hover::before,
+        .glitch-hover:hover::after {
+            opacity: 1;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(10% 0 80% 0); }
+            20% { clip-path: inset(50% 0 30% 0); }
+            40% { clip-path: inset(20% 0 10% 0); }
+            60% { clip-path: inset(70% 0 5% 0); }
+            80% { clip-path: inset(40% 0 45% 0); }
+            100% { clip-path: inset(85% 0 5% 0); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(75% 0 10% 0); }
+            20% { clip-path: inset(15% 0 70% 0); }
+            40% { clip-path: inset(90% 0 5% 0); }
+            60% { clip-path: inset(30% 0 50% 0); }
+            80% { clip-path: inset(60% 0 20% 0); }
+            100% { clip-path: inset(5% 0 80% 0); }
+        }
+
+        /* Vertical Timeline Styles */
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background-color: var(--deep-grid);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+
+        .timeline-container {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+
+        .timeline-container.left {
+            left: 0;
+        }
+
+        .timeline-container.right {
+            left: 50%;
+        }
+
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            right: -17px;
+            background-color: var(--grid-white);
+            border: 4px solid var(--glitch-green);
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .timeline-container.right::after {
+            left: -16px;
+        }
+
+        .timeline-content {
+            padding: 20px 30px;
+            background-color: var(--grid-white);
+            position: relative;
+            border-radius: 6px;
+            border: 2px solid var(--deep-grid);
+        }
+
     </style>
-</head>
-<body class="bg-[var(--bg-color)] text-[var(--text-color)]">
 
-    <!-- HEADER -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[var(--border-color)]">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#home" class="flex items-center gap-3">
-                <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" stroke="#212529" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/> <path d="M24 29C26.7614 29 29 26.7614 29 24C29 21.2386 26.7614 19 24 19C21.2386 19 19 21.2386 19 24C19 26.7614 21.2386 29 24 29Z" fill="#C7F441" stroke="#C7F441" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </svg>
-                <span class="text-2xl font-black tracking-wide font-primary text-gray-900">LOOPIN</span>
-            </a>
-            <nav class="hidden md:flex items-center gap-6">
-                <a href="#mechanics" class="font-mono text-gray-600 hover:text-black transition-colors">Mechanics</a>
-                <a href="#protocol" class="font-mono text-gray-600 hover:text-black transition-colors">Protocol</a>
-                <a href="#tech" class="font-mono text-gray-600 hover:text-black transition-colors">Tech</a>
-            </nav>
-            <div class="hidden md:block">
-                 <a href="#community" class="relative inline-block px-6 py-2 font-bold rounded-md text-black transition-all duration-300 bg-[var(--accent-color)] hover:bg-[#b0d635] font-mono tracking-wide overflow-hidden">
-                    <span class="relative z-10">JOIN WAITLIST</span>
-                </a>
-            </div>
-            <div class="md:hidden">
-                <button id="menu-toggle" class="text-gray-900">
-                    <svg id="menu-open-icon" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
-                    <svg id="menu-close-icon" class="w-6 h-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                </button>
-            </div>
-        </div>
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-[var(--border-color)]">
-            <nav class="flex flex-col items-center px-6 py-4 gap-4">
-                <a href="#mechanics" class="font-mono text-gray-600 hover:text-black transition-colors">Mechanics</a>
-                <a href="#protocol" class="font-mono text-gray-600 hover:text-black transition-colors">Protocol</a>
-                <a href="#tech" class="font-mono text-gray-600 hover:text-black transition-colors">Tech</a>
-                <a href="#community" class="w-full text-center px-6 py-2 font-bold rounded-md text-black transition-all duration-300 bg-[var(--accent-color)] hover:bg-[#b0d635] font-mono tracking-wide">
-                    JOIN WAITLIST
-                </a>
+    <!-- 4. Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'glitch-green': '#C7F441',
+                        'deep-grid': '#1A1A1A',
+                        'ghosted': '#EAEAEA',
+                        'grid-white': '#FFFFFF',
+                        'alert-blue': '#007BFF',
+                        'error-red': '#FF4136',
+                    },
+                    fontFamily: {
+                        heading: ['Chakra Petch', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    borderRadius: {
+                        'chunky': '12px',
+                    },
+                    boxShadow: {
+                        'glow-green': '0 0 15px 5px rgba(199, 244, 65, 0.5)',
+                        'glow-green-sm': '0 0 8px 2px rgba(199, 244, 65, 0.4)',
+                    }
+                },
+            },
+        };
+    </script>
+</head>
+<body class="bg-grid-white text-deep-grid font-body antialiased">
+
+    <!-- Canvas for Dynamic Background -->
+    <canvas id="hero-canvas"></canvas>
+
+    <!-- Header -->
+    <header class="absolute top-0 left-0 right-0 z-10">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <nav class="flex h-20 items-center justify-between">
+                <a href="#" class="text-2xl font-heading font-bold">LOOPIN</a>
+                <div class="flex items-center gap-4">
+                    <a href="https://www.loopin.fit/demo" class="btn-secondary">DEMO</a>
+                    <a href="https://github.com/chandan989/Loopin" class="btn-secondary">SOURCE</a>
+                    <a href="#join" class="btn-primary">
+                        JOIN THE GRID
+                    </a>
+                </div>
             </nav>
         </div>
     </header>
 
-    <main class="pt-20">
-        <!-- Home/Hero Section -->
-        <section id="home" class="py-16 md:py-24 overflow-hidden">
-            <div class="container mx-auto px-6">
-                <div class="grid md:grid-cols-2 gap-12 items-center">
-                   <div class="text-left scroll-animate">
-                        <h1 class="text-6xl md:text-8xl font-black tracking-tighter mb-4 font-primary uppercase">
-                            <span class="block text-gray-900">Your World.</span>
-                            <span class="block" style="-webkit-text-stroke: 2px var(--text-color); color: transparent;">Your Empire.</span>
-                        </h1>
-                        <p class="max-w-xl text-lg text-gray-600 mb-8 font-primary">
-                            Transform real-world movement into captured territory. Compete in winner-take-all sessions where the largest area wins the prize pool, powered by the Stacks blockchain.
-                        </p>
-                        <a href="#community" class="inline-block px-8 py-3 font-bold text-base rounded-md text-black transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-opacity-50 bg-[var(--accent-color)] hover:bg-[#b0d635] shadow-lg shadow-lime-500/10 hover:shadow-xl hover:shadow-lime-500/30 transform hover:-translate-y-1 font-mono tracking-wide">
-                            JOIN WAITLIST
-                        </a>
-                    </div>
-                    <div class="hidden md:block scroll-animate" style="transition-delay: 200ms;">
-                        <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto max-w-lg mx-auto">
-                            <defs>
-                                <style>
-                                    @keyframes pulse { 0%, 100% { transform: scale(0.95); } 50% { transform: scale(1.05); } }
-                                    @keyframes dash { to { stroke-dashoffset: -1000; } }
-                                    .pulse-node { animation: pulse 4s ease-in-out infinite; }
-                                    .path-anim { stroke-dasharray: 10 5; animation: dash 40s linear infinite; }
-                                </style>
-                            </defs>
-                            <path d="M0 50 H400 M0 100 H400 M0 150 H400 M50 0 V200 M100 0 V200 M150 0 V200 M200 0 V200 M250 0 V200 M300 0 V200 M350 0 V200" stroke="var(--border-color)" stroke-width="0.5" />
-                            <circle cx="200" cy="100" r="10" fill="var(--accent-color)" class="pulse-node" />
-                            <circle cx="200" cy="100" r="20" fill="var(--accent-color)" opacity="0.3" class="pulse-node" style="animation-delay: 0.2s"/>
-                            <g stroke="var(--text-color)" stroke-width="1" fill="none" class="path-anim">
-                                <path d="M200,100 Q250,50 300,80 T380,120" />
-                                <path d="M200,100 C100,20 50,150 20,130" />
-                                <path d="M200,100 C280,180 150,190 100,150 C50,110 120,30 200,100" />
-                            </g>
-                            <g fill="var(--text-color)">
-                                <circle cx="300" cy="80" r="4" />
-                                <circle cx="380" cy="120" r="4" />
-                                <circle cx="20" cy="130" r="4" />
-                                <circle cx="100" cy="150" r="4" />
-                            </g>
-                        </svg>
-                    </div>
+    <main>
+        <!-- Hero Section -->
+        <section class="relative min-h-screen flex items-center justify-center overflow-hidden py-32 px-4 sm:px-6 lg:px-8">
+            <div class="relative z-10 max-w-3xl text-center">
+                <div class="inline-block bg-transparent border-2 border-glitch-green rounded-chunky px-4 py-2 mb-8 shadow-glow-green-sm">
+                    <span class="text-glitch-green font-mono font-bold">BETA LIVE</span>
                 </div>
-            </div>
-        </section>
-
-        <!-- Mechanics Section -->
-        <section id="mechanics" class="py-16 md:py-24 bg-white overflow-hidden">
-            <div class="container mx-auto px-6">
-                <div class="scroll-animate">
-                    <h2 class="text-4xl font-bold font-primary uppercase mb-1 text-gray-900">Core Mechanics</h2>
-                    <div class="w-24 h-1 bg-[var(--accent-color)] mb-8"></div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="scroll-animate" style="transition-delay: 100ms;">
-                        <div class="bg-[var(--card-bg-color)] p-6 border border-[var(--border-color)] rounded-lg h-full group relative overflow-hidden">
-                            <div class="absolute -inset-0.5 bg-[var(--accent-color)] rounded-lg blur-xl opacity-0 group-hover:opacity-25 transition duration-300"></div>
-                            <div class="relative">
-                                <h3 class="text-xl font-bold text-gray-900 mb-3 font-mono">GPS_TO_TERRITORY</h3>
-                                <p class="text-[var(--muted-text-color)] leading-relaxed font-primary">Your physical movements draw a path on the map. Close the loop to capture the enclosed area and add it to your score for the current game session.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="scroll-animate" style="transition-delay: 200ms;">
-                        <div class="bg-[var(--card-bg-color)] p-6 border border-[var(--border-color)] rounded-lg h-full group relative overflow-hidden">
-                            <div class="absolute -inset-0.5 bg-[var(--accent-color)] rounded-lg blur-xl opacity-0 group-hover:opacity-25 transition duration-300"></div>
-                             <div class="relative">
-                                <h3 class="text-xl font-bold text-gray-900 mb-3 font-mono">WEB3_POWERED_ECONOMY</h3>
-                                <p class="text-[var(--muted-text-color)] leading-relaxed font-primary">Built on Stacks, the game features a transparent economy. Entry fees contribute to a smart contract-managed prize pool, and power-ups are purchased on-chain.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="scroll-animate" style="transition-delay: 300ms;">
-                        <div class="bg-[var(--card-bg-color)] p-6 border border-[var(--border-color)] rounded-lg h-full group relative overflow-hidden">
-                            <div class="absolute -inset-0.5 bg-[var(--accent-color)] rounded-lg blur-xl opacity-0 group-hover:opacity-25 transition duration-300"></div>
-                             <div class="relative">
-                                <h3 class="text-xl font-bold text-gray-900 mb-3 font-mono">STRATEGIC_GAMEPLAY</h3>
-                                <p class="text-[var(--muted-text-color)] leading-relaxed font-primary">Expand your captured area. Defend your trails from rivals and use power-ups strategically to control the largest territory by the end of the game.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Protocol Section -->
-        <section id="protocol" class="py-16 md:py-24 overflow-hidden">
-             <div class="container mx-auto px-6">
-                <div class="scroll-animate">
-                    <h2 class="text-4xl font-bold font-primary uppercase mb-1 text-gray-900">Deployment Protocol</h2>
-                    <div class="w-24 h-1 bg-[var(--accent-color)] mb-8"></div>
-                </div>
-                <div class="space-y-6">
-                    <div class="scroll-animate flex items-center gap-6" style="transition-delay: 100ms;"><div class="w-12 h-12 flex items-center justify-center border-2 border-[var(--text-color)] text-[var(--text-color)] font-bold text-lg font-mono flex-shrink-0">01</div><div><h3 class="text-xl font-bold font-mono">PAY & SYNC</h3><p class="text-[var(--muted-text-color)] font-primary">Pay the entry fee and connect your Stacks wallet to join a game.</p></div></div>
-                    <div class="scroll-animate flex items-center gap-6" style="transition-delay: 200ms;"><div class="w-12 h-12 flex items-center justify-center border-2 border-[var(--text-color)] text-[var(--text-color)] font-bold text-lg font-mono flex-shrink-0">02</div><div><h3 class="text-xl font-bold font-mono">TRACE & LOOP</h3><p class="text-[var(--muted-text-color)] font-primary">Initiate a session and move. Your path is traced in real-time.</p></div></div>
-                    <div class="scroll-animate flex items-center gap-6" style="transition-delay: 300ms;"><div class="w-12 h-12 flex items-center justify-center border-2 border-[var(--text-color)] text-[var(--text-color)] font-bold text-lg font-mono flex-shrink-0">03</div><div><h3 class="text-xl font-bold font-mono">CAPTURE TERRITORY</h3><p class="text-[var(--muted-text-color)] font-primary">Return to any point on your trail to capture the enclosed area.</p></div></div>
-                    <div class="scroll-animate flex items-center gap-6" style="transition-delay: 400ms;"><div class="w-12 h-12 flex items-center justify-center border-2 border-[var(--text-color)] text-[var(--text-color)] font-bold text-lg font-mono flex-shrink-0">04</div><div><h3 class="text-xl font-bold font-mono">WIN THE PRIZE</h3><p class="text-[var(--muted-text-color)] font-primary">Use power-ups, cut off rivals, and hold the largest area when the timer runs out to win the STX prize pool.</p></div></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Tech Section -->
-        <section id="tech" class="py-16 md:py-24 bg-white overflow-hidden">
-            <div class="container mx-auto px-6">
-                <div class="scroll-animate">
-                    <h2 class="text-4xl font-bold font-primary uppercase mb-1 text-gray-900">System Architecture</h2>
-                    <div class="w-24 h-1 bg-[var(--accent-color)] mb-8"></div>
-                    <p class="max-w-3xl text-gray-600 mb-8 font-primary text-lg">
-                      Loopin is built on <span class="font-bold text-black">Stacks</span> to power its game economy, secured by <span class="font-bold text-black">Bitcoin</span>. This allows for transparent, smart contract-based entry fees, prize distribution, and in-game purchases, ensuring fairness and decentralization.
-                    </p>
-                    <a href="https://www.stacks.co" target="_blank" rel="noopener noreferrer" class="inline-block px-8 py-3 font-bold rounded-md bg-[var(--accent-color)] text-black hover:bg-[#b0d635] transition-colors font-mono tracking-wide">
-                        READ STACKS DOCS
+                <h1 class="glitch-hover text-5xl sm:text-7xl md:text-8xl" data-text="REALITY AMPLIFIED.">
+                    REALITY AMPLIFIED.
+                </h1>
+                <p class="mt-8 text-lg md:text-xl max-w-2xl mx-auto">
+                    The membrane between digital and physical reality has shattered. You are a Grid Runner. Your movement creates power. Your territory translates to victory.
+                </p>
+                <div class="mt-12 flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="https://www.loopin.fit/demo" class="btn-primary">
+                        VIEW DEMO
+                    </a>
+                    <a href="#protocol" class="btn-secondary">
+                        READ THE PROTOCOL
                     </a>
                 </div>
             </div>
         </section>
 
-        <!-- Community Section -->
-        <section id="community" class="py-16 md:py-24 overflow-hidden">
-            <div class="container mx-auto px-6">
-                 <div class="scroll-animate">
-                    <h2 class="text-4xl font-bold font-primary uppercase mb-1 text-gray-900">Join Genesis Loop</h2>
-                    <div class="w-24 h-1 bg-[var(--accent-color)] mb-8"></div>
-                    <p class="max-w-2xl mb-8 font-primary text-[var(--muted-text-color)]">Be first to be notified when Loopin goes live. Get early access, exclusive rewards, and a place in our founding community.</p>
-                    <form class="max-w-md flex flex-col sm:flex-row gap-0 relative" onsubmit="return false;">
-                        <input
-                            type="email"
-                            placeholder="your.email@protocol.xyz"
-                            class="w-full px-5 py-3 rounded-l-md rounded-r-none bg-white text-black placeholder-gray-400 outline-none border-2 border-gray-300 focus:border-[var(--accent-color)] transition-all focus:ring-2 focus:ring-[var(--accent-color)]/50 font-mono"
-                            required
-                        />
-                        <button type="submit" class="px-6 py-3 font-bold rounded-r-md bg-[var(--accent-color)] text-black hover:bg-[#b0d635] transition-all duration-300 focus:outline-none whitespace-nowrap font-mono border-2 border-l-0 border-[var(--accent-color)] hover:border-[#b0d635]">
-                            SUBMIT
-                        </button>
-                    </form>
+        <!-- Protocol Section -->
+        <section id="protocol" class="py-24 relative z-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-4xl md:text-5xl">THE PROTOCOL</h2>
+                    <p class="mt-4 text-lg max-w-xl mx-auto">
+                        The game is session-based. Players pay an entry fee in STX to join, which contributes to a prize pool. The winner at the end of the session takes the prize.
+                    </p>
+                </div>
+
+                <!-- Feature Cards -->
+                <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                    <!-- Card 1 -->
+                    <div class="card">
+                        <div class="p-8">
+                            <h3 class="mt-6 text-2xl">PHASE ONE: TRAIL EMISSION</h3>
+                            <p class="mt-4 text-base opacity-90">
+                                Your physical presence bleeds data. As you move, your neural interface generates a Quantum Trail—a cryptographically signed path visible to all Grid Runners.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="card">
+                        <div class="p-8">
+                            <h3 class="mt-6 text-2xl">PHASE TWO: TERRITORIAL CAPTURE</h3>
+                            <p class="mt-4 text-base opacity-90">
+                                Complete the circuit. Return to any point on your own trail to close the loop, initiating a Territory Capture Protocol. The enclosed area becomes yours.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="card">
+                        <div class="p-8">
+                            <h3 class="mt-6 text-2xl">PHASE THREE: INTERFERENCE WARFARE</h3>
+                            <p class="mt-4 text-base opacity-90">
+                                You're not alone. Intersect an opponent's active trail to cut it, collapsing their loop potential. Territory capture is zero-sum.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="bg-white border-t border-[var(--border-color)]">
-        <div class="container mx-auto px-6 py-8">
-            <div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-6">
-                 <div class="flex items-center gap-3">
-                    <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" stroke="#212529" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/> <path d="M24 29C26.7614 29 29 26.7614 29 24C29 21.2386 26.7614 19 24 19C21.2386 19 19 21.2386 19 24C19 26.7614 21.2386 29 24 29Z" fill="#C7F441" stroke="#C7F441" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </svg>
-                    <span class="text-xl font-black tracking-wide font-primary text-gray-900">LOOPIN</span>
+        <!-- System Architecture Section -->
+        <section class="py-24 relative z-10">
+            <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-4xl md:text-5xl">SYSTEM ARCHITECTURE</h2>
+                    <p class="mt-4 text-lg max-w-xl mx-auto">
+                        Built on a modern, decentralized stack for a seamless and secure experience.
+                    </p>
                 </div>
-                <p class="font-mono text-sm text-[var(--muted-text-color)]">&copy; 2025 Loopin Protocol. All rights reserved.</p>
-                <div class="flex gap-4 font-mono text-sm text-gray-600">
-                    <a href="#" class="hover:text-black">Twitter</a>
-                    <a href="#" class="hover:text-black">Discord</a>
-                    <a href="#" class="hover:text-black">Privacy</a>
+
+                <div class="mt-12 p-8 bg-deep-grid text-grid-white rounded-chunky font-mono text-sm md:text-base">
+                    <p>&gt; INTERFACE: <span class="text-glitch-green">React + Vite + TypeScript</span></p>
+                    <p>&gt; CORE LOGIC: <span class="text-glitch-green">FastAPI (Python)</span></p>
+                    <p>&gt; IDENTITY: <span class="text-glitch-green">Supabase Auth</span></p>
+                    <p>&gt; WEB3 LAYER: <span class="text-glitch-green">Stacks Blockchain</span></p>
+                    <p>&gt; STATE ARCHIVE: <span class="text-glitch-green">PostgreSQL (PostGIS)</span></p>
+                    <p>&gt; COMMUNICATION: <span class="text-glitch-green">WebSocket</span></p>
                 </div>
             </div>
+        </section>
+
+        <!-- Operator's Manual Section -->
+        <section class="py-24 relative z-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-4xl md:text-5xl">OPERATOR'S MANUAL</h2>
+                </div>
+                <div class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="text-center">
+                        <h3 class="text-2xl">1. CONNECT WALLET</h3>
+                        <p class="mt-2">Connect your Hiro Wallet to establish your Grid Runner identity.</p>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-2xl">2. PAY ENTRY FEE</h3>
+                        <p class="mt-2">Pay an entry fee in STX to join a game session and contribute to the prize pool.</p>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-2xl">3. GENERATE TRAIL</h3>
+                        <p class="mt-2">Begin moving to emit your quantum trail, visible to other runners.</p>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-2xl">4. CAPTURE TERRITORY</h3>
+                        <p class="mt-2">Return to any point on your trail to form a loop and capture the enclosed area.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Evolution Timeline Section -->
+        <section class="py-24 relative z-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl">EVOLUTION TIMELINE</h2>
+                </div>
+                <div class="timeline">
+                    <div class="timeline-container left">
+                        <div class="timeline-content">
+                            <h3 class="text-2xl">PHASE ALPHA ✅</h3>
+                            <p class="mt-2">Core gameplay loop. Stacks integration for payments. GPS trail mechanics.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-container right">
+                        <div class="timeline-content">
+                            <h3 class="text-2xl">PHASE BETA 🔄</h3>
+                            <p class="mt-2">Real-time PvP Combat, Squad Formation, Global Leaderboards.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-container left">
+                        <div class="timeline-content">
+                            <h3 class="text-2xl">PHASE GAMMA 🔮</h3>
+                            <p class="mt-2">Bitcoin Lightning Integration, Advanced Game Modes, Mobile Native Apps.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-container right">
+                        <div class="timeline-content">
+                            <h3 class="text-2xl">PHASE OMEGA 🌟</h3>
+                            <p class="mt-2">Mainnet Deployment, Global Grid Network, Player Governance.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Form/CTA Section -->
+        <section id="join" class="py-24 relative z-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+
+                    <!-- Left Column: Form -->
+                    <div>
+                        <h2 class="text-4xl md:text-5xl">GET ON THE LIST</h2>
+                        <p class="mt-4 text-lg">
+                            The grid is expanding. Be the first to know when new nodes go live.
+                            No spam, just signals.
+                        </p>
+
+                        <form class="mt-10 space-y-6">
+                            <div>
+                                <label for="email" class="block text-sm font-bold uppercase tracking-wider">Email Address</label>
+                                <input type="email" name="email" id="email" class="input-field" placeholder="you@thegrid.com">
+                            </div>
+
+                            <button type="submit" class="btn-primary w-full">
+                                SECURE MY SPOT
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Right Column: Live Feed -->
+                    <div class="space-y-6">
+                        <h3 class="text-2xl">LIVE GRID FEED</h3>
+                        <!-- Feed Item 1: Info -->
+                        <div class="flex items-start p-4 bg-blue-50 border-l-4 border-alert-blue rounded-r-lg">
+                            <svg class="h-6 w-6 text-alert-blue mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <div>
+                                <p class="font-bold">SYSTEM INFO</p>
+                                <p class="text-sm">New node <span class="text-alert-blue font-mono">0x4F...A2</span> just went live in Sector 8B.</p>
+                            </div>
+                        </div>
+
+                        <!-- Feed Item 2: Error -->
+                        <div class="flex items-start p-4 bg-red-50 border-l-4 border-error-red rounded-r-lg">
+                             <svg class="h-6 w-6 text-error-red mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            <div>
+                                <p class="font-bold">GRID ALERT</p>
+                                <p class="text-sm">User <span class="text-error-red font-mono">//V0ID_RUNNER//</span> just severed your trail at [4G.1.88].</p>
+                            </div>
+                        </div>
+
+                        <!-- Feed Item 3: Success (Glitch Green) -->
+                        <div class="flex items-start p-4 bg-green-50 border-l-4 border-glitch-green rounded-r-lg">
+                             <svg class="h-6 w-6 text-glitch-green mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            <div>
+                                <p class="font-bold">TRAIL CAPTURED</p>
+                                <p class="text-sm">You successfully looped <span class="text-deep-grid font-mono">1.4 STX</span> from Sector 2A.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 text-deep-grid relative z-10">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-2xl font-heading">LOOPIN</p>
+            <div class="flex justify-center gap-4 mt-4">
+                <a href="https://www.loopin.fit" class="text-sm opacity-70 hover:opacity-100">COMMAND CENTER</a>
+                <a href="https://github.com/chandan989/Loopin" class="text-sm opacity-70 hover:opacity-100">SOURCE VAULT</a>
+            </div>
+            <p class="mt-4 text-sm opacity-70">
+                &copy; 2025 LOOPIN PROTOCOL. ALL RIGHTS RESERVED.
+            </p>
         </div>
     </footer>
 
+    <!-- 5. Global Styles & UI Element Definitions -->
+    <style>
+        /* Define UI Elements using Tailwind's @apply */
+        .btn-primary {
+            @apply inline-block px-8 py-4 bg-glitch-green text-deep-grid font-bold font-body rounded-chunky uppercase tracking-wider
+                   transform transition-transform duration-200 ease-in-out
+                   hover:scale-105 hover:shadow-glow-green-sm active:scale-100;
+        }
+
+        .btn-secondary {
+            @apply inline-block px-8 py-3.5 bg-transparent border-2 border-deep-grid text-deep-grid font-bold font-body rounded-chunky uppercase tracking-wider
+                   transform transition-all duration-200 ease-in-out
+                   hover:scale-105 hover:bg-deep-grid hover:text-grid-white hover:shadow-glow-green-sm active:scale-100;
+        }
+
+        .input-field {
+            @apply w-full px-5 py-4 bg-transparent border-2 border-ghosted rounded-chunky text-deep-grid font-body
+                   placeholder:text-deep-grid placeholder:opacity-40
+                   transition-all duration-200 ease-in-out
+                   focus:outline-none focus:border-glitch-green focus:ring-4 focus:ring-glitch-green focus:ring-opacity-30 focus:shadow-glow-green-sm;
+        }
+
+        .card {
+            @apply relative bg-transparent border border-ghosted rounded-lg transition-transform duration-300 ease-out hover:-translate-y-2;
+            /* The 4px Glitch Green left border */
+            box-shadow: -4px 0 0 0 var(--glitch-green) inset;
+        }
+    </style>
+
+    <!-- 6. JavaScript for Dynamic Elements -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Mobile Menu Toggle
-            const menuToggle = document.getElementById('menu-toggle');
-            const mobileMenu = document.getElementById('mobile-menu');
-            const openIcon = document.getElementById('menu-open-icon');
-            const closeIcon = document.getElementById('menu-close-icon');
 
-            if (menuToggle && mobileMenu && openIcon && closeIcon) {
-                menuToggle.addEventListener('click', () => {
-                    mobileMenu.classList.toggle('hidden');
-                    openIcon.classList.toggle('hidden');
-                    closeIcon.classList.toggle('hidden');
-                });
-
-                // Close menu when a link is clicked
-                mobileMenu.addEventListener('click', (event) => {
-                    if (event.target.tagName === 'A') {
-                        mobileMenu.classList.add('hidden');
-                        openIcon.classList.remove('hidden');
-                        closeIcon.classList.add('hidden');
+            // --- Button "Pop" on Click ---
+            const buttons = document.querySelectorAll('.btn-primary, .btn-secondary');
+            buttons.forEach(button => {
+                button.addEventListener('mousedown', () => {
+                    if (!button.disabled) {
+                        button.classList.add('scale-95'); // Add "pop"
                     }
                 });
+                button.addEventListener('mouseup', () => {
+                    button.classList.remove('scale-95'); // Remove "pop"
+                });
+                button.addEventListener('mouseleave', () => {
+                    button.classList.remove('scale-95'); // Ensure it resets if mouse leaves while pressed
+                });
+            });
+
+            // --- Hero Canvas Animation (Glitchy Trails) ---
+            const canvas = document.getElementById('hero-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height, trails;
+            const trailCount = 50;
+            const trailLength = 20;
+
+            function initCanvas() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                trails = [];
+                for (let i = 0; i < trailCount; i++) {
+                    trails.push(new Trail());
+                }
             }
 
-            // Scroll Animations
-            const animatedElements = document.querySelectorAll('.scroll-animate');
-            const observer = new IntersectionObserver(
-                (entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('is-visible');
-                            observer.unobserve(entry.target);
-                        }
-                    });
-                },
-                { threshold: 0.1 }
-            );
+            class Trail {
+                constructor() {
+                    this.reset();
+                }
 
-            animatedElements.forEach(el => {
-                observer.observe(el);
-            });
+                reset() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.speed = Math.random() * 2 + 1;
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.vx = Math.cos(this.angle) * this.speed;
+                    this.vy = Math.sin(this.angle) * this.speed;
+                    this.life = Math.random() * 100 + 50;
+                    this.history = [];
+                }
+
+                update() {
+                    this.life--;
+                    if (this.life <= 0) {
+                        this.reset();
+                    }
+
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Wall bounce
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                    // Add to history
+                    this.history.push({ x: this.x, y: this.y });
+                    if (this.history.length > trailLength) {
+                        this.history.shift();
+                    }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    for (let i = 0; i < this.history.length; i++) {
+                        const point = this.history[i];
+                        const alpha = (i / this.history.length) * 0.5; // Fade out
+                        ctx.fillStyle = \`rgba(199, 244, 65, \${alpha})\`;
+                        ctx.fillRect(point.x, point.y, 2, 2); // Use squares for a "digital" feel
+                    }
+                    ctx.closePath();
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height); // Clear canvas
+
+                trails.forEach(trail => {
+                    trail.update();
+                    trail.draw();
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            // Initialize and resize
+            initCanvas();
+            animate();
+            window.addEventListener('resize', initCanvas);
         });
     </script>
+
 </body>
 </html>

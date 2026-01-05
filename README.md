@@ -39,6 +39,7 @@ Your physical presence bleeds data. As you move through the world, your neural i
 **Loop Formation**: Complete the circuit. Return to any point on your own trail to close the loop, initiating a **Territory Capture Protocol**. The enclosed area becomes yours for the duration of the game.
 
 Each captured zone is:
+
 - **Session-Persistent**: Recorded for the duration of the game session.
 - **Strategic**: Control key sectors to dominate the grid and expand your area.
 
@@ -51,9 +52,39 @@ You're not alone on the grid. Other runners are creating their own trails, captu
 ### 🔹 PHASE FOUR: POWER-UPS & PAYMENTS
 
 The Web3 integration is focused on the game's economy. At **Sync Nodes** that appear throughout your city, you can:
+
 - Purchase tactical upgrades (Power-ups) using STX.
 - View the current prize pool.
 - Manage your wallet for entry fees and potential winnings.
+
+---
+
+## 🏦 THE ECOSYSTEM
+
+The Grid is not just a game; it's a thriving digital economy overlaid on the physical world. We've built a sustainable revenue model that benefits everyone in the ecosystem—players, businesses, and the platform.
+
+### 🔹 PARTNER CHECKPOINTS (B2B)
+
+Local businesses (cafes, retail stores, gyms) can join the Loopin network as **Partner Checkpoints**.
+
+- **The Value**: Businesses pay to become designated checkpoints or "Sync Nodes" on the grid.
+- **The Result**: This drives physical footfall to their locations as players visit these nodes to collect items, recharge, or secure their trails.
+- **The Cycle**: A portion of this B2B revenue goes directly into the player prize pool.
+
+### 🔹 GRID ADS
+
+The map interface itself is valuable real estate.
+
+- **Hyped Zones**: Brands can sponsor specific territories or display non-intrusive ads within the tactical interface.
+- **Revenue Sharing**: Advertising revenue is not hoarded; it is shared with the community to increase the stakes of every session.
+
+### 🔹 SUSTAINABLE REWARDS
+
+Unlike traditional "move-to-earn" models that rely on inflationary tokenomics, Loopin is built on **Real Yield**.
+
+- **No Out-of-Pocket Payouts**: We don't pay players from our own treasury or by printing tokens.
+- **Profit Redistribution**: The prize pool is fueled by Entry Fees + B2B Revenue + Ad Revenue.
+- **The Flywheel**: more players → more valuable B2B spots → larger prize pools → more players.
 
 ---
 
@@ -175,28 +206,28 @@ npm run dev
 
 ### 🔻 TERRITORIAL OPERATIONS
 
-4. **🏃 TRAIL GENERATION**
+1. **🏃 TRAIL GENERATION**
    - Begin movement to emit your quantum trail.
    - The trail persists for the duration of the game session.
 
-5. **➰ LOOP FORMATION**
+2. **➰ LOOP FORMATION**
    - Return to any previous point on your trail.
    - The system automatically detects loop closure and calculates the captured area, adding it to your score.
 
 ### 🔻 TACTICAL WARFARE
 
-6. **⚔️ TRAIL SEVERING**
+1. **⚔️ TRAIL SEVERING**
    - Cross an opponent's trail to cut it.
    - Severed trails collapse, preventing loop formation.
 
-7. **🛡️ DEFENSIVE UPGRADES (POWER-UPS)**
+2. **🛡️ DEFENSIVE UPGRADES (POWER-UPS)**
    - **Shield (2 STX)**: One-time protection against trail severing.
    - **Stealth (5 STX)**: Temporary trail invisibility (60 seconds).
    - Upgrades are purchased with STX and are consumable.
 
 ### 🔻 REWARD ACQUISITION
 
-8. **🏆 END OF GAME**
+1. **🏆 END OF GAME**
    - The game session ends after a predetermined time.
    - The player with the largest total captured area is declared the winner.
    - The prize pool (funded by entry fees) is automatically transferred to the winner's wallet.
@@ -208,20 +239,24 @@ npm run dev
 <div align="center">
 
 ### **⚡ PHASE ALPHA: FOUNDATION** ✅
+
 *Core gameplay loop. Stacks integration for payments. GPS trail mechanics.*
 
 ### **🔥 PHASE BETA: WARFARE** 🔄
+
 - [ ] **Real-time PvP Combat**: Live trail warfare with collision detection.
 - [ ] **Squad Formation**: Team-based territorial conquest.
 - [ ] **Global Leaderboards**: Rankings by area captured and games won.
 - [ ] **Dynamic Sync Nodes**: Rotating node locations for strategic gameplay.
 
 ### **🌐 PHASE GAMMA: EXPANSION** 🔮
+
 - [ ] **Bitcoin Lightning Integration**: Instant micropayments for upgrades.
 - [ ] **Advanced Game Modes**: New rulesets, larger maps, and bigger tournaments.
 - [ ] **Mobile Native Apps**: iOS and Android grid interfaces.
 
 ### **🏆 PHASE OMEGA: ASCENSION** 🌟
+
 - [ ] **Mainnet Deployment**: Full security audit and Stacks mainnet launch.
 - [ ] **Global Grid Network**: Synchronized worldwide gameplay.
 - [ ] **Player Governance**: DAO voting for grid rule modifications.

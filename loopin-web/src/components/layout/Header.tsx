@@ -1,0 +1,237 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Menu, X, Wallet, LogOut, User, ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { connect, isConnected, disconnect, getLocalStorage } from '@stacks/connect';
+import { Button } from '@/components/ui/button';
+
+interface HeaderProps {
+  className?: string;
+}
+
+export const Header: React.FC<HeaderProps> = ({ className }) => {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isScrolled, setIsScrolled] = React.useState(false);
+  const [isSignedIn, setIsSignedIn] = React.useState(false);
+  const [userAddress, setUserAddress] = React.useState<string | null>(null);
+
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    if (isConnected()) {
+      const storageData = getLocalStorage() as any;
+      if (storageData && storageData.addresses && storageData.addresses.stx && storageData.addresses.stx.length > 0) {
+        setIsSignedIn(true);
+        // Assuming the first address is the active one
+        setUserAddress(storageData.addresses.stx[0].address);
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleConnect = async () => {
+    try {
+      const authOptions = {
+        appDetails: {
+          name: "Loopin",
+          icon: window.location.origin + "/logo.svg",
+        },
+      };
+
+      const response = await connect(authOptions as any);
+      if (response && (response as any).addresses && (response as any).addresses.stx && (response as any).addresses.stx.length > 0) {
+        setIsSignedIn(true);
+        setUserAddress((response as any).addresses.stx[0].address);
+        window.location.href = '/dashboard';
+      }
+    } catch (e) {
+      console.error("Connect error:", e);
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    setIsSignedIn(false);
+    setUserAddress(null);
+    window.location.reload();
+  };
+
+  const truncateAddress = (address: string) => {
+    if (!address) return "";
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  };
+
+  const navLinks = [
+    // { href: '/', label: 'Home' },
+    ...(isSignedIn ? [{ href: '/dashboard', label: 'Dashboard' }] : []),
+    { href: '/leaderboard', label: 'Leaderboard' },
+    { href: '/how-to-play', label: 'How to Play' },
+  ];
+
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <header className={cn(
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-300 pointer-events-none",
+      className
+    )}>
+      {/* Search/Status Bar Decoration (Top Border) */}
+      <div className={cn(
+        "h-1 w-full transition-all duration-300",
+        isScrolled ? "bg-black/5" : "bg-transparent"
+      )} />
+
+      <div className={cn(
+        "transition-all duration-300 pointer-events-auto",
+        isScrolled
+          ? "bg-white/80 backdrop-blur-xl border-b border-black/5 py-2"
+          : "bg-transparent border-transparent py-4"
+      )}>
+        <div className="container mx-auto px-6">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 group">
+              <img
+                src="/logo.svg"
+                alt="Loopin"
+                className="w-10 h-10 transform group-hover:rotate-12 transition-transform duration-300"
+              />
+              <span className="font-display font-black text-2xl tracking-tighter italic">
+                LOOPIN
+              </span>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={cn(
+                    "text-xs font-bold font-display tracking-[0.2em] uppercase transition-colors relative group",
+                    isActive(link.href)
+                      ? "text-black"
+                      : "text-gray-400 hover:text-black"
+                  )}
+                >
+                  {link.label}
+                  <span className={cn(
+                    "absolute -bottom-1 left-0 w-full h-[2px] bg-[#D4FF00] transform origin-left transition-transform duration-300",
+                    isActive(link.href) ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  )} />
+                </Link>
+              ))}
+            </nav>
+
+            {/* Desktop CTA */}
+            <div className="hidden md:flex items-center gap-3">
+              {isSignedIn ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      className="bg-black hover:bg-black/80 text-white font-display font-bold tracking-widest text-xs h-10 px-6 rounded-full border-2 border-transparent hover:border-[#D4FF00] transition-all group gap-2"
+                    >
+                      <Wallet className="w-4 h-4 text-[#D4FF00]" />
+                      {truncateAddress(userAddress || "")}
+                      <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer w-full flex items-center">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleDisconnect} className="cursor-pointer text-red-600 focus:text-red-600 pointer-events-auto">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  onClick={handleConnect}
+                  className="bg-black hover:bg-black/80 text-white font-display font-bold tracking-widest text-xs h-10 px-6 rounded-full border-2 border-transparent hover:border-[#D4FF00] transition-all"
+                >
+                  <Wallet className="w-4 h-4 mr-2 text-[#D4FF00]" />
+                  CONNECT
+                </Button>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-black/5 transition-colors"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Navigation Overlay */}
+      {isMenuOpen && (
+        <div className="absolute top-full left-0 right-0 h-screen bg-white/95 backdrop-blur-xl border-t border-black/5 animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
+          <nav className="container mx-auto px-6 py-8 flex flex-col gap-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                onClick={() => setIsMenuOpen(false)}
+                className={cn(
+                  "text-3xl font-display font-black tracking-tighter uppercase transition-colors",
+                  isActive(link.href)
+                    ? "text-transparent bg-clip-text bg-gradient-to-r from-black to-gray-500"
+                    : "text-gray-300 hover:text-black"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="pt-8 border-t border-gray-100 mt-4">
+              {isSignedIn ? (
+                <Button
+                  onClick={handleDisconnect}
+                  className="w-full bg-black text-white hover:bg-black/90 font-display font-black text-lg h-14 rounded-xl"
+                >
+                  <Wallet className="w-5 h-5 mr-2 text-[#D4FF00]" />
+                  {truncateAddress(userAddress || "")}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleConnect}
+                  className="w-full bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-black text-lg h-14 rounded-xl"
+                >
+                  <Wallet className="w-5 h-5 mr-2" />
+                  CONNECT WALLET
+                </Button>
+              )}
+            </div>
+          </nav>
+        </div>
+      )}
+    </header>
+  );
+};
+
+export default Header;
