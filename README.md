@@ -1,11 +1,12 @@
-# ➰ LOOPIN ➰
+<div align="center">
+
+# LOOPIN 
 
 *Where Reality Becomes Territory. Where Movement Becomes Power.*
 
-<div align="center">
+<img src="LoopIn.png" width="400" alt="Loopin Logo">
 
 **🌐 COMMAND CENTER**: [https://www.loopin.fit](https://www.loopin.fit)  
-**📡 TACTICAL INTERFACE**: [https://www.loopin.fit/demo](https://www.loopin.fit/demo)  
 **⚙️ SOURCE VAULT**: [https://github.com/chandan989/Loopin](https://github.com/chandan989/Loopin)
 
 </div>
@@ -234,9 +235,9 @@ npm run dev
 
 ---
 
-## 🌌 EVOLUTION TIMELINE
-
 <div align="center">
+
+## 🌌 EVOLUTION TIMELINE
 
 ### **⚡ PHASE ALPHA: FOUNDATION** ✅
 
@@ -262,28 +263,12 @@ npm run dev
 - [ ] **Player Governance**: DAO voting for grid rule modifications.
 - [ ] **Cross-chain Bridges**: Expand beyond the Stacks ecosystem for payments.
 
-</div>
-
 ---
-
-## 🛠️ CONTRIBUTE TO THE GRID
-
-The grid is open-source. The grid is collaborative. The grid evolves through collective intelligence.
-
-- 🔍 **Audit the code** to understand the protocol
-- 🐛 **Report anomalies** via GitHub issues
-- 🍴 **Fork and experiment** with grid modifications
-- 💡 **Submit improvements** through pull requests
-
----
-
 ## ⚖️ LICENSE
 
 MIT License - The grid belongs to everyone and no one.
 
 ---
-
-<div align="center">
 
 ## **⚡ THE GRID AWAITS ⚡**
 
@@ -293,8 +278,7 @@ MIT License - The grid belongs to everyone and no one.
 
 **[CONNECT TO GRID](https://www.loopin.fit)** | **[VIEW PROTOCOL](https://github.com/your-username/loopin)** | **[DEPLOY NODE](https://docs.loopin.fit)**
 
-</div>
-
 ---
 
 <sub>Built on Stacks. Secured by Bitcoin. Powered by human movement. The future of territorial warfare is location-based.</sub>
+</div>
