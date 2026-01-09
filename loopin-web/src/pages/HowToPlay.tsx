@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -19,32 +18,24 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MOCK_FAQS, MOCK_POWERUPS } from '@/data/mockData';
+import { SlideUp, StaggerContainer, ScaleIn } from '@/components/animation/MotionWrapper';
 
 const HowToPlay = () => {
   const [openFaq, setOpenFaq] = React.useState<number | null>(null);
 
-  const faqs = [
-    {
-      question: 'How is territory calculated?',
-      answer: 'Territory is calculated by the area enclosed when you close a loop. The more loops you close and the bigger they are, the more territory you capture. Overlapping areas count only once.',
-    },
-    {
-      question: 'What happens if my trail gets severed?',
-      answer: 'If another player crosses your open trail, it gets severed from that point. You lose any unclosed loop progress and must start a new trail from your current position.',
-    },
-    {
-      question: 'How long do game sessions last?',
-      answer: 'Standard game sessions last 15 minutes. Special events may have different durations. The timer is displayed on the HUD.',
-    },
-    {
-      question: 'What are STX nodes / beacons?',
-      answer: 'STX beacons appear randomly. Running through a beacon adds bonus STX to your potential winnings, even if you don\'t win the session.',
-    },
-    {
-      question: 'Is GPS required at all times?',
-      answer: 'Yes. We recommend playing in open areas. Indoor or underground play is not supported due to GPS signal loss.',
-    },
-  ];
+  const faqs = MOCK_FAQS;
+  const powerUps = MOCK_POWERUPS;
+
+  const getPowerUpIcon = (id: string) => {
+    switch (id) {
+      case 'shield': return <Shield className="text-[#0047FF]" size={32} />;
+      case 'ghost': return <Eye className="text-gray-600" size={32} />;
+      case 'sever': return <Crosshair size={16} />;
+      case 'beacon': return <Zap size={16} />;
+      default: return null;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-[#09090B] selection:bg-[#D4FF00] selection:text-black">
@@ -52,7 +43,7 @@ const HowToPlay = () => {
 
       {/* 1. HERO: The Protocol */}
       <main className="pt-32 pb-6 md:pb-16">
-        <div className="px-6 text-center md:px-24 md:mb-12 max-w-7xl mx-auto">
+        <SlideUp className="px-6 text-center md:px-24 md:mb-12 max-w-7xl mx-auto">
           <div className="inline-block px-4 py-1 rounded-full border border-black/10 bg-gray-50 text-gray-500 font-display text-xs font-bold tracking-widest mb-6">
             OPERATIONAL MANUAL v1.0
           </div>
@@ -64,7 +55,7 @@ const HowToPlay = () => {
             Loopin is not just running. It is a high-speed territory control protocol.
             Learn the rules. Control the map. Secure the bag.
           </p>
-        </div>
+        </SlideUp>
       </main>
 
       {/* 2. CORE MECHANICS: The Tactile Steps */}
@@ -73,9 +64,9 @@ const HowToPlay = () => {
         <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-gray-100 hidden md:block" />
 
         <div className="container mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-20 md:gap-12 max-w-7xl mx-auto">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-20 md:gap-12 max-w-7xl mx-auto" delay={0.2}>
             {/* Step 1: Connect */}
-            <div className="relative group">
+            <SlideUp className="relative group">
               <div className="absolute -top-12 -left-4 font-display text-[120px] font-bold text-gray-50 transition-colors group-hover:text-[#0047FF]/5 select-none z-0">
                 1
               </div>
@@ -93,10 +84,10 @@ const HowToPlay = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </SlideUp>
 
             {/* Step 2: Run & Loop */}
-            <div className="relative group md:mt-12">
+            <SlideUp className="relative group md:mt-12">
               <div className="absolute -top-12 -left-4 font-display text-[120px] font-bold text-gray-50 transition-colors group-hover:text-[#D4FF00]/10 select-none z-0">
                 2
               </div>
@@ -114,10 +105,10 @@ const HowToPlay = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </SlideUp>
 
             {/* Step 3: Win */}
-            <div className="relative group md:mt-24">
+            <SlideUp className="relative group md:mt-24">
               <div className="absolute -top-12 -left-4 font-display text-[120px] font-bold text-gray-50 transition-colors group-hover:text-[#09090B]/5 select-none z-0">
                 3
               </div>
@@ -135,8 +126,8 @@ const HowToPlay = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </SlideUp>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -148,33 +139,57 @@ const HowToPlay = () => {
             <div className="h-1 w-24 bg-[#09090B]" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            <DesignCard title="Defensive Shield" subtitle="Protects your trail from being severed by enemies. Auto-deploys on contact.">
-              <div className="mt-4 flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100">
-                <Shield className="text-[#0047FF]" size={32} />
-                <span className="font-display text-xl font-bold text-[#0047FF]">2 STX</span>
-              </div>
-            </DesignCard>
-
-            <DesignCard title="Ghost Mode" subtitle="Become invisible on the map for 60 seconds. Perfect for sneak attacks.">
-              <div className="mt-4 flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100">
-                <Eye className="text-gray-600" size={32} />
-                <span className="font-display text-xl font-bold text-gray-600">5 STX</span>
-              </div>
-            </DesignCard>
-
-            <DesignCard title="Severing Trails" subtitle="Run across an enemy's active trail to cut it. They lose all un-looped progress.">
-              <div className="mt-4 flex items-center space-x-2 text-[#FF2E00] font-bold font-display text-sm tracking-widest">
-                <Crosshair size={16} /> <span>OFFENSIVE MOVE</span>
-              </div>
-            </DesignCard>
-
-            <DesignCard title="STX Beacons" subtitle="Random high-value nodes that drop cash instantly when collected.">
-              <div className="mt-4 flex items-center space-x-2 text-[#D4FF00] font-bold font-display text-sm tracking-widest bg-black inline-block px-3 py-1 rounded">
-                <Zap size={16} /> <span>BONUS DROPS</span>
-              </div>
-            </DesignCard>
-          </div>
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto" delay={0.4}>
+            {powerUps.map((powerUp) => {
+              if (powerUp.id === 'shield') {
+                return (
+                  <ScaleIn key={powerUp.id}>
+                    <DesignCard title={powerUp.name} subtitle={powerUp.description}>
+                      <div className="mt-4 flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100">
+                        {getPowerUpIcon(powerUp.id)}
+                        <span className="font-display text-xl font-bold text-[#0047FF]">{powerUp.cost}</span>
+                      </div>
+                    </DesignCard>
+                  </ScaleIn>
+                );
+              }
+              if (powerUp.id === 'ghost') {
+                return (
+                  <ScaleIn key={powerUp.id}>
+                    <DesignCard title={powerUp.name} subtitle={powerUp.description}>
+                      <div className="mt-4 flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100">
+                        {getPowerUpIcon(powerUp.id)}
+                        <span className="font-display text-xl font-bold text-gray-600">{powerUp.cost}</span>
+                      </div>
+                    </DesignCard>
+                  </ScaleIn>
+                );
+              }
+              if (powerUp.id === 'sever') {
+                return (
+                  <ScaleIn key={powerUp.id}>
+                    <DesignCard title={powerUp.name} subtitle={powerUp.description}>
+                      <div className="mt-4 flex items-center space-x-2 text-[#FF2E00] font-bold font-display text-sm tracking-widest">
+                        {getPowerUpIcon(powerUp.id)} <span>OFFENSIVE MOVE</span>
+                      </div>
+                    </DesignCard>
+                  </ScaleIn>
+                );
+              }
+              if (powerUp.id === 'beacon') {
+                return (
+                  <ScaleIn key={powerUp.id}>
+                    <DesignCard title={powerUp.name} subtitle={powerUp.description}>
+                      <div className="mt-4 flex items-center space-x-2 text-[#D4FF00] font-bold font-display text-sm tracking-widest bg-black inline-block px-3 py-1 rounded">
+                        {getPowerUpIcon(powerUp.id)} <span>BONUS DROPS</span>
+                      </div>
+                    </DesignCard>
+                  </ScaleIn>
+                );
+              }
+              return null;
+            })}
+          </StaggerContainer>
         </div>
       </section>
 
@@ -182,11 +197,12 @@ const HowToPlay = () => {
       <section className="py-12 md:py-24 bg-white">
         <div className="container mx-auto px-6 max-w-3xl">
           <h2 className="font-display text-3xl font-bold mb-12 text-center">SYSTEM FAQ</h2>
-          <div className="space-y-4">
+          <StaggerContainer className="space-y-4" delay={0.6}>
             {faqs.map((faq, index) => (
-              <div
+              <SlideUp
                 key={index}
                 className="group border border-gray-200 rounded-2xl overflow-hidden hover:border-black transition-colors"
+                delay={0}
               >
                 <button
                   className="w-full p-6 flex items-center justify-between text-left bg-white"
@@ -206,9 +222,9 @@ const HowToPlay = () => {
                     </p>
                   </div>
                 )}
-              </div>
+              </SlideUp>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 

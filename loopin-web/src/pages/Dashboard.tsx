@@ -14,6 +14,7 @@ import {
   Zap,
   ArrowUpRight
 } from 'lucide-react';
+import { SlideUp, StaggerContainer, ScaleIn, FadeIn, GlitchText } from '@/components/animation/MotionWrapper';
 
 const Dashboard = () => {
   // Mock data
@@ -45,17 +46,19 @@ const Dashboard = () => {
           {/* Header Section */}
           <div className="mb-12 md:mb-24">
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-8 md:mb-12">
-              <div>
+              <SlideUp>
                 <h1 className="font-display text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-4 md:mb-6 uppercase">
-                  Command <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-black to-gray-400">Center</span>
+                  <GlitchText text="COMMAND" /> <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-black to-gray-400">
+                    <GlitchText text="CENTER" delay={0.3} />
+                  </span>
                 </h1>
                 <p className="text-lg md:text-xl text-gray-500 font-medium max-w-md leading-relaxed">
                   Welcome back, Runner. Your territory is waiting.
                 </p>
-              </div>
+              </SlideUp>
 
-              <div className="bg-[#09090B] p-1.5 rounded-3xl md:rounded-full w-full md:w-auto">
+              <ScaleIn delay={0.2} className="bg-[#09090B] p-1.5 rounded-3xl md:rounded-full w-full md:w-auto">
                 <div className="px-6 md:px-8 py-4 rounded-3xl md:rounded-full bg-[#09090B] border border-white/10 flex items-center justify-between md:justify-start gap-5 shadow-2xl">
                   <div className="flex items-center gap-5">
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#D4FF00] flex items-center justify-center animate-pulse shrink-0">
@@ -67,16 +70,18 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </ScaleIn>
             </div>
 
-            <div className="h-px w-full bg-gray-200" />
+            <SlideUp delay={0.3} className="h-px w-full bg-gray-200">
+              {null}
+            </SlideUp>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-16 md:mb-24">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-16 md:mb-24" delay={0.4}>
             {/* Stat 1 */}
-            <div className="group relative">
+            <SlideUp className="group relative">
               <div className="absolute inset-0 bg-gray-100 rounded-[24px] md:rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
               <div className="bg-white border border-black rounded-[24px] md:rounded-[32px] p-6 md:p-8 transition-transform duration-300 h-full flex flex-col justify-between hover:-translate-y-1">
                 <div className="flex justify-between items-start mb-4 md:mb-6">
@@ -90,10 +95,10 @@ const Dashboard = () => {
                   <div className="text-xs font-bold text-gray-400 tracking-widest uppercase">Total Area</div>
                 </div>
               </div>
-            </div>
+            </SlideUp>
 
             {/* Stat 2 */}
-            <div className="group relative">
+            <SlideUp className="group relative">
               <div className="absolute inset-0 bg-gray-100 rounded-[24px] md:rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
               <div className="bg-white border border-gray-200 group-hover:border-black rounded-[24px] md:rounded-[32px] p-6 md:p-8 transition-all duration-300 h-full flex flex-col justify-between hover:-translate-y-1">
                 <div className="flex justify-between items-start mb-4 md:mb-6">
@@ -107,10 +112,10 @@ const Dashboard = () => {
                   <div className="text-xs font-bold text-gray-400 tracking-widest uppercase">Operations</div>
                 </div>
               </div>
-            </div>
+            </SlideUp>
 
             {/* Stat 3 */}
-            <div className="group relative">
+            <SlideUp className="group relative">
               <div className="absolute inset-0 bg-gray-100 rounded-[24px] md:rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
               <div className="bg-white border border-gray-200 group-hover:border-black rounded-[24px] md:rounded-[32px] p-6 md:p-8 transition-all duration-300 h-full flex flex-col justify-between hover:-translate-y-1">
                 <div className="flex justify-between items-start mb-4 md:mb-6">
@@ -124,10 +129,10 @@ const Dashboard = () => {
                   <div className="text-xs font-bold text-gray-400 tracking-widest uppercase">Victories</div>
                 </div>
               </div>
-            </div>
+            </SlideUp>
 
             {/* Stat 4 */}
-            <div className="group relative">
+            <SlideUp className="group relative">
               <div className="absolute inset-0 bg-gray-100 rounded-[24px] md:rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
               <div className="bg-[#09090B] border border-black rounded-[24px] md:rounded-[32px] p-6 md:p-8 transition-transform duration-300 h-full flex flex-col justify-between text-white hover:-translate-y-1 shadow-2xl">
                 <div className="flex justify-between items-start mb-4 md:mb-6">
@@ -141,8 +146,8 @@ const Dashboard = () => {
                   <div className="text-xs font-bold text-gray-500 tracking-widest uppercase">Earnings</div>
                 </div>
               </div>
-            </div>
-          </div>
+            </SlideUp>
+          </StaggerContainer>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
             {/* Active Sessions */}
@@ -159,49 +164,51 @@ const Dashboard = () => {
               </div>
 
               <div className="space-y-4">
-                {activeSessions.map((session, idx) => (
-                  <div key={session.id} className="group relative">
-                    <div className="absolute inset-0 bg-black rounded-[24px] translate-y-2 translate-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <div className="relative bg-white border border-gray-200 group-hover:border-black rounded-[24px] p-5 md:p-6 transition-all duration-300 hover:-translate-y-1 hover:-translate-x-1">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3">
-                            <span className="font-display text-sm md:text-lg font-bold bg-black text-white px-3 py-1 rounded-md">{session.type}</span>
-                            <div className="flex items-center gap-2 text-gray-500 text-[10px] md:text-xs font-bold tracking-widest uppercase border-l-2 border-gray-200 pl-3 md:pl-4">
-                              <Users size={12} className="md:w-[14px] md:h-[14px]" /> {session.players} Runners
+                <StaggerContainer delay={0.6}>
+                  {activeSessions.map((session, idx) => (
+                    <SlideUp key={session.id} className="group relative block">
+                      <div className="absolute inset-0 bg-black rounded-[24px] translate-y-2 translate-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="relative bg-white border border-gray-200 group-hover:border-black rounded-[24px] p-5 md:p-6 transition-all duration-300 hover:-translate-y-1 hover:-translate-x-1">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3">
+                              <span className="font-display text-sm md:text-lg font-bold bg-black text-white px-3 py-1 rounded-md">{session.type}</span>
+                              <div className="flex items-center gap-2 text-gray-500 text-[10px] md:text-xs font-bold tracking-widest uppercase border-l-2 border-gray-200 pl-3 md:pl-4">
+                                <Users size={12} className="md:w-[14px] md:h-[14px]" /> {session.players} Runners
+                              </div>
+                              <div className="flex items-center gap-2 text-gray-500 text-[10px] md:text-xs font-bold tracking-widest uppercase border-l-2 border-gray-200 pl-3 md:pl-4">
+                                <Clock size={12} className="md:w-[14px] md:h-[14px]" /> {session.timeRemaining}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 text-gray-500 text-[10px] md:text-xs font-bold tracking-widest uppercase border-l-2 border-gray-200 pl-3 md:pl-4">
-                              <Clock size={12} className="md:w-[14px] md:h-[14px]" /> {session.timeRemaining}
+
+                            <div className="flex items-baseline gap-2">
+                              <span className="font-display text-3xl md:text-4xl font-black">{session.prizePool}</span>
+                              <span className="text-gray-400 font-medium text-sm md:text-base">Prize Pool</span>
                             </div>
                           </div>
 
-                          <div className="flex items-baseline gap-2">
-                            <span className="font-display text-3xl md:text-4xl font-black">{session.prizePool}</span>
-                            <span className="text-gray-400 font-medium text-sm md:text-base">Prize Pool</span>
-                          </div>
-                        </div>
+                          <div className="flex items-center justify-between md:justify-end gap-4 md:gap-8 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100">
+                            <div className="text-left md:text-right">
+                              <div className="text-[10px] md:text-xs font-bold text-gray-400 tracking-widest uppercase mb-1">ENTRY FEE</div>
+                              <div className="font-display text-lg md:text-xl font-bold">{session.entryFee}</div>
+                            </div>
 
-                        <div className="flex items-center justify-between md:justify-end gap-4 md:gap-8 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100">
-                          <div className="text-left md:text-right">
-                            <div className="text-[10px] md:text-xs font-bold text-gray-400 tracking-widest uppercase mb-1">ENTRY FEE</div>
-                            <div className="font-display text-lg md:text-xl font-bold">{session.entryFee}</div>
+                            <Link to={`/game/${session.id}`} className="block">
+                              <Button className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#09090B] hover:bg-[#D4FF00] hover:text-black p-0 flex items-center justify-center transition-colors">
+                                <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6 text-[#D4FF00]" />
+                              </Button>
+                            </Link>
                           </div>
-
-                          <Link to={`/game/${session.id}`} className="block">
-                            <Button className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#09090B] hover:bg-[#D4FF00] hover:text-black p-0 flex items-center justify-center transition-colors">
-                              <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6 text-[#D4FF00]" />
-                            </Button>
-                          </Link>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    </SlideUp>
+                  ))}
+                </StaggerContainer>
               </div>
             </div>
 
             {/* Recent Games Sidebar */}
-            <div className="mt-8 lg:mt-0">
+            <FadeIn delay={0.6} className="mt-8 lg:mt-0">
               <div className="flex items-center justify-between mb-8 md:mb-12">
                 <h2 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight">Logs</h2>
                 <Link to="/profile" className="text-xs font-bold text-gray-400 hover:text-black tracking-widest uppercase border-b border-gray-200 hover:border-black transition-colors pb-0.5">View All</Link>
@@ -216,9 +223,9 @@ const Dashboard = () => {
                   }}
                 />
 
-                <div className="relative z-10 space-y-3">
+                <StaggerContainer className="relative z-10 space-y-3">
                   {recentGames.map((game, index) => (
-                    <div key={index} className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center justify-between hover:border-black transition-colors duration-300">
+                    <SlideUp key={index} className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center justify-between hover:border-black transition-colors duration-300">
                       <div>
                         <div className="text-[10px] font-bold text-gray-400 tracking-widest mb-1">{game.date.toUpperCase()}</div>
                         <div className="font-display text-lg font-bold">{game.area}</div>
@@ -231,9 +238,9 @@ const Dashboard = () => {
                           <div className="text-[10px] font-bold text-[#D4FF00] bg-black px-1.5 py-0.5 rounded mt-1">+{game.prize}</div>
                         )}
                       </div>
-                    </div>
+                    </SlideUp>
                   ))}
-                </div>
+                </StaggerContainer>
 
                 <div className="mt-8 space-y-3">
                   <Link to="/leaderboard">
@@ -248,7 +255,7 @@ const Dashboard = () => {
                   </Link>
                 </div>
               </div>
-            </div>
+            </FadeIn>
           </div>
         </div>
       </main>

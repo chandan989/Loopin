@@ -10,12 +10,17 @@ import {
   ArrowLeft,
   Zap
 } from 'lucide-react';
+import { MOCK_POWERUPS } from '@/data/mockData';
+import { SlideUp, FadeIn, MaskReveal } from '@/components/animation/MotionWrapper';
 
 const GamePage = () => {
   const { sessionId } = useParams();
   const [speed, setSpeed] = React.useState(0);
   const [earnings, setEarnings] = React.useState(0);
   const [showPowerUps, setShowPowerUps] = React.useState(false);
+
+  const shieldPowerUp = MOCK_POWERUPS.find(p => p.id === 'shield');
+  const stealthPowerUp = MOCK_POWERUPS.find(p => p.id === 'ghost');
 
   // Simulate speed changes
   React.useEffect(() => {
@@ -44,21 +49,21 @@ const GamePage = () => {
   return (
     <div className="h-screen w-screen overflow-hidden bg-fog relative">
       {/* Status Bar - Top 10% */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-4 flex items-center justify-between">
+      <SlideUp className="absolute top-0 left-0 right-0 z-20 p-4 flex items-center justify-between" delay={0.2}>
         <div className="flex items-center gap-4">
           <Link to="/dashboard">
             <Button variant="ghost" size="icon-sm" className="bg-background/80 backdrop-blur-sm">
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
-          <div className="px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm">
+          <MaskReveal className="rounded-full bg-background/80 backdrop-blur-sm px-1 py-1">
             <StatusIndicator status="live" label="LIVE • 3 RUNNERS" />
-          </div>
+          </MaskReveal>
         </div>
         <div className="px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm">
           <SignalStrength strength="strong" />
         </div>
-      </div>
+      </SlideUp>
 
       {/* Map Viewport - 60% */}
       <div className="absolute inset-0" style={{ bottom: '30vh' }}>
@@ -125,7 +130,7 @@ const GamePage = () => {
       <ActionDeck>
         <ActionDeckContent>
           {/* Primary Stats */}
-          <div className="flex items-end justify-center gap-12 mb-6">
+          <SlideUp className="flex items-end justify-center gap-12 mb-6" delay={0.4}>
             <StatDisplay
               value={speed.toFixed(1)}
               label="km/h"
@@ -137,10 +142,10 @@ const GamePage = () => {
               label="STX Earned"
               variant="crypto"
             />
-          </div>
+          </SlideUp>
 
           {/* Power-ups */}
-          <div className="flex items-center justify-center gap-3 mb-6">
+          <FadeIn className="flex items-center justify-center gap-3 mb-6" delay={0.6}>
             <Button
               variant="secondary"
               size="sm"
@@ -153,7 +158,7 @@ const GamePage = () => {
               <Zap className="w-4 h-4 text-volt" />
               <span className="font-medium">No active power-ups</span>
             </div>
-          </div>
+          </FadeIn>
 
           {/* Slide to End */}
           <SlideToEngage
@@ -172,41 +177,45 @@ const GamePage = () => {
             </h3>
 
             <div className="space-y-3">
-              <button
-                className="w-full p-4 rounded-md border-2 border-border hover:border-success transition-colors text-left"
-                onClick={() => handlePurchasePowerUp('shield')}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-md bg-success/10 flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-success" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold">Shield</div>
-                    <div className="text-sm text-muted-foreground">
-                      One-time trail protection from severing
+              {shieldPowerUp && (
+                <button
+                  className="w-full p-4 rounded-md border-2 border-border hover:border-success transition-colors text-left"
+                  onClick={() => handlePurchasePowerUp('shield')}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-md bg-success/10 flex items-center justify-center">
+                      <Shield className="w-6 h-6 text-success" />
                     </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">{shieldPowerUp.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {shieldPowerUp.description}
+                      </div>
+                    </div>
+                    <div className="font-display font-bold text-crypto">{shieldPowerUp.cost}</div>
                   </div>
-                  <div className="font-display font-bold text-crypto">2 STX</div>
-                </div>
-              </button>
+                </button>
+              )}
 
-              <button
-                className="w-full p-4 rounded-md border-2 border-border hover:border-crypto transition-colors text-left"
-                onClick={() => handlePurchasePowerUp('stealth')}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-md bg-crypto/10 flex items-center justify-center">
-                    <Eye className="w-6 h-6 text-crypto" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold">Stealth</div>
-                    <div className="text-sm text-muted-foreground">
-                      60 seconds of trail invisibility
+              {stealthPowerUp && (
+                <button
+                  className="w-full p-4 rounded-md border-2 border-border hover:border-crypto transition-colors text-left"
+                  onClick={() => handlePurchasePowerUp('stealth')}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-md bg-crypto/10 flex items-center justify-center">
+                      <Eye className="w-6 h-6 text-crypto" />
                     </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">{stealthPowerUp.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {stealthPowerUp.description}
+                      </div>
+                    </div>
+                    <div className="font-display font-bold text-crypto">{stealthPowerUp.cost}</div>
                   </div>
-                  <div className="font-display font-bold text-crypto">5 STX</div>
-                </div>
-              </button>
+                </button>
+              )}
             </div>
 
             <Button

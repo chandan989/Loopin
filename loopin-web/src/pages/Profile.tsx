@@ -16,36 +16,16 @@ import {
   Shield,
   Activity
 } from 'lucide-react';
+import { MOCK_USER_PROFILE, MOCK_USER_STATS, MOCK_GAME_HISTORY } from '@/data/mockData';
+import { SlideUp, StaggerContainer, ScaleIn, FadeIn } from '@/components/animation/MotionWrapper';
 
 const Profile = () => {
   const [copied, setCopied] = React.useState(false);
 
   // Mock user data
-  const user = {
-    username: 'SPEEDRUNNER',
-    walletAddress: 'ST1PQHQKBV3YX530PXHXSMXE7SXQ8D5X8AKQNMQM',
-    balance: '245.3',
-    joinedDate: 'DEC 2025',
-  };
-
-  const stats = {
-    totalArea: '2.4 km²',
-    gamesPlayed: 23,
-    gamesWon: 7,
-    winRate: '30%',
-    totalEarnings: '156.8 STX',
-    longestTrail: '4.2 km',
-    biggestLoop: '0.15 km²',
-    currentStreak: 2,
-  };
-
-  const recentGames = [
-    { id: 1, date: 'Jan 4, 2026', area: '0.15 km²', rank: 2, players: 6, prize: null },
-    { id: 2, date: 'Jan 3, 2026', area: '0.42 km²', rank: 1, players: 8, prize: '25 STX' },
-    { id: 3, date: 'Jan 2, 2026', area: '0.08 km²', rank: 5, players: 5, prize: null },
-    { id: 4, date: 'Jan 1, 2026', area: '0.22 km²', rank: 3, players: 7, prize: null },
-    { id: 5, date: 'Dec 31, 2025', area: '0.31 km²', rank: 1, players: 4, prize: '18 STX' },
-  ];
+  const user = MOCK_USER_PROFILE;
+  const stats = MOCK_USER_STATS;
+  const recentGames = MOCK_GAME_HISTORY;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(user.walletAddress);
@@ -69,19 +49,19 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row gap-12 items-start mb-24">
 
               {/* Avatar Section */}
-              <div className="relative group mx-auto md:mx-0">
+              <ScaleIn className="relative group mx-auto md:mx-0">
                 <div className="w-32 h-32 md:w-48 md:h-48 bg-[#09090B] rounded-full flex items-center justify-center border-[6px] md:border-[8px] border-[#D4FF00] shadow-[0_0_40px_rgba(212,255,0,0.3)]">
                   <span className="font-display text-6xl md:text-8xl font-black text-white">
                     {user.username.charAt(0)}
                   </span>
                 </div>
                 <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-white px-4 py-1 rounded-full border border-gray-200 shadow-lg text-xs font-bold tracking-widest uppercase whitespace-nowrap">
-                  Level 12 Runner
+                  Level {user.level} Runner
                 </div>
-              </div>
+              </ScaleIn>
 
               {/* Info Section */}
-              <div className="flex-1 space-y-6 w-full text-center md:text-left">
+              <SlideUp className="flex-1 space-y-6 w-full text-center md:text-left" delay={0.2}>
                 <div>
                   <h1 className="font-display text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-4 break-words">
                     {user.username}
@@ -117,10 +97,10 @@ const Profile = () => {
                     DISCONNECT
                   </Button>
                 </div>
-              </div>
+              </SlideUp>
 
               {/* Balance Card - Floating style */}
-              <div className="w-full md:w-auto p-6 md:p-8 bg-[#09090B] text-white rounded-[32px] md:min-w-[300px] shadow-2xl relative overflow-hidden mt-6 md:mt-0">
+              <ScaleIn className="w-full md:w-auto p-6 md:p-8 bg-[#09090B] text-white rounded-[32px] md:min-w-[300px] shadow-2xl relative overflow-hidden mt-6 md:mt-0" delay={0.4}>
                 <div className="absolute top-0 right-0 p-8 opacity-20">
                   <Wallet size={120} className="text-[#D4FF00]" />
                 </div>
@@ -138,72 +118,72 @@ const Profile = () => {
                     <span className="font-mono text-[#D4FF00]">{stats.totalEarnings}</span>
                   </div>
                 </div>
-              </div>
+              </ScaleIn>
             </div>
 
             {/* 2. STATS GRID */}
             <div className="mb-24">
-              <div className="flex items-end gap-4 mb-12">
+              <SlideUp className="flex items-end gap-4 mb-12">
                 <h2 className="font-display text-3xl md:text-5xl font-black tracking-tighter">PERFORMANCE</h2>
                 <div className="h-1 flex-1 bg-[#F3F4F6] mb-4 rounded-full" />
-              </div>
+              </SlideUp>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6" delay={0.5}>
                 {/* Stat 1 */}
-                <div className="p-6 md:p-8 bg-[#F3F4F6] rounded-[32px] hover:-translate-y-1 transition-transform duration-300">
+                <SlideUp className="p-6 md:p-8 bg-[#F3F4F6] rounded-[32px] hover:-translate-y-1 transition-transform duration-300">
                   <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm">
                     <MapPin className="w-6 h-6 text-black" />
                   </div>
                   <p className="text-gray-500 font-bold text-sm tracking-widest mb-2">TOTAL AREA</p>
                   <p className="font-display text-3xl md:text-4xl font-black">{stats.totalArea}</p>
-                </div>
+                </SlideUp>
 
                 {/* Stat 2 */}
-                <div className="p-6 md:p-8 bg-[#D4FF00] rounded-[32px] hover:-translate-y-1 transition-transform duration-300">
+                <SlideUp className="p-6 md:p-8 bg-[#D4FF00] rounded-[32px] hover:-translate-y-1 transition-transform duration-300">
                   <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center mb-6 shadow-sm">
                     <Trophy className="w-6 h-6 text-[#D4FF00]" />
                   </div>
                   <p className="text-black/60 font-bold text-sm tracking-widest mb-2">GAMES WON</p>
                   <p className="font-display text-3xl md:text-4xl font-black text-black">{stats.gamesWon}</p>
-                </div>
+                </SlideUp>
 
                 {/* Stat 3 */}
-                <div className="p-6 md:p-8 bg-[#F3F4F6] rounded-[32px] hover:-translate-y-1 transition-transform duration-300">
+                <SlideUp className="p-6 md:p-8 bg-[#F3F4F6] rounded-[32px] hover:-translate-y-1 transition-transform duration-300">
                   <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm">
                     <Activity className="w-6 h-6 text-black" />
                   </div>
                   <p className="text-gray-500 font-bold text-sm tracking-widest mb-2">WIN RATE</p>
                   <p className="font-display text-3xl md:text-4xl font-black">{stats.winRate}</p>
-                </div>
+                </SlideUp>
 
                 {/* Stat 4 */}
-                <div className="p-6 md:p-8 bg-black text-white rounded-[32px] hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
+                <SlideUp className="p-6 md:p-8 bg-black text-white rounded-[32px] hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
                   <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-6">
                     <Zap className="w-6 h-6 text-[#D4FF00]" />
                   </div>
                   <p className="text-gray-400 font-bold text-sm tracking-widest mb-2">STREAK</p>
                   <p className="font-display text-3xl md:text-4xl font-black text-[#D4FF00]">{stats.currentStreak} <span className="text-lg md:text-xl text-gray-500">WINS</span></p>
-                </div>
-              </div>
+                </SlideUp>
+              </StaggerContainer>
 
               {/* Secondary Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+              <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6" delay={0.6}>
                 {[
                   { label: 'GAMES PLAYED', value: stats.gamesPlayed },
                   { label: 'LONGEST TRAIL', value: stats.longestTrail },
                   { label: 'BIGGEST LOOP', value: stats.biggestLoop },
-                  { label: 'RANK', value: '#142' }
+                  { label: 'RANK', value: `#${stats.rank}` }
                 ].map((stat, i) => (
-                  <div key={i} className="p-6 border border-gray-200 rounded-2xl flex flex-col items-center justify-center text-center">
+                  <SlideUp key={i} className="p-6 border border-gray-200 rounded-2xl flex flex-col items-center justify-center text-center">
                     <p className="text-xs font-bold text-gray-400 tracking-widest mb-1">{stat.label}</p>
                     <p className="font-display text-2xl font-bold">{stat.value}</p>
-                  </div>
+                  </SlideUp>
                 ))}
-              </div>
+              </StaggerContainer>
             </div>
 
             {/* 3. GAME HISTORY */}
-            <div>
+            <FadeIn>
               <div className="flex items-end gap-4 mb-12">
                 <h2 className="font-display text-3xl md:text-5xl font-black tracking-tighter">HISTORY</h2>
                 <div className="h-1 flex-1 bg-[#F3F4F6] mb-4 rounded-full" />
@@ -257,7 +237,7 @@ const Profile = () => {
                   ))}
                 </div>
               </div>
-            </div>
+            </FadeIn>
 
           </div>
         </div>
@@ -269,4 +249,3 @@ const Profile = () => {
 };
 
 export default Profile;
-

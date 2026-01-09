@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,8 +14,10 @@ import {
   Shield,
   Trophy,
   Users,
-  MapPin
+  MapPin,
+  ArrowRight
 } from 'lucide-react';
+import { SlideUp, StaggerContainer, ScaleIn } from '@/components/animation/MotionWrapper';
 
 const Index = () => {
   const [isLoading, setIsLoading] = React.useState(true);
@@ -60,52 +63,57 @@ const Index = () => {
       {/* Hero Section */}
       <main className="pt-32 pb-16">
         <div className="px-6 mb-8 text-center md:text-left md:px-24 md:mb-12 max-w-7xl mx-auto">
-          <h1 className="font-display text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-6">
-            WHERE REALITY <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-black to-gray-500">BECOMES TERRITORY</span>
-          </h1>
-          <p className="text-lg text-gray-500 md:max-w-md leading-relaxed">
-            You are a <span className="text-black font-bold">Grid Runner</span>—manifesting digital constructs in physical space through pure movement.
-            Your body is the interface. Your path is the code. Your goal: capture more territory than anyone else to win the prize.
-            {/* <br /><br /> */}
-            {/* <span className="text-black font-bold italic">This isn't augmented reality. This is reality amplified.</span> */}
-          </p>
+          <SlideUp delay={0.2}>
+            <h1 className="font-display text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-6">
+              WHERE REALITY <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-black to-gray-500">BECOMES TERRITORY</span>
+            </h1>
+          </SlideUp>
+          <SlideUp delay={0.4}>
+            <p className="text-lg text-gray-500 md:max-w-md leading-relaxed">
+              You are a <span className="text-black font-bold">Grid Runner</span>—manifesting digital constructs in physical space through pure movement.
+              Your body is the interface. Your path is the code. Your goal: capture more territory than anyone else to win the prize.
+            </p>
+          </SlideUp>
         </div>
 
         {/* The Live Demo Component */}
         <div className="w-full max-w-md mx-auto md:max-w-7xl md:grid md:grid-cols-2 md:gap-12 md:px-24 items-center">
-          <div className="relative shadow-2xl rounded-[40px] overflow-hidden border-8 border-black mx-auto md:mx-0 bg-black aspect-[9/19.5] md:aspect-[9/19] h-[80vh] max-h-[850px]">
+          <ScaleIn delay={0.6} className="relative shadow-2xl rounded-[40px] overflow-hidden border-8 border-black mx-auto md:mx-0 bg-black aspect-[9/19.5] md:aspect-[9/19] h-[80vh] max-h-[850px]">
             <AppSimulation />
-          </div>
+          </ScaleIn>
 
           {/* Desktop Feature List */}
           <div className="hidden md:block space-y-12 pl-12">
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-[#D4FF00] rounded-full flex items-center justify-center mb-4">
-                <Zap size={24} strokeWidth={3} className="text-black" />
-              </div>
-              <h3 className="font-display text-3xl font-bold">Real-Time Trail Warfare</h3>
-              <p className="text-gray-500 leading-relaxed text-lg">
-                Watch your <span className="text-black font-bold">Quantum Trail</span> materialize in real-time as you move.
-                See opponents closing in. Spot opportunities to sever their loops.
-                Every second counts when territory equals victory.
-              </p>
-            </div>
+            <StaggerContainer staggerChildren={0.2} delay={0.8}>
+              <SlideUp className="space-y-4">
+                <div className="w-12 h-12 bg-[#D4FF00] rounded-full flex items-center justify-center mb-4">
+                  <Zap size={24} strokeWidth={3} className="text-black" />
+                </div>
+                <h3 className="font-display text-3xl font-bold">Real-Time Trail Warfare</h3>
+                <p className="text-gray-500 leading-relaxed text-lg">
+                  Watch your <span className="text-black font-bold">Quantum Trail</span> materialize in real-time as you move.
+                  See opponents closing in. Spot opportunities to sever their loops.
+                  Every second counts when territory equals victory.
+                </p>
+              </SlideUp>
 
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-[#09090B] rounded-full flex items-center justify-center mb-4">
-                <div className="w-6 h-1 bg-white rounded-full" />
-              </div>
-              <h3 className="font-display text-3xl font-bold">Built for Movement</h3>
-              <p className="text-gray-500 leading-relaxed text-lg">
-                Designed for <span className="text-black font-bold">sprinting Grid Runners</span>, not desk jockeys.
-                Critical intel at eye level. One-thumb tactical controls.
-                Deploy shields, activate stealth, capture territory—all without breaking stride.
-              </p>
-            </div>
+              <SlideUp className="space-y-4">
+                <div className="w-12 h-12 bg-[#09090B] rounded-full flex items-center justify-center mb-4">
+                  <div className="w-6 h-1 bg-white rounded-full" />
+                </div>
+                <h3 className="font-display text-3xl font-bold">Built for Movement</h3>
+                <p className="text-gray-500 leading-relaxed text-lg">
+                  Designed for <span className="text-black font-bold">sprinting Grid Runners</span>, not desk jockeys.
+                  Critical intel at eye level. One-thumb tactical controls.
+                  Deploy shields, activate stealth, capture territory—all without breaking stride.
+                </p>
+              </SlideUp>
+            </StaggerContainer>
           </div>
         </div>
       </main>
+
 
       {/* 2. HOW IT WORKS: The Tactile Steps */}
       <section className="py-32 bg-white relative overflow-hidden">
@@ -122,9 +130,9 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
             {/* Step 1: Connect */}
-            <div className="relative group">
+            <SlideUp className="relative group">
               <div className="absolute -top-12 -left-4 font-display text-[120px] font-bold text-gray-50 transition-colors group-hover:text-[#0047FF]/5 select-none z-0">
                 1
               </div>
@@ -147,10 +155,10 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </SlideUp>
 
             {/* Step 2: Run */}
-            <div className="relative group md:mt-24">
+            <SlideUp className="relative group md:mt-24">
               <div className="absolute -top-12 -left-4 font-display text-[120px] font-bold text-gray-50 transition-colors group-hover:text-[#D4FF00]/10 select-none z-0">
                 2
               </div>
@@ -171,10 +179,10 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </SlideUp>
 
             {/* Step 3: Win */}
-            <div className="relative group">
+            <SlideUp className="relative group">
               <div className="absolute -top-12 -left-4 font-display text-[120px] font-bold text-gray-50 transition-colors group-hover:text-[#09090B]/5 select-none z-0">
                 3
               </div>
@@ -193,8 +201,8 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </SlideUp>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -206,66 +214,76 @@ const Index = () => {
             <div className="h-1 w-24 bg-[#09090B]" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
             {/* Feature 1 */}
-            <DesignCard title="Real-Time GPS" subtitle="High-frequency location polling for sub-meter accuracy during sprints.">
-              <div className="flex items-center space-x-2 mt-4 text-[#D4FF00] font-bold font-display text-sm tracking-widest">
-                <Zap size={16} /> <span>1Hz UPDATES</span>
-              </div>
-            </DesignCard>
+            <ScaleIn>
+              <DesignCard title="Real-Time GPS" subtitle="High-frequency location polling for sub-meter accuracy during sprints.">
+                <div className="flex items-center space-x-2 mt-4 text-[#D4FF00] font-bold font-display text-sm tracking-widest">
+                  <Zap size={16} /> <span>1Hz UPDATES</span>
+                </div>
+              </DesignCard>
+            </ScaleIn>
 
             {/* Feature 2 */}
-            <div className="md:col-span-2 p-8 border border-gray-200 bg-white rounded-3xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Shield size={120} />
-              </div>
-              <h3 className="font-display text-2xl font-bold mb-2">Trail Warfare</h3>
-              <p className="text-gray-500 max-w-md">
-                Cross an enemy's trail to sever their loop. Deploy shields to protect your territory. This isn't just running; it's improved territory control.
-              </p>
-              <div className="mt-8 flex gap-4">
-                <div className="px-4 py-2 bg-red-50 text-[#FF2E00] rounded-lg font-display text-xs font-bold border border-red-100">
-                  OFFENSE: SEVER
+            <ScaleIn className="md:col-span-2">
+              <div className="h-full p-8 border border-gray-200 bg-white rounded-3xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Shield size={120} />
                 </div>
-                <div className="px-4 py-2 bg-blue-50 text-[#0047FF] rounded-lg font-display text-xs font-bold border border-blue-100">
-                  DEFENSE: SHIELD
+                <h3 className="font-display text-2xl font-bold mb-2">Trail Warfare</h3>
+                <p className="text-gray-500 max-w-md">
+                  Cross an enemy's trail to sever their loop. Deploy shields to protect your territory. This isn't just running; it's improved territory control.
+                </p>
+                <div className="mt-8 flex gap-4">
+                  <div className="px-4 py-2 bg-red-50 text-[#FF2E00] rounded-lg font-display text-xs font-bold border border-red-100">
+                    OFFENSE: SEVER
+                  </div>
+                  <div className="px-4 py-2 bg-blue-50 text-[#0047FF] rounded-lg font-display text-xs font-bold border border-blue-100">
+                    DEFENSE: SHIELD
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScaleIn>
 
             {/* Feature 3 */}
-            <DesignCard title="Session Based" subtitle="15-minute blitz rounds. No endless grinding. Win in minutes.">
-              <div className="w-full bg-gray-100 h-2 rounded-full mt-4 overflow-hidden">
-                <div className="bg-[#09090B] w-2/3 h-full rounded-full" />
-              </div>
-              <div className="flex justify-between mt-2 text-xs font-bold text-gray-400">
-                <span>00:00</span>
-                <span>15:00</span>
-              </div>
-            </DesignCard>
+            <ScaleIn>
+              <DesignCard title="Session Based" subtitle="15-minute blitz rounds. No endless grinding. Win in minutes.">
+                <div className="w-full bg-gray-100 h-2 rounded-full mt-4 overflow-hidden">
+                  <div className="bg-[#09090B] w-2/3 h-full rounded-full" />
+                </div>
+                <div className="flex justify-between mt-2 text-xs font-bold text-gray-400">
+                  <span>00:00</span>
+                  <span>15:00</span>
+                </div>
+              </DesignCard>
+            </ScaleIn>
 
             {/* Feature 4 */}
-            <DesignCard title="Stacks Economy" subtitle="Powered by Bitcoin. Secured by running.">
-              <div className="flex items-center justify-between mt-4">
-                <div className="font-display text-2xl font-bold text-[#09090B]">STX</div>
-                <div className="text-sm font-medium text-gray-400">Bitcoin L2</div>
-              </div>
-            </DesignCard>
+            <ScaleIn>
+              <DesignCard title="Stacks Economy" subtitle="Powered by Bitcoin. Secured by running.">
+                <div className="flex items-center justify-between mt-4">
+                  <div className="font-display text-2xl font-bold text-[#09090B]">STX</div>
+                  <div className="text-sm font-medium text-gray-400">Bitcoin L2</div>
+                </div>
+              </DesignCard>
+            </ScaleIn>
 
             {/* Feature 5 */}
-            <DesignCard title="Global Leaderboard" subtitle="Compete locally, rank globally.">
-              <div className="space-y-2 mt-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-bold">1. @speedrunner</span>
-                  <span className="font-display text-[#D4FF00] bg-black px-2 rounded">940</span>
+            <ScaleIn>
+              <DesignCard title="Global Leaderboard" subtitle="Compete locally, rank globally.">
+                <div className="space-y-2 mt-4">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-bold">1. @speedrunner</span>
+                    <span className="font-display text-[#D4FF00] bg-black px-2 rounded">940</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-gray-400">
+                    <span>2. @blockchaser</span>
+                    <span>820</span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center text-sm text-gray-400">
-                  <span>2. @blockchaser</span>
-                  <span>820</span>
-                </div>
-              </div>
-            </DesignCard>
-          </div>
+              </DesignCard>
+            </ScaleIn>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -479,7 +497,7 @@ const Index = () => {
       </section>
 
       <Footer />
-    </div>
+    </div >
   );
 };
 
