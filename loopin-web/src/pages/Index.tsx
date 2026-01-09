@@ -65,8 +65,10 @@ const Index = () => {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-black to-gray-500">BECOMES TERRITORY</span>
           </h1>
           <p className="text-lg text-gray-500 md:max-w-md leading-relaxed">
-            The membrane has shattered. Your physical movement is now digital power.
-            The 0.5-second interface for the modern <span className="text-black font-bold">Grid Runner</span>.
+            You are a <span className="text-black font-bold">Grid Runner</span>—manifesting digital constructs in physical space through pure movement.
+            Your body is the interface. Your path is the code. Your goal: capture more territory than anyone else to win the prize.
+            {/* <br /><br /> */}
+            {/* <span className="text-black font-bold italic">This isn't augmented reality. This is reality amplified.</span> */}
           </p>
         </div>
 
@@ -82,9 +84,11 @@ const Index = () => {
               <div className="w-12 h-12 bg-[#D4FF00] rounded-full flex items-center justify-center mb-4">
                 <Zap size={24} strokeWidth={3} className="text-black" />
               </div>
-              <h3 className="font-display text-3xl font-bold">Glanceability is King</h3>
+              <h3 className="font-display text-3xl font-bold">Real-Time Trail Warfare</h3>
               <p className="text-gray-500 leading-relaxed text-lg">
-                Data is the hero. If you can't read it while sprinting in direct sunlight, the design has failed. We use massive typography and high-albedo white backgrounds.
+                Watch your <span className="text-black font-bold">Quantum Trail</span> materialize in real-time as you move.
+                See opponents closing in. Spot opportunities to sever their loops.
+                Every second counts when territory equals victory.
               </p>
             </div>
 
@@ -92,10 +96,11 @@ const Index = () => {
               <div className="w-12 h-12 bg-[#09090B] rounded-full flex items-center justify-center mb-4">
                 <div className="w-6 h-1 bg-white rounded-full" />
               </div>
-              <h3 className="font-display text-3xl font-bold">The Thumb Zone</h3>
+              <h3 className="font-display text-3xl font-bold">Built for Movement</h3>
               <p className="text-gray-500 leading-relaxed text-lg">
-                Top 70% for visualization. Bottom 30% for interaction.
-                No reaching. No fumbling. Just run.
+                Designed for <span className="text-black font-bold">sprinting Grid Runners</span>, not desk jockeys.
+                Critical intel at eye level. One-thumb tactical controls.
+                Deploy shields, activate stealth, capture territory—all without breaking stride.
               </p>
             </div>
           </div>
