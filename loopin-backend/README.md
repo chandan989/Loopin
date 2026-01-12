@@ -49,10 +49,16 @@ This design allows the FastAPI server to handle thousands of high-frequency, rea
 3. **Set up PostGIS**
     This backend *requires* PostgreSQL with the PostGIS extension.
 
-    ```sql
-    -- Connect to your database and run:
-    CREATE EXTENSION postgis;
-    ```
+    * **Local PostgreSQL:**
+
+      ```sql
+      -- Connect to your database and run:
+      CREATE EXTENSION postgis;
+      ```
+
+    * **Supabase:**
+      PostGIS is supported out of the box. Enable it in the Supabase Dashboard:
+      `Database` -> `Extensions` -> Search for `postgis` -> Enable.
 
 4. **Configure Environment**
     Create a `.env` file in this directory. Fill it out based on the `.env.example` or the section below.
@@ -290,7 +296,12 @@ This server relies on PostGIS for all core game logic and ad management.
 | :--- | :--- | :--- |
 | `id` | `UUID` (PK) | Unique identifier for the player's participation. |
 | `wallet_address` | `String(100)`| Player's Stacks principal (e.g., "ST..."). **(Unique)** |
-| `game_id` | `UUID` (FK) | Foreign key to `game_sessions.id`. |
+| `id` | `UUID` (PK) | Unique identifier for the player's participation. |
+| `wallet_address` | `String(100)`| Player's Stacks principal (e.g., "ST..."). **(Unique)** |
+| `username` | `String(50)` | Display name. **(Unique)** |
+| `avatar_seed` | `String(100)` | Seed for randomly generating avatars. |
+| `level` | `Integer` | Player level. |
+| `joined_at` | `Timestamp` | Account creation time. |
 
 ### `player_trails`
 
@@ -298,7 +309,62 @@ This server relies on PostGIS for all core game logic and ad management.
 | :--- | :--- | :--- |
 | `id` | `UUID` (PK) | Unique identifier for this trail segment. |
 | `player_id` | `UUID` (FK) | Foreign key to `players.id`. |
+| `id` | `UUID` (PK) | Unique identifier for this trail segment. |
+| `player_id` | `UUID` (FK) | Foreign key to `players.id`. |
 | `trail` | `geography(LINESTRING)` | A PostGIS linestring representing the player's active, un-banked trail. |
+
+### `game_participants`
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `game_id` | `UUID` (FK) | Foreign key to `game_sessions.id`. |
+| `player_id` | `UUID` (FK) | Foreign key to `players.id`. |
+| `joined_at` | `Timestamp` | Time the player joined the game. |
+
+### `player_stats`
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `player_id` | `UUID` (PK, FK) | Foreign key to `players.id`. |
+| `total_area` | `Float` | Total area captured across all games. |
+| `games_played` | `Integer` | Total number of games participated in. |
+| `games_won` | `Integer` | Total number of games won. |
+| `total_earnings` | `Float` | Total crypto earnings. |
+| `longest_trail` | `Float` | Longest single trail created. |
+| `biggest_loop` | `Float` | Largest single loop captured. |
+| `current_streak` | `Integer` | Current winning streak. |
+
+### `player_game_history`
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `UUID` (PK) | Unique identifier. |
+| `player_id` | `UUID` (FK) | Foreign key to `players.id`. |
+| `game_id` | `UUID` (FK) | Foreign key to `game_sessions.id`. |
+| `rank` | `Integer` | Final rank in the game. |
+| `area_captured` | `Float` | Area captured in that specific game. |
+| `prize_won` | `Float` | Prize amount won. |
+| `played_at` | `Timestamp` | Time of the game. |
+
+### `powerups`
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `String` (PK) | Unique ID (e.g., 'shield', 'ghost'). |
+| `name` | `String` | Display name. |
+| `description` | `Text` | Description of effect. |
+| `cost` | `Float` | Cost in STX. |
+| `type` | `String` | Type (defense, offense, etc.). |
+
+### `player_powerups` (Inventory)
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `UUID` (PK) | Unique identifier. |
+| `player_id` | `UUID` (FK) | Foreign key to `players.id`. |
+| `powerup_id` | `String` (FK) | Foreign key to `powerups.id`. |
+| `quantity` | `Integer` | Number of items held. |
+| `equipped` | `Boolean` | Whether currently active/equipped. |
 
 ### `player_territories`
 

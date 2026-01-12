@@ -1,6 +1,6 @@
 <div align="center">
 
-# LOOPIN 
+# LOOPIN
 
 *Where Reality Becomes Territory. Where Movement Becomes Power.*
 
@@ -44,13 +44,21 @@ Each captured zone is:
 - **Session-Persistent**: Recorded for the duration of the game session.
 - **Strategic**: Control key sectors to dominate the grid and expand your area.
 
-### 🔹 PHASE THREE: INTERFERENCE WARFARE
+### 🔹 PHASE THREE: GLOBAL CROSSPLAY
+
+To ensure constant competition, the system employs **Spatial Folding** when local runners are scarce.
+
+- **Unified Grid**: The system maps 1km² or 500m² sectors from different physical locations, effectively overlapping them into a single virtual arena.
+- **Phantom Runners**: Opponents from across the globe appear on your interface. You see their trails and movements in real-time, as if they were running beside you.
+- **Asymmetric Warfare**: While physically separate, you compete for the same virtual territory. Cut their trails, steal their land, and dominate the global grid.
+
+### 🔹 PHASE FOUR: INTERFERENCE WARFARE
 
 You're not alone on the grid. Other runners are creating their own trails, capturing their own territories.
 
 **Trail Severing**: Intersect an opponent's active trail to cut it, collapsing their loop potential and forcing them to restart. Territory capture is zero-sum. Show no mercy.
 
-### 🔹 PHASE FOUR: POWER-UPS & PAYMENTS
+### 🔹 PHASE FIVE: POWER-UPS & PAYMENTS
 
 The Web3 integration is focused on the game's economy. At **Sync Nodes** that appear throughout your city, you can:
 
@@ -264,6 +272,7 @@ npm run dev
 - [ ] **Cross-chain Bridges**: Expand beyond the Stacks ecosystem for payments.
 
 ---
+
 ## ⚖️ LICENSE
 
 MIT License - The grid belongs to everyone and no one.

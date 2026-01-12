@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AppSimulation from '@/components/landing/AppSimulation';
-import DesignCard from '@/components/landing/DesignCard';
+
 import {
   Zap,
   Wallet,
@@ -15,9 +15,11 @@ import {
   Trophy,
   Users,
   MapPin,
-  ArrowRight
+  ArrowRight,
+  Globe,
+  Clock
 } from 'lucide-react';
-import { SlideUp, StaggerContainer, ScaleIn } from '@/components/animation/MotionWrapper';
+import { SlideUp, StaggerContainer, ScaleIn, GlitchText } from '@/components/animation/MotionWrapper';
 
 const Index = () => {
   const [isLoading, setIsLoading] = React.useState(true);
@@ -207,82 +209,180 @@ const Index = () => {
       </section>
 
       {/* 3. FEATURES GRID: The Arsenal */}
-      <section className="py-24 bg-[#F8F9FA]">
-        <div className="container mx-auto px-6">
-          <div className="mb-16">
-            <h2 className="font-display text-4xl font-bold mb-4 uppercase">The Arsenal</h2>
-            <div className="h-1 w-24 bg-[#09090B]" />
+      <section className="py-24 md:py-32 bg-white text-[#09090B]">
+        <div className="container mx-auto px-6 max-w-7xl">
+          <div className="mb-24 md:flex md:items-end md:justify-between">
+            <div className="max-w-xl">
+              <h2 className="font-display text-4xl md:text-6xl font-black tracking-tighter mb-6 uppercase">
+                <GlitchText text="THE ARSENAL" />
+              </h2>
+              <p className="text-xl text-gray-500 font-medium leading-relaxed">
+                Tools of the trade. Designed for speed, precision, and dominance.
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <div className="px-6 py-3 rounded-full border border-black flex items-center gap-3">
+                <div className="w-2 h-2 bg-[#D4FF00] rounded-full animate-pulse" />
+                <span className="font-display text-xs font-bold tracking-widest">SYSTEMS ONLINE</span>
+              </div>
+            </div>
           </div>
 
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {/* Feature 1 */}
-            <ScaleIn>
-              <DesignCard title="Real-Time GPS" subtitle="High-frequency location polling for sub-meter accuracy during sprints.">
-                <div className="flex items-center space-x-2 mt-4 text-[#D4FF00] font-bold font-display text-sm tracking-widest">
-                  <Zap size={16} /> <span>1Hz UPDATES</span>
-                </div>
-              </DesignCard>
-            </ScaleIn>
-
-            {/* Feature 2 */}
-            <ScaleIn className="md:col-span-2">
-              <div className="h-full p-8 border border-gray-200 bg-white rounded-3xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Shield size={120} />
-                </div>
-                <h3 className="font-display text-2xl font-bold mb-2">Trail Warfare</h3>
-                <p className="text-gray-500 max-w-md">
-                  Cross an enemy's trail to sever their loop. Deploy shields to protect your territory. This isn't just running; it's improved territory control.
-                </p>
-                <div className="mt-8 flex gap-4">
-                  <div className="px-4 py-2 bg-red-50 text-[#FF2E00] rounded-lg font-display text-xs font-bold border border-red-100">
-                    OFFENSE: SEVER
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mx-auto">
+            {/* Feature 1: GPS (Standard Card) */}
+            <SlideUp className="group relative h-full">
+              <div className="absolute inset-0 bg-gray-100 rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
+              <div className="bg-white border border-gray-200 group-hover:border-black rounded-[32px] p-8 h-full flex flex-col justify-between transition-all duration-300 hover:-translate-y-1">
+                <div>
+                  <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center mb-8 group-hover:bg-[#D4FF00] transition-colors duration-300">
+                    <Zap size={28} className="text-black" />
                   </div>
-                  <div className="px-4 py-2 bg-blue-50 text-[#0047FF] rounded-lg font-display text-xs font-bold border border-blue-100">
-                    DEFENSE: SHIELD
+                  <h3 className="font-display text-2xl font-bold mb-3">Real-Time GPS</h3>
+                  <p className="text-gray-500 font-medium leading-relaxed">
+                    High-frequency polling. Sub-meter accuracy.
+                  </p>
+                </div>
+                <div className="mt-8 flex items-center gap-2 text-xs font-bold tracking-widest uppercase">
+                  <span className="w-2 h-2 rounded-full bg-[#D4FF00]" /> 1Hz Updates
+                </div>
+              </div>
+            </SlideUp>
+
+            {/* Feature 2: Warfare (Wide Card) */}
+            <SlideUp className="group relative h-full md:col-span-2">
+              <div className="absolute inset-0 bg-gray-100 rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
+              <div className="bg-white border border-gray-200 group-hover:border-black rounded-[32px] p-8 h-full block md:flex items-center justify-between gap-12 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                <div className="flex-1 relative z-10">
+                  <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center mb-8 group-hover:bg-black group-hover:text-white transition-colors duration-300">
+                    <Shield size={28} />
+                  </div>
+                  <h3 className="font-display text-3xl font-bold mb-4">Trail Warfare</h3>
+                  <p className="text-gray-500 font-medium leading-relaxed text-lg mb-8">
+                    Sever enemy loops to steal their territory. Deploy shields to secure your perimeter.
+                  </p>
+                  <div className="flex gap-3">
+                    <span className="px-4 py-2 rounded-lg bg-red-50 text-red-600 font-display text-xs font-bold border border-red-100">OFFENSE: SEVER</span>
+                    <span className="px-4 py-2 rounded-lg bg-blue-50 text-blue-600 font-display text-xs font-bold border border-blue-100">DEFENSE: SHIELD</span>
+                  </div>
+                </div>
+                {/* Visual Decor */}
+                <div className="hidden md:block opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500">
+                  <Shield size={200} />
+                </div>
+              </div>
+            </SlideUp>
+
+            {/* Feature 3: Global Crossplay (Dark Card) */}
+            <SlideUp className="group relative h-full md:col-span-2">
+              <div className="absolute inset-0 bg-gray-900 rounded-[32px] transform translate-x-2 translate-y-2 -z-10" />
+              <div className="bg-[#09090B] border border-black rounded-[32px] p-8 h-full flex flex-col md:flex-row items-center gap-12 text-white shadow-2xl relative overflow-hidden group-hover:-translate-y-1 transition-transform duration-300">
+                <div className="flex-1 relative z-10">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
+                      <Globe size={28} className="text-[#D4FF00]" />
+                    </div>
+                    <span className="px-3 py-1 rounded bg-[#D4FF00] text-black font-display text-xs font-bold tracking-widest">NEW</span>
+                  </div>
+
+                  <h3 className="font-display text-3xl font-bold mb-4">Global Crossplay</h3>
+                  <p className="text-gray-400 font-medium leading-relaxed text-lg mb-8">
+                    The <span className="text-white">Unified Grid</span> folds space. Race against Phantom Runners from other cities in your local sector.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                      <div className="text-[#0047FF] text-[10px] font-bold tracking-widest mb-1">TECH</div>
+                      <div className="font-display font-bold">Spatial Folding</div>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                      <div className="text-[#D4FF00] text-[10px] font-bold tracking-widest mb-1">MODE</div>
+                      <div className="font-display font-bold">Virtual Presence</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="hidden md:block opacity-5 group-hover:opacity-10 transition-opacity">
+                  <Globe size={240} />
+                </div>
+              </div>
+            </SlideUp>
+
+            {/* Feature 4: Session Based */}
+            <SlideUp className="group relative h-full">
+              <div className="absolute inset-0 bg-gray-100 rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
+              <div className="bg-white border border-gray-200 group-hover:border-black rounded-[32px] p-8 h-full flex flex-col justify-between transition-all duration-300 hover:-translate-y-1">
+                <div>
+                  <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center mb-8 group-hover:bg-[#D4FF00] transition-colors duration-300">
+                    <Clock size={28} className="text-black" />
+                  </div>
+                  <h3 className="font-display text-2xl font-bold mb-3">15-Min Blitz</h3>
+                  <p className="text-gray-500 font-medium leading-relaxed">
+                    No endless grinding. High stakes rounds.
+                  </p>
+                </div>
+                <div className="mt-6 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                  <div className="bg-black w-3/4 h-full rounded-full" />
+                </div>
+              </div>
+            </SlideUp>
+
+            {/* Feature 5: Stacks Economy */}
+            <SlideUp className="group relative h-full">
+              <div className="absolute inset-0 bg-gray-100 rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
+              <div className="bg-white border border-gray-200 group-hover:border-black rounded-[32px] p-8 h-full flex flex-col justify-between transition-all duration-300 hover:-translate-y-1">
+                <div>
+                  <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center mb-8 group-hover:bg-[#0047FF] group-hover:text-white transition-colors duration-300">
+                    <Wallet size={28} className="text-black group-hover:text-white" />
+                  </div>
+                  <h3 className="font-display text-2xl font-bold mb-3">Stacks Economy</h3>
+                  <p className="text-gray-500 font-medium leading-relaxed">
+                    Powered by Bitcoin. Secured by movement.
+                  </p>
+                </div>
+                <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-4">
+                  <span className="font-display text-xl font-bold">STX</span>
+                  <span className="text-xs font-bold text-gray-400">BITCOIN L2</span>
+                </div>
+              </div>
+            </SlideUp>
+
+            {/* Feature 6: Leaderboards */}
+            <SlideUp className="group relative h-full md:col-span-2">
+              <div className="absolute inset-0 bg-gray-100 rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
+              <div className="bg-white border border-gray-200 group-hover:border-black rounded-[32px] p-8 h-full flex flex-col md:flex-row items-center gap-8 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex-1">
+                  <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center mb-8 group-hover:bg-[#D4FF00] transition-colors duration-300">
+                    <Trophy size={28} className="text-black" />
+                  </div>
+                  <h3 className="font-display text-3xl font-bold mb-3">Global Rankings</h3>
+                  <p className="text-gray-500 font-medium leading-relaxed text-lg">
+                    Dominate your local sector to climb the world tiers. Fame is global.
+                  </p>
+                </div>
+                <div className="w-full md:w-1/2 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center font-bold">
+                        <span className="w-6 text-[#0047FF]">1</span> @speedrunner
+                      </div>
+                      <span className="font-mono font-bold">940 KM²</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className="flex items-center font-bold">
+                        <span className="w-6">2</span> @blockchaser
+                      </div>
+                      <span className="font-mono font-bold">820 KM²</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className="flex items-center font-bold">
+                        <span className="w-6">3</span> @crypto_athlete
+                      </div>
+                      <span className="font-mono font-bold">750 KM²</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </ScaleIn>
+            </SlideUp>
 
-            {/* Feature 3 */}
-            <ScaleIn>
-              <DesignCard title="Session Based" subtitle="15-minute blitz rounds. No endless grinding. Win in minutes.">
-                <div className="w-full bg-gray-100 h-2 rounded-full mt-4 overflow-hidden">
-                  <div className="bg-[#09090B] w-2/3 h-full rounded-full" />
-                </div>
-                <div className="flex justify-between mt-2 text-xs font-bold text-gray-400">
-                  <span>00:00</span>
-                  <span>15:00</span>
-                </div>
-              </DesignCard>
-            </ScaleIn>
-
-            {/* Feature 4 */}
-            <ScaleIn>
-              <DesignCard title="Stacks Economy" subtitle="Powered by Bitcoin. Secured by running.">
-                <div className="flex items-center justify-between mt-4">
-                  <div className="font-display text-2xl font-bold text-[#09090B]">STX</div>
-                  <div className="text-sm font-medium text-gray-400">Bitcoin L2</div>
-                </div>
-              </DesignCard>
-            </ScaleIn>
-
-            {/* Feature 5 */}
-            <ScaleIn>
-              <DesignCard title="Global Leaderboard" subtitle="Compete locally, rank globally.">
-                <div className="space-y-2 mt-4">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-bold">1. @speedrunner</span>
-                    <span className="font-display text-[#D4FF00] bg-black px-2 rounded">940</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm text-gray-400">
-                    <span>2. @blockchaser</span>
-                    <span>820</span>
-                  </div>
-                </div>
-              </DesignCard>
-            </ScaleIn>
           </StaggerContainer>
         </div>
       </section>
