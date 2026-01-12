@@ -1,4 +1,4 @@
-# ➰ LOOPIN - Backend
+# LOOPIN - Backend
 
 This directory contains the primary backend for **Loopin**.
 
@@ -8,7 +8,7 @@ This server is a consolidated **FastAPI (Python)** application that acts as the 
 
 This backend follows a **Dual-Engine Design**. Responsibilities are split into two separate servers for security and performance:
 
-1.  **FastAPI Monolith Engine (This Server):**
+1. **FastAPI Monolith Engine (This Server):**
 
       * **What it is:** The "Game World & Brain".
       * **Responsibilities:**
@@ -17,7 +17,7 @@ This backend follows a **Dual-Engine Design**. Responsibilities are split into t
           * **Ads Service:** Manages a database of paying sponsors and their locations, providing endpoints for the AI to drive player traffic.
       * **Keys:** Holds *no* blockchain private keys.
 
-2.  **Node.js Web3 Manager (Separate Server):**
+2. **Node.js Web3 Manager (Separate Server):**
 
       * **What it is:** The "Game Treasury".
       * **Responsibilities:**
@@ -30,14 +30,14 @@ This design allows the FastAPI server to handle thousands of high-frequency, rea
 
 ## 🚀 Activation Sequence
 
-1.  **Clone the Repository**
+1. **Clone the Repository**
 
     ```bash
-    git clone https://github.com/your-username/loopin.git
+    git clone https://github.com/chandan989/loopin.git
     cd loopin/loop-backend
     ```
 
-2.  **Install Dependencies**
+2. **Install Dependencies**
     (Use of a Python virtual environment is highly recommended)
 
     ```bash
@@ -46,7 +46,7 @@ This design allows the FastAPI server to handle thousands of high-frequency, rea
     pip install -r requirements.txt
     ```
 
-3.  **Set up PostGIS**
+3. **Set up PostGIS**
     This backend *requires* PostgreSQL with the PostGIS extension.
 
     ```sql
@@ -54,17 +54,17 @@ This design allows the FastAPI server to handle thousands of high-frequency, rea
     CREATE EXTENSION postgis;
     ```
 
-4.  **Configure Environment**
+4. **Configure Environment**
     Create a `.env` file in this directory. Fill it out based on the `.env.example` or the section below.
 
-5.  **Initialize Database**
+5. **Initialize Database**
 
     ```bash
     # Run the database migration script (e.g., using Alembic or a custom script)
     python scripts/init_db.py 
     ```
 
-6.  **Launch Backend Core**
+6. **Launch Backend Core**
 
     ```bash
     # Start the FastAPI server with auto-reload for development
@@ -85,11 +85,7 @@ Create a `.env` file with the following variables:
 # Connection string for your PostGIS-enabled database
 DATABASE_URL="postgresql+psycopg2://YOUR_DB_USER:YOUR_DB_PASS@localhost:5432/loopin_gis"
 
-# === IDENTITY MATRIX (SUPABASE) ===
-# Used to validate user JWTs from the frontend
-SUPABASE_URL="your_supabase_url"
-SUPABASE_ANON_KEY="your_supabase_anon_key"
-SUPABASE_JWT_SECRET="your_jwt_secret"
+
 
 # === BLOCKCHAIN CONSENSUS (READ-ONLY) ===
 # Used for read-only calls, e.g., to verify a player's join-game transaction
@@ -106,6 +102,13 @@ WEB3_MANAGER_API_KEY="your-secret-key-shared-between-fastapi-and-node"
 # === GEOSPATIAL CONFIG ===
 TERRITORY_MIN_AREA_SQM="100"
 COLLISION_TOLERANCE_METERS="5"
+MAX_TRAIL_POINTS="10000"
+
+# === GRID ECONOMICS ===
+ENTRY_FEE_STX="2"
+SHIELD_COST_STX="2"
+STEALTH_COST_STX="5"
+
 ```
 
 -----
@@ -116,11 +119,12 @@ This server provides all API endpoints for the game, AI, and ad management.
 
 ### Public Game API (for Frontend Client)
 
-  * **`GET /api/v1/games/lobby`**
+* **`GET /api/v1/games/lobby`**
 
-      * **Description:** Fetches all active games with a `status` of "lobby" from the database.
-      * **Auth:** `None`
-      * **Success Response (200 OK):**
+  * **Description:** Fetches all active games with a `status` of "lobby" from the database.
+  * **Auth:** `None`
+  * **Success Response (200 OK):**
+
         ```json
         [
           {
@@ -134,11 +138,12 @@ This server provides all API endpoints for the game, AI, and ad management.
         ]
         ```
 
-  * **`GET /api/v1/game/{game_id}`**
+* **`GET /api/v1/game/{game_id}`**
 
-      * **Description:** Fetches the complete, current state of a specific game.
-      * **Auth:** `None`
-      * **Success Response (200 OK):** `GameSession` object (see `gameTypes.ts`)
+  * **Description:** Fetches the complete, current state of a specific game.
+  * **Auth:** `None`
+  * **Success Response (200 OK):** `GameSession` object (see `gameTypes.ts`)
+
         ```json
         {
           "id": "game-uuid-1",
@@ -150,11 +155,12 @@ This server provides all API endpoints for the game, AI, and ad management.
         }
         ```
 
-  * **`POST /api/v1/game/{game_id}/confirm_join`**
+* **`POST /api/v1/game/{game_id}/confirm_join`**
 
-      * **Description:** Called by the frontend *after* the user's on-chain `join-game` transaction is confirmed. This officially adds the player to the real-time game loop.
-      * **Auth:** `User JWT` (from Supabase)
-      * **Success Response (200 OK):**
+  * **Description:** Called by the frontend *after* the user's on-chain `join-game` transaction is confirmed. This officially adds the player to the real-time game loop.
+  * **Auth:** `User JWT` (from Supabase)
+  * **Success Response (200 OK):**
+
         ```json
         {
           "status": "success",
@@ -164,11 +170,12 @@ This server provides all API endpoints for the game, AI, and ad management.
 
 ### Internal Ads & AI API (for Admin & Server-to-Server)
 
-  * **`POST /api/v1/ads/locations`**
+* **`POST /api/v1/ads/locations`**
 
-      * **Description:** An endpoint for your business team to add, update, or remove a paying sponsor's location from the database.
-      * **Auth:** `Admin API Key`
-      * **Request Body:**
+  * **Description:** An endpoint for your business team to add, update, or remove a paying sponsor's location from the database.
+  * **Auth:** `Admin API Key`
+  * **Request Body:**
+
         ```json
         {
           "sponsor_name": "Starbucks",
@@ -178,13 +185,15 @@ This server provides all API endpoints for the game, AI, and ad management.
           "bid_price": 0.50 
         }
         ```
-      * **Success Response (201 Created):** `{ "status": "created", "id": "location-uuid-1" }`
 
-  * **`GET /api/v1/ads/locations`**
+  * **Success Response (201 Created):** `{ "status": "created", "id": "location-uuid-1" }`
 
-      * **Description:** An endpoint for the **AI Manager** to query, retrieving a list of all active sponsor locations and their "bids".
-      * **Auth:** `Internal API Key`
-      * **Success Response (200 OK):**
+* **`GET /api/v1/ads/locations`**
+
+  * **Description:** An endpoint for the **AI Manager** to query, retrieving a list of all active sponsor locations and their "bids".
+  * **Auth:** `Internal API Key`
+  * **Success Response (200 OK):**
+
         ```json
         [
           {
@@ -196,11 +205,12 @@ This server provides all API endpoints for the game, AI, and ad management.
         ]
         ```
 
-  * **`POST /api/v1/game/{game_id}/spawn-event`**
+* **`POST /api/v1/game/{game_id}/spawn-event`**
 
-      * **Description:** Called by the **AI Manager** to inject a dynamic event (like a sponsored Sync Node) into a live game.
-      * **Auth:** `Internal API Key` (only the server itself can call this)
-      * **Request Body:**
+  * **Description:** Called by the **AI Manager** to inject a dynamic event (like a sponsored Sync Node) into a live game.
+  * **Auth:** `Internal API Key` (only the server itself can call this)
+  * **Request Body:**
+
         ```json
         {
           "event_type": "sponsored_sync_node",
@@ -210,7 +220,8 @@ This server provides all API endpoints for the game, AI, and ad management.
           "display_name": "Starbucks Bonus Node"
         }
         ```
-      * **Success Response (202 Accepted):** `{ "status": "event_queued" }`
+
+  * **Success Response (202 Accepted):** `{ "status": "event_queued" }`
 
 -----
 
@@ -222,27 +233,40 @@ This is the real-time communication layer for live gameplay.
 
 ### Client → Server Events
 
-  * **Event:** `position_update`
-      * **Payload:** `{ "lat": 34.0522, "lng": -118.2437 }`
-      * **Description:** Sent by the client continuously to update the server with their current GPS coordinates.
+* **Event:** `position_update`
+  * **Payload:** `{ "lat": 34.0522, "lng": -118.2437 }`
+  * **Description:** Sent by the client continuously to update the server with their current GPS coordinates.
 
 ### Server → Client Events
 
-  * **Event:** `game_state_update`
-      * **Payload:** `GameSession` object
-      * **Description:** Broadcast to all players on a regular tick (e.g., 100ms), containing the latest positions, trails, and scores for everyone.
-  * **Event:** `territory_captured`
-      * **Payload:** `{ "player_id": "user-uuid", "new_territory": [...], "new_score": 1250 }`
-      * **Description:** Sent when a player successfully closes a loop.
-  * **Event:** `trail_severed`
-      * **Payload:** `{ "attacker_id": "user-uuid-1", "victim_id": "user-uuid-2" }`
-      * **Description:** Sent when one player "cuts" an opponent's active trail.
+* **Event:** `game_state_update`
+  * **Payload:** `GameSession` object
+  * **Description:** Broadcast to all players on a regular tick (e.g., 100ms), containing the latest positions, trails, and scores for everyone.
+* **Event:** `territory_captured`
+  * **Payload:** `{ "player_id": "user-uuid", "new_territory": [...], "new_score": 1250 }`
+  * **Description:** Sent when a player successfully closes a loop.
+* **Event:** `trail_severed`
+  * **Payload:** `{ "attacker_id": "user-uuid-1", "victim_id": "user-uuid-2" }`
+  * **Description:** Sent when one player "cuts" an opponent's active trail.
   * **Event:** `dynamic_event_spawned`
-      * **Payload:** `{ "event_type": "sponsored_sync_node", "lat": 34.0522, "lng": -118.2437, ... }`
-      * **Description:** Broadcast to all players when the **AI Manager** creates a new sponsored event on the map.
+    * **Payload:** `{ "event_type": "sponsored_sync_node", "lat": 34.0522, "lng": -118.2437, ... }`
+    * **Description:** Broadcast to all players when the **AI Manager** creates a new sponsored event on the map.
+  * **Event:** `powerup_activated`
+    * **Payload:** `{ "player_id": "user-uuid", "type": "shield", "duration": 60 }`
+    * **Description:** Broadcast when a player purchases/activates a power-up (Shield or Stealth).
   * **Event:** `error`
-      * **Payload:** `{ "code": 4001, "message": "Invalid position update." }`
-      * **Description:** Sent to a specific client if they send a malformed event.
+    * **Payload:** `{ "code": 4001, "message": "Invalid position update." }`
+    * **Description:** Sent to a specific client if they send a malformed event.
+
+### Flow 5: Power-Ups & Payments
+
+1. **Shield (2 STX)**: Protects against trail severing.
+2. **Stealth (5 STX)**: Makes trail invisible for 60 seconds.
+3. **Purchase:** User pays STX -> Smart Contract -> Backend confirmation -> Power-up active.
+
+### Flow 6: Partner Checkpoints (B2B)
+
+Local businesses act as "Sync Nodes". Players visit these locations to trigger specific rewards or game events.
 
 -----
 
@@ -265,8 +289,7 @@ This server relies on PostGIS for all core game logic and ad management.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | `UUID` (PK) | Unique identifier for the player's participation. |
-| `user_id` | `UUID` (FK) | Foreign key to Supabase Auth `users.id`. |
-| `wallet_address` | `String(100)`| Player's Stacks principal (e.g., "ST..."). |
+| `wallet_address` | `String(100)`| Player's Stacks principal (e.g., "ST..."). **(Unique)** |
 | `game_id` | `UUID` (FK) | Foreign key to `game_sessions.id`. |
 
 ### `player_trails`
@@ -310,60 +333,61 @@ This server relies on PostGIS for all core game logic and ad management.
 
 ### Flow 1: Player Joins a Game
 
-1.  **Frontend:** User clicks "Join Game" for a lobby.
-2.  **Frontend:** Prompts user's wallet (Hiro/Xverse) to call the `join-game` function on the Stacks contract, which transfers the STX entry fee.
-3.  **Frontend:** Polls the Stacks network until the transaction is confirmed.
-4.  **Frontend:** On confirmation, sends a `POST /api/v1/game/{game_id}/confirm_join` request to the FastAPI backend, including the user's auth JWT.
-5.  **Backend:** The backend validates the JWT, links the user's `user_id` to their `wallet_address`, and inserts them into the `players` table, marking them as active for that `game_id`.
-6.  **Backend:** The player is now included in the next `game_state_update` WebSocket broadcast.
+1. **Frontend:** User clicks "Join Game" for a lobby.
+2. **Frontend:** Prompts user's wallet (Hiro/Xverse) to call the `join-game` function on the Stacks contract, which transfers the STX entry fee.
+3. **Frontend:** Polls the Stacks network until the transaction is confirmed.
+4. **Frontend:** On confirmation, prompts user to sign a message to prove ownership of the wallet.
+5. **Frontend:** Sends a `POST /api/v1/game/{game_id}/confirm_join` request to the FastAPI backend with `wallet_address` and `signature`.
+6. **Backend:** The backend verifies the signature, finds/creates the player by `wallet_address`, and marks them as active for that `game_id`.
+7. **Backend:** The player is now included in the next `game_state_update` WebSocket broadcast.
 
 ### Flow 2: Real-time Gameplay Loop (Trail & Collision)
 
-1.  **Client:** Sends `position_update` (e.g., 5x/second) to the WebSocket.
-2.  **Backend:** Receives the coordinate.
-3.  **Backend:** Appends the new point to the player's `player_trails` `LINESTRING` in PostGIS.
-4.  **Backend:** Runs two PostGIS queries:
+1. **Client:** Sends `position_update` (e.g., 5x/second) to the WebSocket.
+2. **Backend:** Receives the coordinate.
+3. **Backend:** Appends the new point to the player's `player_trails` `LINESTRING` in PostGIS.
+4. **Backend:** Runs two PostGIS queries:
       * **Collision Check:** `ST_Intersects(this_trail, other_trails)`: Does this new trail segment cross any *other* player's active trail? If yes, fire `trail_severed` event.
       * **Loop Check:** `ST_Intersects(this_trail, ST_StartPoint(this_trail))`: Does this trail's end touch its beginning? If yes, proceed to capture.
-5.  **Backend (on Loop Capture):**
+5. **Backend (on Loop Capture):**
       * Uses `ST_MakePolygon` to create a polygon from the `LINESTRING`.
       * Uses `ST_Area` to calculate the area.
       * Inserts the new polygon into `player_territories`.
       * Deletes the active `player_trail`.
       * Broadcasts a `territory_captured` event.
-6.  **Backend:** Broadcasts the new `game_state_update` (with updated positions/scores) to all clients.
+6. **Backend:** Broadcasts the new `game_state_update` (with updated positions/scores) to all clients.
 
 ### Flow 3: AI-Sponsored Event
 
-1.  **Backend (AI Manager):** A background task runs (e.g., every 5 minutes).
-2.  **AI Manager:** Queries `GET /api/v1/ads/locations` (internally) to get all sponsor locations.
-3.  **AI Manager:** Queries its own database to get the current `geography(POINT)` of all active players.
-4.  **AI Manager:** Runs its algorithm (e.g., "find a sponsor location within 500m of a cluster of 3+ players").
-5.  **AI Manager:** Finds a match\! It calls `POST /api/v1/game/{game_id}/spawn-event` (internally) with the chosen location's details.
-6.  **Backend (Game Engine):** Receives the command and broadcasts a `dynamic_event_spawned` message to all players in that game.
-7.  **Client:** The frontend receives the event and renders a special icon on the map at the sponsored location.
+1. **Backend (AI Manager):** A background task runs (e.g., every 5 minutes).
+2. **AI Manager:** Queries `GET /api/v1/ads/locations` (internally) to get all sponsor locations.
+3. **AI Manager:** Queries its own database to get the current `geography(POINT)` of all active players.
+4. **AI Manager:** Runs its algorithm (e.g., "find a sponsor location within 500m of a cluster of 3+ players").
+5. **AI Manager:** Finds a match\! It calls `POST /api/v1/game/{game_id}/spawn-event` (internally) with the chosen location's details.
+6. **Backend (Game Engine):** Receives the command and broadcasts a `dynamic_event_spawned` message to all players in that game.
+7. **Client:** The frontend receives the event and renders a special icon on the map at the sponsored location.
 
 ### Flow 4: Game End & Payout
 
-1.  **Backend (Game Engine):** The `end_time` for a game is reached. The server sets its `status` to "ended".
-2.  **Backend:** Runs a final query on `player_territories` to find the `player_id` with the `SUM(area_sqm)`.
-3.  **Backend:** This `player_id` is the winner. The server looks up their `wallet_address` from the `players` table.
-4.  **Backend:** Sends an internal HTTP request to the **Node.js Web3 Manager**:
+1. **Backend (Game Engine):** The `end_time` for a game is reached. The server sets its `status` to "ended".
+2. **Backend:** Runs a final query on `player_territories` to find the `player_id` with the `SUM(area_sqm)`.
+3. **Backend:** This `player_id` is the winner. The server looks up their `wallet_address` from the `players` table.
+4. **Backend:** Sends an internal HTTP request to the **Node.js Web3 Manager**:
       * `POST http://localhost:3001/api/web3/end-game`
       * `Headers: { "X-API-Key": "..." }`
       * `Body: { "game_id": 123, "winner": "ST...WINNER...ADDRESS" }`
-5.  **Node.js Manager:** Receives the request, validates the API key.
-6.  **Node.js Manager:** Uses its `DEPLOYER_PRIVATE_KEY` to construct, sign, and broadcast an `end-game` transaction to the Stacks contract, passing the winner's address.
-7.  **Stacks Contract:** The contract verifies the call, calculates the 5% platform fee, and transfers the remaining prize pool to the winner's address.
+5. **Node.js Manager:** Receives the request, validates the API key.
+6. **Node.js Manager:** Uses its `DEPLOYER_PRIVATE_KEY` to construct, sign, and broadcast an `end-game` transaction to the Stacks contract, passing the winner's address.
+7. **Stacks Contract:** The contract verifies the call, calculates the 5% platform fee, and transfers the remaining prize pool to the winner's address.
 
 -----
 
 ## 🛡️ Security & Error Handling
 
-  * **Authentication:** All user-facing endpoints that modify data (like `confirm_join`) are protected by a JWT, which is validated against the `SUPABASE_JWT_SECRET`.
-  * **Internal Service Auth:** Communication between the FastAPI server and the Node.js server is secured by a shared secret (`WEB3_MANAGER_API_KEY`) sent in the HTTP headers. This key *must* be a long, randomly generated string.
-  * **Admin Auth:** Endpoints like `POST /api/v1/ads/locations` must be protected by a separate, distinct `Admin API Key`.
-  * **Error Codes:** The server uses standard HTTP status codes (e.g., `400` for bad input, `401` for unauthorized, `404` for not found, `500` for internal errors).
+* **Authentication:** All user-facing endpoints that modify data (like `confirm_join`) are protected by Wallet Signature verification.
+* **Internal Service Auth:** Communication between the FastAPI server and the Node.js server is secured by a shared secret (`WEB3_MANAGER_API_KEY`) sent in the HTTP headers. This key *must* be a long, randomly generated string.
+* **Admin Auth:** Endpoints like `POST /api/v1/ads/locations` must be protected by a separate, distinct `Admin API Key`.
+* **Error Codes:** The server uses standard HTTP status codes (e.g., `400` for bad input, `401` for unauthorized, `404` for not found, `500` for internal errors).
 
 -----
 
