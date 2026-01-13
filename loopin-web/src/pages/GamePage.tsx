@@ -200,39 +200,81 @@ const GamePage = () => {
           </div>
 
 
-          {/* Powerups Container */}
-          <div className="flex gap-3">
-            {/* Shield Powerup */}
-            <Button
-              className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 shadow-xl ${activePowerup === 'shield'
-                ? 'bg-[#D4FF00] text-black border-2 border-black'
-                : 'bg-black hover:bg-black/90 text-white'
-                }`}
-              onClick={() => handlePowerup('shield')}
-            >
-              <div className={`${activePowerup === 'shield' ? 'animate-pulse' : ''}`}>
-                <Shield size={24} strokeWidth={2.5} className={activePowerup === 'shield' ? 'text-black' : 'text-[#D4FF00]'} />
-              </div>
-              <span className={`font-display text-[10px] font-bold uppercase ${activePowerup === 'shield' ? 'text-black' : 'text-[#D4FF00]'}`}>
-                Shield
-              </span>
-            </Button>
+          {/* Powerups Control Panel */}
+          <div className="bg-black/80 backdrop-blur-xl p-2 rounded-[24px] border border-white/10 shadow-2xl flex items-center gap-2">
 
-            {/* Invisibility Powerup */}
-            <Button
-              className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 shadow-xl ${activePowerup === 'invisibility'
-                ? 'bg-[#b794f4] text-black border-2 border-black'
-                : 'bg-black hover:bg-black/90 text-white'
-                }`}
-              onClick={() => handlePowerup('invisibility')}
-            >
-              <div className={`${activePowerup === 'invisibility' ? 'animate-pulse' : ''}`}>
-                <Ghost size={24} strokeWidth={2.5} className={activePowerup === 'invisibility' ? 'text-black' : 'text-[#b794f4]'} />
+            {/* Shield Slot */}
+            <div className="relative group">
+              {/* Countdown Ring (visible when active) */}
+              {activePowerup === 'shield' && (
+                <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none scale-110" viewBox="0 0 36 36">
+                  <path
+                    className="text-[#D4FF00] stroke-current transition-all duration-1000 ease-linear"
+                    strokeDasharray="100, 100"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    strokeWidth="2"
+                  />
+                  {/* We would animate stroke-dashoffset here based on time remaining */}
+                </svg>
+              )}
+
+              <button
+                onClick={() => handlePowerup('shield')}
+                className={`w-14 h-14 md:w-16 md:h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 relative overflow-hidden ${activePowerup === 'shield'
+                    ? 'bg-[#D4FF00] text-black shadow-[0_0_15px_rgba(212,255,0,0.5)]'
+                    : 'bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white'
+                  }`}
+              >
+                <Shield
+                  size={24}
+                  strokeWidth={2.5}
+                  className={`relative z-10 transition-transform duration-300 ${activePowerup === 'shield' ? 'scale-110' : 'group-hover:scale-110'}`}
+                />
+                {activePowerup === 'shield' && <div className="absolute inset-0 bg-white/30 animate-pulse-slow" />}
+              </button>
+              {/* Label (Tooltip style) */}
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] font-bold uppercase px-2 py-1 rounded">
+                Shield
               </div>
-              <span className={`font-display text-[10px] font-bold uppercase ${activePowerup === 'invisibility' ? 'text-black' : 'text-[#b794f4]'}`}>
+            </div>
+
+            {/* Separator */}
+            <div className="w-px h-8 bg-white/10" />
+
+            {/* Stealth Slot */}
+            <div className="relative group">
+              {activePowerup === 'invisibility' && (
+                <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none scale-110" viewBox="0 0 36 36">
+                  <path
+                    className="text-[#b794f4] stroke-current"
+                    strokeDasharray="100, 100"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    strokeWidth="2"
+                  />
+                </svg>
+              )}
+
+              <button
+                onClick={() => handlePowerup('invisibility')}
+                className={`w-14 h-14 md:w-16 md:h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 relative overflow-hidden ${activePowerup === 'invisibility'
+                    ? 'bg-[#b794f4] text-black shadow-[0_0_15px_rgba(183,148,244,0.5)]'
+                    : 'bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white'
+                  }`}
+              >
+                <Ghost
+                  size={24}
+                  strokeWidth={2.5}
+                  className={`relative z-10 transition-transform duration-300 ${activePowerup === 'invisibility' ? 'scale-110' : 'group-hover:scale-110'}`}
+                />
+                {activePowerup === 'invisibility' && <div className="absolute inset-0 bg-white/30 animate-pulse-slow" />}
+              </button>
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] font-bold uppercase px-2 py-1 rounded">
                 Stealth
-              </span>
-            </Button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
