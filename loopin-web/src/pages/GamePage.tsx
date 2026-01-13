@@ -11,7 +11,9 @@ import {
   Navigation,
   Target,
   Zap,
-  X
+  X,
+  Shield,
+  Ghost
 } from 'lucide-react';
 import { MOCK_POWERUPS } from '@/data/mockData';
 
@@ -40,6 +42,22 @@ const GamePage = () => {
   const [myPos, setMyPos] = useState<[number, number]>(START_POS);
   const [myTrail, setMyTrail] = useState<[number, number][]>([START_POS]);
   const [stats, setStats] = useState({ distance: 0, calories: 0, conquered: 0.0 });
+
+  // Powerup State
+  const [activePowerup, setActivePowerup] = useState<'shield' | 'invisibility' | null>(null);
+
+  const handlePowerup = (type: 'shield' | 'invisibility') => {
+    if (activePowerup === type) {
+      setActivePowerup(null); // Toggle off
+    } else {
+      setActivePowerup(type);
+      // In real implementation, this would send a message via WebSocket
+      // sendPowerupActivation(type);
+
+      // Auto-deactivate after duration (mock)
+      setTimeout(() => setActivePowerup(null), type === 'shield' ? 10000 : 15000);
+    }
+  };
 
   // Game Loop
   useEffect(() => {
@@ -181,13 +199,41 @@ const GamePage = () => {
             </div>
           </div>
 
-          {/* Main Action / Powerup Button */}
-          <Button
-            className="w-20 h-20 rounded-2xl bg-black hover:bg-black/90 text-white shadow-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95"
-          >
-            <Zap size={28} strokeWidth={2.5} className="text-[#D4FF00]" />
-            <span className="font-display text-[10px] font-bold uppercase text-[#D4FF00]">Boost</span>
-          </Button>
+
+          {/* Powerups Container */}
+          <div className="flex gap-3">
+            {/* Shield Powerup */}
+            <Button
+              className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 shadow-xl ${activePowerup === 'shield'
+                ? 'bg-[#D4FF00] text-black border-2 border-black'
+                : 'bg-black hover:bg-black/90 text-white'
+                }`}
+              onClick={() => handlePowerup('shield')}
+            >
+              <div className={`${activePowerup === 'shield' ? 'animate-pulse' : ''}`}>
+                <Shield size={24} strokeWidth={2.5} className={activePowerup === 'shield' ? 'text-black' : 'text-[#D4FF00]'} />
+              </div>
+              <span className={`font-display text-[10px] font-bold uppercase ${activePowerup === 'shield' ? 'text-black' : 'text-[#D4FF00]'}`}>
+                Shield
+              </span>
+            </Button>
+
+            {/* Invisibility Powerup */}
+            <Button
+              className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 shadow-xl ${activePowerup === 'invisibility'
+                ? 'bg-[#b794f4] text-black border-2 border-black'
+                : 'bg-black hover:bg-black/90 text-white'
+                }`}
+              onClick={() => handlePowerup('invisibility')}
+            >
+              <div className={`${activePowerup === 'invisibility' ? 'animate-pulse' : ''}`}>
+                <Ghost size={24} strokeWidth={2.5} className={activePowerup === 'invisibility' ? 'text-black' : 'text-[#b794f4]'} />
+              </div>
+              <span className={`font-display text-[10px] font-bold uppercase ${activePowerup === 'invisibility' ? 'text-black' : 'text-[#b794f4]'}`}>
+                Stealth
+              </span>
+            </Button>
+          </div>
         </div>
       </div>
 
