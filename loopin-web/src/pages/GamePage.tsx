@@ -126,32 +126,35 @@ const GamePage = () => {
       </div>
 
       {/* --- TOP HUD --- */}
-      <div className="absolute top-0 left-0 right-0 z-[1000] p-4 md:p-6 safe-top pointer-events-none">
-        <div className="max-w-7xl mx-auto flex justify-between items-center pointer-events-auto">
-
+      <div className="absolute top-0 left-0 right-0 z-20 p-4 pt- safe-top">
+        <div className="flex justify-between items-start">
           {/* Back / Exit */}
           <Button
             size="icon"
-            className="w-10 h-10 md:w-12 md:h-12 bg-black/90 hover:bg-black text-white rounded-full shadow-2xl border border-white/10 transition-transform active:scale-95"
+            className="bg-[#D4FF00] hover:bg-[#b8dd00] text-black rounded-full shadow-[0_0_20px_rgba(212,255,0,0.3)] border border-[#09090B]/10 transition-transform active:scale-95 w-12 h-12"
             onClick={() => navigate('/dashboard')}
           >
-            <X size={20} className="text-[#D4FF00]" />
+            <X size={24} strokeWidth={2.5} />
           </Button>
 
-          {/* Time & Live Status Pill */}
-          <div className="flex items-center gap-3 bg-black/90 backdrop-blur-md px-4 py-2 md:px-6 md:py-3 rounded-full border border-white/10 shadow-2xl">
-            <div className="flex items-center gap-2 border-r border-white/20 pr-3 md:pr-4">
-              <div className="w-2 h-2 rounded-full bg-[#D4FF00] animate-pulse shadow-[0_0_10px_#D4FF00]" />
-              <span className="font-display font-bold text-white tracking-widest text-xs md:text-sm">LIVE</span>
-            </div>
-            <div className="font-mono text-lg md:text-2xl font-bold text-white tabular-nums tracking-tight">
-              {formatTime(timeLeft)}
+          {/* Timer Pill */}
+          <div className="flex flex-col items-center">
+            <div className="bg-white/80 backdrop-blur-xl border border-black/5 px-6 py-2 rounded-2xl shadow-xl flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-[#09090B] animate-pulse" />
+              <span className="font-display text-2xl font-bold tracking-tight tabular-nums text-black">
+                {formatTime(timeLeft)}
+              </span>
             </div>
           </div>
 
-          {/* Participants */}
-          <div className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-black/90 backdrop-blur-md rounded-full border border-white/10 shadow-2xl">
-            <span className="text-xs md:text-sm font-bold text-[#D4FF00]">+12</span>
+          {/* Participants / Live Count */}
+          <div className="flex items-center bg-white/80 backdrop-blur-md rounded-full px-3 py-1.5 border border-black/5 gap-2 shadow-sm">
+            <div className="flex -space-x-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-6 h-6 rounded-full border border-white bg-gray-200" />
+              ))}
+            </div>
+            <span className="text-xs font-bold text-black">+12</span>
           </div>
         </div>
       </div>
