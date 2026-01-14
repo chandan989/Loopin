@@ -19,10 +19,12 @@ import {
   Globe,
   Clock
 } from 'lucide-react';
+import { connect, isConnected, getLocalStorage } from '@stacks/connect';
 import { SlideUp, StaggerContainer, ScaleIn, GlitchText } from '@/components/animation/MotionWrapper';
 
 const Index = () => {
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isSignedIn, setIsSignedIn] = React.useState(false);
   const [loadingText, setLoadingText] = React.useState('INITIALIZING GRID PROTOCOL...');
 
   const logoRef = React.useRef(null);
@@ -31,6 +33,17 @@ const Index = () => {
   React.useEffect(() => {
     // Check for auth
     const wallet = localStorage.getItem('loopin_wallet');
+
+    // Determine signed in state
+    let signedIn = !!wallet;
+    if (!signedIn && isConnected()) {
+      const storageData = getLocalStorage() as any;
+      if (storageData && storageData.addresses && storageData.addresses.stx && storageData.addresses.stx.length > 0) {
+        signedIn = true;
+      }
+    }
+    setIsSignedIn(signedIn);
+
     if (wallet) {
       navigate('/dashboard');
       return;
@@ -570,16 +583,18 @@ const Index = () => {
           </div>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-16">
-            <Button
-              asChild
-              variant="default"
-              size="xl"
-              className="h-20 px-12 text-xl bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-bold rounded-full shadow-[0_0_40px_rgba(212,255,0,0.3)] transition-transform hover:scale-105"
-            >
-              <Link to="/register">
-                CONNECT WALLET
-              </Link>
-            </Button>
+            {!isSignedIn && (
+              <Button
+                asChild
+                variant="default"
+                size="xl"
+                className="h-20 px-12 text-xl bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-bold rounded-full shadow-[0_0_40px_rgba(212,255,0,0.3)] transition-transform hover:scale-105"
+              >
+                <Link to="/register">
+                  CONNECT WALLET
+                </Link>
+              </Button>
+            )}
             <Button
               asChild
               variant="outline"
