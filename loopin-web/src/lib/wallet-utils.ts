@@ -12,29 +12,49 @@ export const isAndroid = (): boolean => {
     return /Android/i.test(navigator.userAgent);
 };
 
-export const connectWalletMobile = () => {
-    // Try to detect if Leather Wallet app is installed via deep link
-    const appUrl = `leather://connect?appName=Loopin&appIcon=${encodeURIComponent(window.location.origin + "/logo.svg")}`;
+export const showMobileWalletInstructions = () => {
+    const message = isIOS()
+        ? 'To connect your wallet on mobile:\n\n1. Install Leather Wallet from the App Store\n2. Create or import your wallet\n3. Return to this page and try connecting again\n\nWould you like to go to the App Store now?'
+        : 'To connect your wallet on mobile:\n\n1. Install Leather Wallet from the Play Store\n2. Create or import your wallet\n3. Return to this page and try connecting again\n\nWould you like to go to the Play Store now?';
 
-    // Attempt to open the app
-    const startTime = Date.now();
-    window.location.href = appUrl;
-
-    // If app doesn't open within 2 seconds, redirect to app store
-    setTimeout(() => {
-        const elapsedTime = Date.now() - startTime;
-        if (elapsedTime < 2500) {
-            // App likely not installed, redirect to appropriate store
-            if (isIOS()) {
-                window.location.href = 'https://apps.apple.com/us/app/leather-bitcoin-defi-wallet/id6499127775';
-            } else if (isAndroid()) {
-                window.location.href = 'https://play.google.com/store/apps/details?id=io.leather.mobilewallet';
-            } else {
-                // Fallback: show alert
-                alert('Please install Leather Wallet app from your device\'s app store to connect.');
-            }
+    if (confirm(message)) {
+        if (isIOS()) {
+            window.location.href = 'https://apps.apple.com/us/app/leather-bitcoin-defi-wallet/id6499127775';
+        } else if (isAndroid()) {
+            window.location.href = 'https://play.google.com/store/apps/details?id=io.leather.mobilewallet';
         }
-    }, 2000);
+    }
+};
+
+export const connectWalletMobile = (
+    authenticate: any,
+    userSession: UserSession,
+    onFinish?: () => void
+) => {
+    try {
+        // On mobile, Stacks Connect will try to redirect to the Leather mobile app
+        // If the app is installed, it will open and handle the auth
+        // If not, it may show an error or do nothing
+        authenticate({
+            appDetails: {
+                name: "Loopin",
+                icon: window.location.origin + "/logo.svg",
+            },
+            redirectTo: window.location.origin + "/", // Return to home after auth
+            onFinish: onFinish || (() => {
+                window.location.reload();
+            }),
+            onCancel: () => {
+                // User cancelled or app not installed
+                showMobileWalletInstructions();
+            },
+            userSession,
+        });
+    } catch (error) {
+        console.error('Mobile wallet connection error:', error);
+        // If Stacks Connect fails, show installation instructions
+        showMobileWalletInstructions();
+    }
 };
 
 export const connectWalletDesktop = (
@@ -59,8 +79,12 @@ export const connectWallet = (
     userSession: UserSession,
     onFinish?: () => void
 ) => {
+    // Use the same authentication flow for both mobile and desktop
+    // Stacks Connect will handle the platform-specific behavior:
+    // - Desktop: Opens browser extension
+    // - Mobile: Redirects to Leather app (if installed) or shows install prompt
     if (isMobileDevice()) {
-        connectWalletMobile();
+        connectWalletMobile(authenticate, userSession, onFinish);
     } else {
         connectWalletDesktop(authenticate, userSession, onFinish);
     }
