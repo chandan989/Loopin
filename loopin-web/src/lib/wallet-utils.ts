@@ -32,27 +32,41 @@ export const connectWalletMobile = (
     onFinish?: () => void
 ) => {
     try {
-        // On mobile, Stacks Connect will try to redirect to the Leather mobile app
-        // If the app is installed, it will open and handle the auth
-        // If not, it may show an error or do nothing
-        authenticate({
-            appDetails: {
-                name: "Loopin",
-                icon: window.location.origin + "/logo.svg",
-            },
-            redirectTo: window.location.origin + "/", // Return to home after auth
-            onFinish: onFinish || (() => {
-                window.location.reload();
-            }),
-            onCancel: () => {
-                // User cancelled or app not installed
-                showMobileWalletInstructions();
-            },
-            userSession,
-        });
+        // For mobile, we create a deep link to Leather app
+        const appName = "Loopin";
+        const appIcon = encodeURIComponent(window.location.origin + "/logo.svg");
+        const returnUrl = encodeURIComponent(window.location.origin + "/");
+
+        // Try custom URL scheme first (works if app is installed)
+        const customSchemeUrl = `leather://sign-in?appName=${appName}&appIcon=${appIcon}&returnTo=${returnUrl}`;
+
+        // Fallback to HTTPS URL (universal link)
+        const httpsUrl = `https://wallet.leather.io/sign-in?appName=${appName}&appIcon=${appIcon}&returnTo=${returnUrl}`;
+
+        // Store callback for when user returns
+        if (onFinish) {
+            sessionStorage.setItem('wallet_connect_callback', 'true');
+        }
+
+        // Try custom scheme first
+        window.location.href = customSchemeUrl;
+
+        // If app doesn't open, try HTTPS fallback and show instructions
+        setTimeout(() => {
+            if (document.hasFocus()) {
+                // Try HTTPS URL
+                window.location.href = httpsUrl;
+
+                // If still here after another delay, show instructions
+                setTimeout(() => {
+                    if (document.hasFocus()) {
+                        showMobileWalletInstructions();
+                    }
+                }, 2000);
+            }
+        }, 1500);
     } catch (error) {
         console.error('Mobile wallet connection error:', error);
-        // If Stacks Connect fails, show installation instructions
         showMobileWalletInstructions();
     }
 };
