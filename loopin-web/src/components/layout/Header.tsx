@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { AppConfig, UserSession, showConnect, isConnected } from '@stacks/connect';
+import { AppConfig, UserSession, authenticate, isConnected } from '@stacks/connect';
 import { userSession } from '@/lib/stacks-auth';
 import { Button } from '@/components/ui/button';
 
@@ -61,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
   }, []);
 
   const handleConnect = async () => {
-    showConnect({
+    authenticate({
       appDetails: {
         name: "Loopin",
         icon: window.location.origin + "/logo.svg",

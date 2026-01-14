@@ -14,7 +14,7 @@ import {
     ChevronUp,
     Zap
 } from 'lucide-react';
-import { isConnected, showConnect } from '@stacks/connect';
+import { isConnected, authenticate } from '@stacks/connect';
 import { userSession } from '@/lib/stacks-auth';
 import { cn } from '@/lib/utils';
 import { MOCK_FAQS, MOCK_POWERUPS } from '@/data/mockData';
@@ -257,7 +257,7 @@ const HowToPlay = () => {
                                         variant="default"
                                         size="xl"
                                         className="h-16 px-10 text-lg bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-bold rounded-full shadow-[0_0_20px_rgba(212,255,0,0.3)] transition-transform hover:scale-105"
-                                        onClick={() => showConnect({
+                                        onClick={() => authenticate({
                                             appDetails: {
                                                 name: "Loopin",
                                                 icon: window.location.origin + "/logo.svg",
