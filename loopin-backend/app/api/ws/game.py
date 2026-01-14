@@ -95,7 +95,54 @@ class ConnectionManager:
         except Exception as e:
             print(f"Error fetching trails: {e}")
 
-        # 3. Send customized state to each connected client
+
+        # 4. Fetch Territories
+        territories_list = []
+        try:
+            # Fetch all territories
+            # We want the owner ID and the GeoJSON geometry
+            t_stmt = select(PlayerTerritory.player_id, func.ST_AsGeoJSON(PlayerTerritory.territory).label("geojson"), PlayerTerritory.area_sqm)
+            t_result = await db.execute(t_stmt)
+            for row in t_result:
+                t_pid = row.player_id
+                t_geojson_str = row.geojson
+                t_area = row.area_sqm
+                
+                if t_geojson_str:
+                    t_geojson = json.loads(t_geojson_str)
+                    
+                    # Convert to simple list of points for frontend Polygon [[lat, lng], ...]
+                    # GeoJSON Polygon coordinates are usually [[[lng, lat], [lng, lat], ...]] (nested list for rings)
+                    # We assume single outer ring for MVP simplicity, or handle multipolygons
+                    
+                    # Helper to extract points from a Polygon coordinate ring
+                    def extract_points(coords_ring):
+                        return [{"lat": p[1], "lng": p[0]} for p in coords_ring]
+
+                    # Handle Polygon vs MultiPolygon
+                    polygons = []
+                    if t_geojson["type"] == "Polygon":
+                        # t_geojson["coordinates"] is [outer_ring, inner_ring1, ...]
+                        # We just take the outer ring for now
+                        if len(t_geojson["coordinates"]) > 0:
+                            polygons.append(extract_points(t_geojson["coordinates"][0]))
+                            
+                    elif t_geojson["type"] == "MultiPolygon":
+                        for poly_coords in t_geojson["coordinates"]:
+                            if len(poly_coords) > 0:
+                                polygons.append(extract_points(poly_coords[0]))
+                                
+                    for poly_points in polygons:
+                        territories_list.append({
+                            "owner_id": str(t_pid),
+                            "points": poly_points,
+                            "area": t_area
+                        })
+
+        except Exception as e:
+            print(f"Error fetching territories: {e}")
+
+        # 5. Send customized state to each connected client
         for connection in list(self.active_connections[game_id]):
             recipient_state = self.connection_states.get(connection)
             recipient_id = recipient_state.get("player_id") if recipient_state else None
@@ -153,7 +200,7 @@ class ConnectionManager:
                     "type": "game_state",
                     "tick": 0, 
                     "players": payload_players,
-                    "territories": [] 
+                    "territories": territories_list 
                 })
             except Exception:
                 pass

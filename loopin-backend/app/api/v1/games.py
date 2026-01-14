@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.models.game import GameSession
 from app.models.player import Player
 from app.schemas.game import GameResponse, GameSessionDetail
@@ -43,7 +44,8 @@ async def get_game_details(game_id: UUID, db: AsyncSession = Depends(get_db)):
 async def confirm_join(
     game_id: UUID, 
     join_request: JoinRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Confirm player join. 

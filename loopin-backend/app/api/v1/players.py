@@ -6,6 +6,7 @@ from typing import Optional
 from uuid import UUID
 
 from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.models.player import Player, PlayerStats
 
 router = APIRouter()
@@ -99,7 +100,8 @@ async def get_player(
 async def update_player(
     wallet_address: str,
     request: UpdateProfileRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     result = await db.execute(select(Player).where(Player.wallet_address == wallet_address))
     player = result.scalar_one_or_none()
