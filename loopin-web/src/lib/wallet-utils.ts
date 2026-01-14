@@ -32,6 +32,8 @@ export const connectWalletMobile = (
     onFinish?: () => void
 ) => {
     try {
+        console.log('[Mobile Wallet] Starting connection...');
+
         // For mobile, we create a deep link to Leather app
         const appName = "Loopin";
         const appIcon = encodeURIComponent(window.location.origin + "/logo.svg");
@@ -42,6 +44,8 @@ export const connectWalletMobile = (
 
         // Fallback to HTTPS URL (universal link)
         const httpsUrl = `https://wallet.leather.io/sign-in?appName=${appName}&appIcon=${appIcon}&returnTo=${returnUrl}`;
+
+        console.log('[Mobile Wallet] Trying custom scheme:', customSchemeUrl);
 
         // Store callback for when user returns
         if (onFinish) {
@@ -54,19 +58,23 @@ export const connectWalletMobile = (
         // If app doesn't open, try HTTPS fallback and show instructions
         setTimeout(() => {
             if (document.hasFocus()) {
+                console.log('[Mobile Wallet] Custom scheme failed, trying HTTPS...');
                 // Try HTTPS URL
                 window.location.href = httpsUrl;
 
                 // If still here after another delay, show instructions
                 setTimeout(() => {
                     if (document.hasFocus()) {
+                        console.log('[Mobile Wallet] HTTPS also failed, showing instructions');
                         showMobileWalletInstructions();
                     }
                 }, 2000);
+            } else {
+                console.log('[Mobile Wallet] App opened successfully!');
             }
         }, 1500);
     } catch (error) {
-        console.error('Mobile wallet connection error:', error);
+        console.error('[Mobile Wallet] Error:', error);
         showMobileWalletInstructions();
     }
 };
