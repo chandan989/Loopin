@@ -261,13 +261,17 @@ const HowToPlay = () => {
                                             try {
                                                 const response = await connect({
                                                     network: 'mainnet',
+                                                    appDetails: {
+                                                        name: "Loopin",
+                                                        icon: "https://loopin.game/logo.svg",
+                                                    },
                                                     walletConnect: {
                                                         projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
                                                         metadata: {
                                                             name: "Loopin",
                                                             description: "Loopin Game",
-                                                            url: window.location.origin,
-                                                            icons: [window.location.origin + "/logo.svg"],
+                                                            url: "https://loopin.game",
+                                                            icons: ["https://loopin.game/logo.svg"],
                                                         },
                                                     },
                                                 } as any);

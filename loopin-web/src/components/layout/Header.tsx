@@ -62,21 +62,30 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
 
   const handleConnect = async () => {
     try {
+      console.log("Initiating connect() with manual session handling...");
       const response = await connect({
         network: 'mainnet',
+        appDetails: {
+          name: "Loopin",
+          icon: "https://loopin.game/logo.svg",
+        },
         walletConnect: {
           projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
           metadata: {
             name: "Loopin",
             description: "Loopin Game",
-            url: window.location.origin,
-            icons: [window.location.origin + "/logo.svg"],
+            url: "https://loopin.game",
+            icons: ["https://loopin.game/logo.svg"],
           },
         },
       } as any);
 
+      console.log("connect() returned:", response);
+
       if (response && response.addresses) {
+        console.log("Addresses found:", response.addresses);
         const stxAddress = response.addresses.find((a: any) => a.symbol === 'STX' || a.address.startsWith('S'))?.address;
+        console.log("Extracted STX Address:", stxAddress);
 
         if (stxAddress) {
           const sessionData = userSession.store.getSessionData();
@@ -92,8 +101,13 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
             userData
           });
 
+          console.log("Session updated. Reloading...");
           window.location.reload();
+        } else {
+          console.error("STX Address not found in response.");
         }
+      } else {
+        console.error("No addresses in response.");
       }
     } catch (e) {
       console.error("Connect error:", e);
