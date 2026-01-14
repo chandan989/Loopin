@@ -14,7 +14,7 @@ import {
     ChevronUp,
     Zap
 } from 'lucide-react';
-import { isConnected, authenticate } from '@stacks/connect';
+import { isConnected, connect } from '@stacks/connect';
 import { userSession } from '@/lib/stacks-auth';
 import { cn } from '@/lib/utils';
 import { MOCK_FAQS, MOCK_POWERUPS } from '@/data/mockData';
@@ -257,16 +257,45 @@ const HowToPlay = () => {
                                         variant="default"
                                         size="xl"
                                         className="h-16 px-10 text-lg bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-bold rounded-full shadow-[0_0_20px_rgba(212,255,0,0.3)] transition-transform hover:scale-105"
-                                        onClick={() => authenticate({
-                                            appDetails: {
-                                                name: "Loopin",
-                                                icon: window.location.origin + "/logo.svg",
-                                            },
-                                            onFinish: () => {
-                                                window.location.reload();
-                                            },
-                                            userSession,
-                                        })}
+                                        onClick={async () => {
+                                            try {
+                                                const response = await connect({
+                                                    network: 'mainnet',
+                                                    walletConnect: {
+                                                        projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
+                                                        metadata: {
+                                                            name: "Loopin",
+                                                            description: "Loopin Game",
+                                                            url: window.location.origin,
+                                                            icons: [window.location.origin + "/logo.svg"],
+                                                        },
+                                                    },
+                                                } as any);
+
+                                                if (response && response.addresses) {
+                                                    const stxAddress = response.addresses.find((a: any) => a.symbol === 'STX' || a.address.startsWith('S'))?.address;
+
+                                                    if (stxAddress) {
+                                                        const sessionData = userSession.store.getSessionData();
+                                                        const userData = sessionData.userData || { profile: {} };
+                                                        userData.profile = userData.profile || {};
+                                                        userData.profile.stxAddress = {
+                                                            mainnet: stxAddress,
+                                                            testnet: stxAddress
+                                                        };
+
+                                                        userSession.store.setSessionData({
+                                                            ...sessionData,
+                                                            userData
+                                                        });
+
+                                                        window.location.reload();
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                console.error("Connect error:", e);
+                                            }
+                                        }}
                                     >
                                         CONNECT WALLET
                                     </Button>

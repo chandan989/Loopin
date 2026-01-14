@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { AppConfig, UserSession, authenticate, isConnected } from '@stacks/connect';
+import { AppConfig, UserSession, connect, isConnected } from '@stacks/connect';
 import { userSession } from '@/lib/stacks-auth';
 import { Button } from '@/components/ui/button';
 
@@ -61,17 +61,68 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
   }, []);
 
   const handleConnect = async () => {
-    authenticate({
-      appDetails: {
-        name: "Loopin",
-        icon: window.location.origin + "/logo.svg",
-      },
-      redirectTo: "/",
-      onFinish: () => {
-        window.location.reload();
-      },
-      userSession,
-    });
+    try {
+      const { userSession } = await connect({
+        network: 'mainnet',
+        walletConnect: {
+          projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
+        },
+        appDetails: {
+          name: "Loopin",
+          icon: window.location.origin + "/logo.svg",
+        },
+      });
+      // connect() is a promise that resolves when flow is complete (unlike authenticate which uses callbacks)
+      // but strictly speaking for @stacks/connect v8+, it might still rely on some callbacks or just resolve.
+      // Based on the library code we saw: `await w(...)`, it returns a promise.
+      // And `w` does `await ue(n.walletConnect)`.
+
+      // Verification: The library returns the `authResponse` payload or similar.
+      // We need to verify if `connect` resolves with { userSession } or we just check session after.
+
+      // Actually standard Stacks `connect` usage usually involves `onFinish` in `authOptions` passed to `connect`.
+      // BUT `connect` signature in index.d.ts is:
+      // export declare const connect: (authOptions: AuthOptions) => Promise<void>;
+      // Wait, let's double check the `index.d.ts` view from Step 81.
+      // export { connect ... } from './request';
+
+      // Step 81 view of index.d.ts says:
+      // export { connect, request, requestRaw } from './request';
+
+      // Let's check `dist/index.mjs` again in Step 86.
+      // export { ... is as connect ... }
+      // function is(e){ ... return w(...) }
+
+      // `w` returns `Promise` if window is defined.
+      // It calls `defineCustomElements`.
+
+      // Most importantly, the `AuthOptions` interface (Step 115) has `onFinish`.
+      // So we should keep using `onFinish`.
+
+      // My previous analysis said `authenticate` dropped options.
+      // `connect` (alias `is`) uses `w`.
+      // `w` takes `options`.
+      // `w` calls `ue(n.walletConnect)` -> initializes UniversalConnector.
+
+      // So we just need to switch `authenticate` -> `connect` and pass `walletConnect` in options.
+
+      await connect({
+        walletConnect: {
+          projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
+        },
+        appDetails: {
+          name: "Loopin",
+          icon: window.location.origin + "/logo.svg",
+        },
+        redirectTo: "/",
+        onFinish: () => {
+          window.location.reload();
+        },
+        userSession,
+      });
+    } catch (e) {
+      console.error("Connect error:", e);
+    }
   };
 
   const handleDisconnect = () => {
