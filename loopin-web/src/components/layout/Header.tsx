@@ -14,6 +14,7 @@ import { isConnected } from '@stacks/connect';
 import { useConnect } from '@stacks/connect-react';
 import { userSession } from '@/lib/stacks-auth';
 import { Button } from '@/components/ui/button';
+import { connectWallet } from '@/lib/wallet-utils';
 
 interface HeaderProps {
   className?: string;
@@ -57,16 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
   }, []);
 
   const handleConnect = async () => {
-    authenticate({
-      appDetails: {
-        name: "Loopin",
-        icon: window.location.origin + "/logo.svg",
-      },
-      onFinish: () => {
-        window.location.reload();
-      },
-      userSession,
-    });
+    connectWallet(authenticate, userSession);
   };
 
   const handleDisconnect = () => {

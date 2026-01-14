@@ -7,8 +7,12 @@ import { Input } from '@/components/ui/input';
 import { SlideUp } from '@/components/animation/MotionWrapper';
 import { Wallet, User, Loader2, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useConnect } from '@stacks/connect-react';
+import { userSession } from '@/lib/stacks-auth';
+import { connectWallet } from '@/lib/wallet-utils';
 
 const Register = () => {
+    const { authenticate } = useConnect();
     const navigate = useNavigate();
     const [step, setStep] = useState(1); // 1: Connect, 2: Details
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -16,15 +20,40 @@ const Register = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleConnect = () => {
-        // Mock connection
-        setIsLoading(true);
-        setTimeout(() => {
-            const mockWallet = `SP3K...${Math.random().toString(36).substring(7).toUpperCase()}`;
-            setWalletAddress(mockWallet);
-            setIsLoading(false);
+    // Check if already connected on mount
+    React.useEffect(() => {
+        const loopinWallet = localStorage.getItem('loopin_wallet');
+        if (loopinWallet) {
+            navigate('/dashboard');
+            return;
+        }
+
+        if (userSession.isUserSignedIn()) {
+            const userData = userSession.loadUserData();
+            const address = userData.profile.stxAddress.mainnet;
+            setWalletAddress(address);
             setStep(2);
-        }, 1000);
+        }
+    }, [navigate]);
+
+    const handleConnect = () => {
+        setIsLoading(true);
+        connectWallet(
+            authenticate,
+            userSession,
+            () => {
+                // On successful connection
+                if (userSession.isUserSignedIn()) {
+                    const userData = userSession.loadUserData();
+                    const address = userData.profile.stxAddress.mainnet;
+                    setWalletAddress(address);
+                    setStep(2);
+                    setIsLoading(false);
+                } else {
+                    setIsLoading(false);
+                }
+            }
+        );
     };
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -83,7 +112,7 @@ const Register = () => {
                                             {isLoading ? <Loader2 className="animate-spin" /> : <Wallet />}
                                         </Button>
                                         <p className="text-xs text-center text-gray-400 font-bold uppercase tracking-widest mt-6">
-                                            Supported: Leather, Xverse
+                                            Supported: Leather Wallet, Xverse
                                         </p>
                                     </div>
                                 ) : (
