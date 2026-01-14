@@ -10,7 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { connect, isConnected, disconnect, getLocalStorage } from '@stacks/connect';
+import { isConnected } from '@stacks/connect';
+import { useConnect } from '@stacks/connect-react';
+import { userSession } from '@/lib/stacks-auth';
 import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
@@ -18,6 +20,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ className }) => {
+  const { authenticate } = useConnect();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isSignedIn, setIsSignedIn] = React.useState(false);
@@ -35,13 +38,17 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
     if (loopinWallet) {
       setIsSignedIn(true);
       setUserAddress(loopinWallet);
+    } else if (userSession.isUserSignedIn()) {
+      setIsSignedIn(true);
+      setUserAddress(userSession.loadUserData().profile.stxAddress.mainnet);
     } else if (isConnected()) {
-      // Fallback to Stacks auth if we use it later
-      const storageData = getLocalStorage() as any;
-      if (storageData && storageData.addresses && storageData.addresses.stx && storageData.addresses.stx.length > 0) {
-        setIsSignedIn(true);
-        // Assuming the first address is the active one
-        setUserAddress(storageData.addresses.stx[0].address);
+      // Legacy check or if session was restored
+      setIsSignedIn(true);
+      try {
+        const userData = userSession.loadUserData();
+        setUserAddress(userData.profile.stxAddress.mainnet);
+      } catch (e) {
+        console.log("No user data found in session");
       }
     }
 
@@ -50,27 +57,20 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
   }, []);
 
   const handleConnect = async () => {
-    try {
-      const authOptions = {
-        appDetails: {
-          name: "Loopin",
-          icon: window.location.origin + "/logo.svg",
-        },
-      };
-
-      const response = await connect(authOptions as any);
-      if (response && (response as any).addresses && (response as any).addresses.stx && (response as any).addresses.stx.length > 0) {
-        setIsSignedIn(true);
-        setUserAddress((response as any).addresses.stx[0].address);
-        window.location.href = '/dashboard';
-      }
-    } catch (e) {
-      console.error("Connect error:", e);
-    }
+    authenticate({
+      appDetails: {
+        name: "Loopin",
+        icon: window.location.origin + "/logo.svg",
+      },
+      onFinish: () => {
+        window.location.reload();
+      },
+      userSession,
+    });
   };
 
   const handleDisconnect = () => {
-    disconnect();
+    userSession.signUserOut();
     localStorage.removeItem('loopin_wallet');
     setIsSignedIn(false);
     setUserAddress(null);
@@ -175,13 +175,11 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
                 </DropdownMenu>
               ) : (
                 <Button
-                  asChild
+                  onClick={handleConnect}
                   className="bg-black hover:bg-black/80 text-white font-display font-bold tracking-widest text-xs h-10 px-6 rounded-full border-2 border-transparent hover:border-[#D4FF00] transition-all"
                 >
-                  <Link to="/register">
-                    <Wallet className="w-4 h-4 mr-2 text-[#D4FF00]" />
-                    CONNECT
-                  </Link>
+                  <Wallet className="w-4 h-4 mr-2 text-[#D4FF00]" />
+                  CONNECT
                 </Button>
               )}
             </div>
@@ -199,57 +197,59 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
       </div>
 
       {/* Mobile Navigation Overlay */}
-      {isMenuOpen && (
-        <div className="absolute top-full left-0 right-0 h-screen bg-white/95 backdrop-blur-xl border-t border-black/5 animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
-          <nav className="container mx-auto px-6 py-8 flex flex-col gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                onClick={() => setIsMenuOpen(false)}
-                className={cn(
-                  "text-3xl font-display font-black tracking-tighter uppercase transition-colors",
-                  isActive(link.href)
-                    ? "text-transparent bg-clip-text bg-gradient-to-r from-black to-gray-500"
-                    : "text-gray-300 hover:text-black"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="pt-8 border-t border-gray-100 mt-4">
-              {isSignedIn ? (
-                <div className="flex flex-col gap-3">
-                  <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
-                    <Button className="w-full bg-white border-2 border-black text-black hover:bg-black/5 font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
-                      <User className="w-5 h-5 mr-2" />
-                      PROFILE
-                    </Button>
-                  </Link>
-                  <Button
-                    onClick={handleDisconnect}
-                    className="w-full bg-black text-white hover:bg-black/90 font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(212,255,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
-                  >
-                    <LogOut className="w-5 h-5 mr-2 text-[#D4FF00]" />
-                    LOG OUT ({truncateAddress(userAddress || "")})
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  asChild
-                  className="w-full bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+      {
+        isMenuOpen && (
+          <div className="absolute top-full left-0 right-0 h-screen bg-white/95 backdrop-blur-xl border-t border-black/5 animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
+            <nav className="container mx-auto px-6 py-8 flex flex-col gap-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={cn(
+                    "text-3xl font-display font-black tracking-tighter uppercase transition-colors",
+                    isActive(link.href)
+                      ? "text-transparent bg-clip-text bg-gradient-to-r from-black to-gray-500"
+                      : "text-gray-300 hover:text-black"
+                  )}
                 >
-                  <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                  {link.label}
+                </Link>
+              ))}
+              <div className="pt-8 border-t border-gray-100 mt-4">
+                {isSignedIn ? (
+                  <div className="flex flex-col gap-3">
+                    <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full bg-white border-2 border-black text-black hover:bg-black/5 font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
+                        <User className="w-5 h-5 mr-2" />
+                        PROFILE
+                      </Button>
+                    </Link>
+                    <Button
+                      onClick={handleDisconnect}
+                      className="w-full bg-black text-white hover:bg-black/90 font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(212,255,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+                    >
+                      <LogOut className="w-5 h-5 mr-2 text-[#D4FF00]" />
+                      LOG OUT ({truncateAddress(userAddress || "")})
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      handleConnect();
+                    }}
+                    className="w-full bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+                  >
                     <Wallet className="w-5 h-5 mr-2" />
                     CONNECT WALLET
-                  </Link>
-                </Button>
-              )}
-            </div>
-          </nav>
-        </div>
-      )}
-    </header>
+                  </Button>
+                )}
+              </div>
+            </nav >
+          </div >
+        )}
+    </header >
   );
 };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Zap, Hexagon, Shield, Activity } from 'lucide-react';
+import { userSession } from '@/lib/stacks-auth';
 
 interface FooterProps {
   className?: string;
@@ -12,7 +13,8 @@ export const Footer: React.FC<FooterProps> = ({ className }) => {
 
   React.useEffect(() => {
     const loopinWallet = localStorage.getItem('loopin_wallet');
-    setIsSignedIn(!!loopinWallet);
+    const isStacksSignedIn = userSession.isUserSignedIn();
+    setIsSignedIn(!!loopinWallet || isStacksSignedIn);
   }, []);
 
   return (

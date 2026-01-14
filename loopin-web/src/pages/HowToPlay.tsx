@@ -14,7 +14,9 @@ import {
     ChevronUp,
     Zap
 } from 'lucide-react';
-import { connect, isConnected, getLocalStorage } from '@stacks/connect';
+import { isConnected, getLocalStorage } from '@stacks/connect';
+import { useConnect } from '@stacks/connect-react';
+import { userSession } from '@/lib/stacks-auth';
 import { cn } from '@/lib/utils';
 import { MOCK_FAQS, MOCK_POWERUPS } from '@/data/mockData';
 import { SlideUp, StaggerContainer, ScaleIn, GlitchText } from '@/components/animation/MotionWrapper';
@@ -22,6 +24,7 @@ import { SlideUp, StaggerContainer, ScaleIn, GlitchText } from '@/components/ani
 const HowToPlay = () => {
     const [openFaq, setOpenFaq] = React.useState<number | null>(null);
     const [isSignedIn, setIsSignedIn] = React.useState(false);
+    const { authenticate } = useConnect();
 
     const faqs = MOCK_FAQS;
     const powerUps = MOCK_POWERUPS;
@@ -257,14 +260,21 @@ const HowToPlay = () => {
                             <div className="flex flex-col md:flex-row items-center justify-center gap-6">
                                 {!isSignedIn && (
                                     <Button
-                                        asChild
                                         variant="default"
                                         size="xl"
                                         className="h-16 px-10 text-lg bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-bold rounded-full shadow-[0_0_20px_rgba(212,255,0,0.3)] transition-transform hover:scale-105"
+                                        onClick={() => authenticate({
+                                            appDetails: {
+                                                name: "Loopin",
+                                                icon: window.location.origin + "/logo.svg",
+                                            },
+                                            onFinish: () => {
+                                                window.location.reload();
+                                            },
+                                            userSession,
+                                        })}
                                     >
-                                        <Link to="/register">
-                                            CONNECT WALLET
-                                        </Link>
+                                        CONNECT WALLET
                                     </Button>
                                 )}
                                 <Link to="/dashboard">
