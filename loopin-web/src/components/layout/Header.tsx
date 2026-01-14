@@ -10,8 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { isConnected } from '@stacks/connect';
-import { useConnect } from '@stacks/connect-react';
+
+import { AppConfig, UserSession, showConnect, isConnected } from '@stacks/connect';
 import { userSession } from '@/lib/stacks-auth';
 import { Button } from '@/components/ui/button';
 
@@ -20,7 +20,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ className }) => {
-  const { authenticate } = useConnect();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isSignedIn, setIsSignedIn] = React.useState(false);
@@ -43,12 +42,17 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
       setUserAddress(userSession.loadUserData().profile.stxAddress.mainnet);
     } else if (isConnected()) {
       // Legacy check or if session was restored
-      setIsSignedIn(true);
-      try {
-        const userData = userSession.loadUserData();
-        setUserAddress(userData.profile.stxAddress.mainnet);
-      } catch (e) {
-        console.log("No user data found in session");
+      // NOTE: isConnected() might not represent session state with new library, relying on userSession mainly
+      // but keeping check for compatibility if needed.
+      // Actually, with new library, rely on userSession.
+      if (userSession.isUserSignedIn()) {
+        setIsSignedIn(true);
+        try {
+          const userData = userSession.loadUserData();
+          setUserAddress(userData.profile.stxAddress.mainnet);
+        } catch (e) {
+          console.log("No user data found in session");
+        }
       }
     }
 
@@ -57,11 +61,12 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
   }, []);
 
   const handleConnect = async () => {
-    authenticate({
+    showConnect({
       appDetails: {
         name: "Loopin",
         icon: window.location.origin + "/logo.svg",
       },
+      redirectTo: "/",
       onFinish: () => {
         window.location.reload();
       },
