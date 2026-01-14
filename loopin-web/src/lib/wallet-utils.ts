@@ -34,20 +34,23 @@ export const connectWalletMobile = (
     try {
         console.log('[Mobile Wallet] Starting mobile connection with Stacks Connect...');
 
-        // On mobile, we need to use Stacks Connect's authenticate method
-        // but it will automatically redirect to the mobile app
+        // On mobile, use Stacks Connect but without redirectTo to avoid router issues
         authenticate({
             appDetails: {
                 name: "Loopin",
                 icon: window.location.origin + "/logo.svg",
             },
-            redirectTo: window.location.origin + "/",
+            // Don't use redirectTo on mobile - it causes router errors
+            // The app will handle the return naturally
             onFinish: () => {
                 console.log('[Mobile Wallet] Authentication finished!');
+                // Store that we're authenticated
+                localStorage.setItem('wallet_just_connected', 'true');
                 if (onFinish) {
                     onFinish();
                 } else {
-                    window.location.reload();
+                    // Reload to update the UI
+                    window.location.href = '/';
                 }
             },
             onCancel: () => {
