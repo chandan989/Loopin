@@ -31,39 +31,10 @@ export const connectWalletMobile = (
     userSession: UserSession,
     onFinish?: () => void
 ) => {
-    try {
-        console.log('[Mobile Wallet] Starting mobile connection with Stacks Connect...');
-
-        // On mobile, use Stacks Connect but without redirectTo to avoid router issues
-        authenticate({
-            appDetails: {
-                name: "Loopin",
-                icon: window.location.origin + "/logo.svg",
-            },
-            // Don't use redirectTo on mobile - it causes router errors
-            // The app will handle the return naturally
-            onFinish: () => {
-                console.log('[Mobile Wallet] Authentication finished!');
-                // Store that we're authenticated
-                localStorage.setItem('wallet_just_connected', 'true');
-                if (onFinish) {
-                    onFinish();
-                } else {
-                    // Reload to update the UI
-                    window.location.href = '/';
-                }
-            },
-            onCancel: () => {
-                console.log('[Mobile Wallet] User cancelled');
-            },
-            userSession,
-        });
-
-        console.log('[Mobile Wallet] Authenticate called, waiting for redirect...');
-    } catch (error) {
-        console.error('[Mobile Wallet] Error:', error);
-        showMobileWalletInstructions();
-    }
+    // For now, use the same flow as desktop
+    // The wallet selector will show, but Leather mobile app should be listed
+    console.log('[Mobile Wallet] Using desktop flow for mobile (temporary)...');
+    connectWalletDesktop(authenticate, userSession, onFinish);
 };
 
 export const connectWalletDesktop = (
