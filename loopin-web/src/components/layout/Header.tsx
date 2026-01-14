@@ -30,7 +30,13 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
       setIsScrolled(window.scrollY > 10);
     };
 
-    if (isConnected()) {
+    // Check for our custom auth first
+    const loopinWallet = localStorage.getItem('loopin_wallet');
+    if (loopinWallet) {
+      setIsSignedIn(true);
+      setUserAddress(loopinWallet);
+    } else if (isConnected()) {
+      // Fallback to Stacks auth if we use it later
       const storageData = getLocalStorage() as any;
       if (storageData && storageData.addresses && storageData.addresses.stx && storageData.addresses.stx.length > 0) {
         setIsSignedIn(true);
@@ -65,9 +71,10 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
 
   const handleDisconnect = () => {
     disconnect();
+    localStorage.removeItem('loopin_wallet');
     setIsSignedIn(false);
     setUserAddress(null);
-    window.location.reload();
+    window.location.href = '/'; // Go to home instead of reload
   };
 
   const truncateAddress = (address: string) => {
@@ -168,11 +175,13 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
                 </DropdownMenu>
               ) : (
                 <Button
-                  onClick={handleConnect}
+                  asChild
                   className="bg-black hover:bg-black/80 text-white font-display font-bold tracking-widest text-xs h-10 px-6 rounded-full border-2 border-transparent hover:border-[#D4FF00] transition-all"
                 >
-                  <Wallet className="w-4 h-4 mr-2 text-[#D4FF00]" />
-                  CONNECT
+                  <Link to="/register">
+                    <Wallet className="w-4 h-4 mr-2 text-[#D4FF00]" />
+                    CONNECT
+                  </Link>
                 </Button>
               )}
             </div>
@@ -227,11 +236,13 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
                 </div>
               ) : (
                 <Button
-                  onClick={handleConnect}
+                  asChild
                   className="w-full bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-black text-lg h-14 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
                 >
-                  <Wallet className="w-5 h-5 mr-2" />
-                  CONNECT WALLET
+                  <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                    <Wallet className="w-5 h-5 mr-2" />
+                    CONNECT WALLET
+                  </Link>
                 </Button>
               )}
             </div>

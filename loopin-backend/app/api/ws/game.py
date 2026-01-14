@@ -22,7 +22,12 @@ class ConnectionManager:
         if game_id not in self.active_connections:
             self.active_connections[game_id] = []
         self.active_connections[game_id].append(websocket)
-        self.connection_states[websocket] = {"lat": 0.0, "lng": 0.0, "player_id": None}
+        self.connection_states[websocket] = {
+            "lat": 0.0, 
+            "lng": 0.0, 
+            "player_id": None,
+            "active_powerups": [] # list of 'shield', 'invisibility', etc.
+        }
 
     def disconnect(self, websocket: WebSocket, game_id: UUID):
         if game_id in self.active_connections:
@@ -44,37 +49,77 @@ class ConnectionManager:
     async def broadcast_game_state(self, game_id: UUID, sender_id: UUID, true_lat: float, true_lng: float):
         """
         Custom broadcast for Unified Grid.
-        Calculates the virtual position of the sender RELATIVE to each recipient.
+        Constructs a "Game State" object with all active players for the client to render.
+        Note: For MVP efficiency, we are sending the full list of active players in memory (positions only).
+        Trails should be ideally fetched or cached if we want to stream them.
         """
         from app.core.unified_grid import project_to_observer
         
         if game_id not in self.active_connections:
             return
 
+        # 1. Build the list of all active players from memory
+        # We only have their LAST position.
+        active_players_state = []
+        for ws, state in self.connection_states.items():
+            # Check if this connection belongs to the current game
+            if ws in self.active_connections.get(game_id, []):
+                 if state["player_id"]:
+                     active_players_state.append({
+                         "id": str(state["player_id"]),
+                         "lat": state["lat"],
+                         "lng": state["lng"],
+                         "active_powerups": state["active_powerups"]
+                     })
+
+        # 2. Send customized state to each connected client
         for connection in list(self.active_connections[game_id]):
             recipient_state = self.connection_states.get(connection)
+            recipient_id = str(recipient_state.get("player_id")) if recipient_state else ""
             
-            # If recipient hasn't sent a location yet, we can't project relative to them.
-            # Default to raw coords or skip? Let's send raw to be safe, or 0,0.
-            # If we send raw, they see the player far away.
-            # If we project with 0,0, they see player relative to 0,0.
-            
-            if recipient_state and recipient_state["lat"] != 0.0:
-                 proj_lat, proj_lng = project_to_observer(
-                     recipient_state["lat"], recipient_state["lng"],
-                     true_lat, true_lng
-                 )
-            else:
-                 # Fallback: Just send raw.
-                 # This means if I haven't moved, I see you where you really are.
-                 proj_lat, proj_lng = true_lat, true_lng
+            payload_players = []
+
+            for other_player in active_players_state:
+                is_me = (other_player["id"] == recipient_id)
+                
+                # INVISIBILITY LOGIC:
+                # If other_player is invisible AND it's not me, SKIP adding them to payload.
+                if "invisibility" in other_player["active_powerups"] and not is_me:
+                    continue
+
+                # If recipient hasn't moved, use 0,0 or their last known
+                r_lat = recipient_state["lat"] if recipient_state else 0.0
+                r_lng = recipient_state["lng"] if recipient_state else 0.0
+                
+                if r_lat != 0.0:
+                     proj_lat, proj_lng = project_to_observer(
+                         r_lat, r_lng,
+                         other_player["lat"], other_player["lng"]
+                     )
+                else:
+                     # Fallback: Raw
+                     proj_lat, proj_lng = other_player["lat"], other_player["lng"]
+                
+                # Construct Player Object for Payload
+                # NOTE: sender uses `trail: []` placeholder. 
+                
+                payload_players.append({
+                    "id": other_player["id"],
+                    "is_me": is_me,
+                    "position": {"lat": proj_lat, "lng": proj_lng},
+                    "trail": [{"lat": proj_lat, "lng": proj_lng}], # History would go here
+                    "status": "active",
+                    # Tell frontend if they have shield/etc
+                    "powerups": other_player["active_powerups"]
+                })
 
             try:
                 await connection.send_json({
-                    "type": "game_state_update",
-                    "player_id": str(sender_id),
-                    "lat": proj_lat,
-                    "lng": proj_lng
+                    "type": "game_state",
+                    "tick": 0, # Could use int(time.time()*1000)
+                    "players": payload_players,
+                    # Territories would be fetched from DB
+                    "territories": [] 
                 })
             except Exception:
                 pass

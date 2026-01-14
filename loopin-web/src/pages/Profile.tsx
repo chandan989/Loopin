@@ -1,34 +1,74 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Wallet,
   Copy,
   Check,
   MapPin,
   Trophy,
-  TrendingUp,
+  Activity,
+  Zap,
   Settings,
   LogOut,
-  Zap,
-  Shield,
-  Activity
+  Edit2,
+  Save,
+  X
 } from 'lucide-react';
-import { MOCK_USER_PROFILE, MOCK_USER_STATS, MOCK_GAME_HISTORY } from '@/data/mockData';
 import { SlideUp, StaggerContainer, ScaleIn, FadeIn } from '@/components/animation/MotionWrapper';
+import { api, PlayerProfile } from '@/lib/api';
+// Still using some mock data for stats until stats API is ready
+import { MOCK_USER_STATS, MOCK_GAME_HISTORY } from '@/data/mockData';
 
 const Profile = () => {
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [player, setPlayer] = useState<PlayerProfile | null>(null);
+  const [mockWallet] = useState("mock_wallet_address_123"); // Simulating auth
 
-  // Mock user data
-  const user = MOCK_USER_PROFILE;
+  // Edit State
+  const [editUsername, setEditUsername] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Mock stats for now
   const stats = MOCK_USER_STATS;
   const recentGames = MOCK_GAME_HISTORY;
 
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      // Try getting real profile, fallback if not found (or should register first)
+      const p = await api.getPlayer(mockWallet).catch(() => null);
+      if (p) {
+        setPlayer(p);
+        setEditUsername(p.username);
+      } else {
+        // Mock fallback if user skipped register flow in dev
+        setPlayer({
+          id: 'mock-id',
+          wallet_address: mockWallet,
+          username: 'Runner',
+          avatar_seed: 'Runner',
+          level: 1,
+          joined_at: new Date().toISOString()
+        } as PlayerProfile);
+        setEditUsername('Runner');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(user.walletAddress);
+    if (!player) return;
+    navigator.clipboard.writeText(player.wallet_address);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -36,6 +76,25 @@ const Profile = () => {
   const truncateAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-6)}`;
   };
+
+  const handleSave = async () => {
+    if (!player) return;
+    try {
+      const updated = await api.updatePlayer(player.wallet_address, editUsername);
+      setPlayer(updated);
+      setIsEditing(false);
+    } catch (e) {
+      console.error("Failed to update", e);
+      // Show error toast ideally
+    }
+  };
+
+  const handleCancel = () => {
+    if (player) setEditUsername(player.username);
+    setIsEditing(false);
+  };
+
+  if (isLoading || !player) return <div className="min-h-screen bg-white" />;
 
   return (
     <div className="min-h-screen bg-white text-[#09090B] selection:bg-[#D4FF00] selection:text-black">
@@ -51,21 +110,33 @@ const Profile = () => {
               {/* Avatar Section */}
               <ScaleIn className="relative group mx-auto md:mx-0">
                 <div className="w-32 h-32 md:w-48 md:h-48 bg-[#09090B] rounded-full flex items-center justify-center border-[6px] md:border-[8px] border-[#D4FF00] shadow-[0_0_40px_rgba(212,255,0,0.3)]">
-                  <span className="font-display text-6xl md:text-8xl font-black text-white">
-                    {user.username.charAt(0)}
+                  <span className="font-display text-6xl md:text-8xl font-black text-white capitalize">
+                    {player.avatar_seed ? player.avatar_seed.charAt(0) : player.username.charAt(0)}
                   </span>
                 </div>
                 <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-white px-4 py-1 rounded-full border border-gray-200 shadow-lg text-xs font-bold tracking-widest uppercase whitespace-nowrap">
-                  Level {user.level} Runner
+                  Level {player.level} Runner
                 </div>
               </ScaleIn>
 
               {/* Info Section */}
               <SlideUp className="flex-1 space-y-6 w-full text-center md:text-left" delay={0.2}>
                 <div>
-                  <h1 className="font-display text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-4 break-words">
-                    {user.username}
-                  </h1>
+                  {isEditing ? (
+                    <div className="flex items-center gap-4 mb-4 justify-center md:justify-start">
+                      <Input
+                        value={editUsername}
+                        onChange={(e) => setEditUsername(e.target.value)}
+                        className="font-display text-4xl md:text-6xl font-black h-auto py-2 px-4 w-full md:w-auto border-black"
+                        autoFocus
+                      />
+                    </div>
+                  ) : (
+                    <h1 className="font-display text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-4 break-words">
+                      {player.username}
+                    </h1>
+                  )}
+
                   <div className="flex flex-col md:flex-row gap-4 md:items-center justify-center md:justify-start">
                     <button
                       onClick={handleCopy}
@@ -73,7 +144,7 @@ const Profile = () => {
                     >
                       <Wallet size={20} className="text-gray-400 group-hover:text-black transition-colors flex-shrink-0" />
                       <span className="font-mono text-base md:text-lg font-bold text-gray-500 group-hover:text-black transition-colors truncate">
-                        {truncateAddress(user.walletAddress)}
+                        {truncateAddress(player.wallet_address)}
                       </span>
                       <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
                         {copied ? <Check size={14} className="text-[#00C853]" /> : <Copy size={14} className="text-black" />}
@@ -81,21 +152,37 @@ const Profile = () => {
                     </button>
 
                     <span className="text-gray-400 font-bold tracking-widest text-sm md:text-base">
-                      JOINED {user.joinedDate}
+                      JOINED {new Date(player.joined_at).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Button variant="outline" size="lg" className="h-14 px-8 rounded-full border-2 border-black text-black font-display font-bold text-lg hover:bg-black hover:text-white transition-all w-full md:w-auto">
-                    <Settings className="w-5 h-5 mr-2" />
-                    SETTINGS
-                  </Button>
-                  <Button variant="ghost" size="lg" className="h-14 px-8 rounded-full text-red-500 font-display font-bold text-lg hover:bg-red-50 hover:text-red-600 w-full md:w-auto">
-                    <LogOut className="w-5 h-5 mr-2" />
-                    DISCONNECT
-                  </Button>
+                <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center md:justify-start">
+                  {isEditing ? (
+                    <>
+                      <Button onClick={handleSave} className="h-14 px-8 rounded-full bg-[#D4FF00] text-black font-display font-bold text-lg hover:bg-black hover:text-[#D4FF00] transition-all w-full md:w-auto">
+                        <Save className="w-5 h-5 mr-2" />
+                        SAVE CHANGES
+                      </Button>
+                      <Button onClick={handleCancel} variant="ghost" className="h-14 px-8 rounded-full font-display font-bold text-lg w-full md:w-auto">
+                        <X className="w-5 h-5 mr-2" />
+                        CANCEL
+                      </Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => setIsEditing(true)} variant="outline" size="lg" className="h-14 px-8 rounded-full border-2 border-black text-black font-display font-bold text-lg hover:bg-black hover:text-white transition-all w-full md:w-auto">
+                      <Edit2 className="w-5 h-5 mr-2" />
+                      EDIT PROFILE
+                    </Button>
+                  )}
+
+                  {!isEditing && (
+                    <Button variant="ghost" size="lg" className="h-14 px-8 rounded-full text-red-500 font-display font-bold text-lg hover:bg-red-50 hover:text-red-600 w-full md:w-auto">
+                      <LogOut className="w-5 h-5 mr-2" />
+                      DISCONNECT
+                    </Button>
+                  )}
                 </div>
               </SlideUp>
 
@@ -108,7 +195,7 @@ const Profile = () => {
                   <p className="text-gray-400 font-bold tracking-widest text-sm mb-2">TOTAL BALANCE</p>
                   <div className="flex items-baseline gap-2">
                     <span className="font-display text-5xl md:text-6xl font-black text-[#D4FF00] tracking-tighter">
-                      {user.balance}
+                      245.3
                     </span>
                     <span className="font-bold text-xl text-white">STX</span>
                   </div>

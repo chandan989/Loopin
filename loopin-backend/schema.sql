@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS player_stats (
     total_earnings FLOAT DEFAULT 0.0,
     longest_trail FLOAT DEFAULT 0.0,
     biggest_loop FLOAT DEFAULT 0.0,
-    current_streak INTEGER DEFAULT 0
+    current_streak INTEGER DEFAULT 0,
+    last_daily_reward_claimed_at TIMESTAMP
 );
 
 -- Create player_game_history table

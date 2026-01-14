@@ -118,7 +118,7 @@ export const SlideUp = ({
             whileInView={{ opacity: 1, y: 0, skewY: 0, filter: "blur(0px)" }}
             viewport={VIEWPORT_CONFIG}
             transition={{
-                duration: 0.8,
+                duration: 0.5,
                 delay,
                 ease: [0.22, 1, 0.36, 1], // Custom "OutExpo" like ease
                 type: "spring",
@@ -164,7 +164,7 @@ export const ScaleIn = ({
                 delay,
                 type: "spring",
                 bounce: 0.5, // Bouncy!
-                duration: 0.8
+                duration: 0.5
             }}
             style={{ transformPerspective: 1000 }} // Enable 3D perspective
         >

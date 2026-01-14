@@ -64,6 +64,12 @@ async def confirm_join(
         await db.flush()
 
     # 3. Add to Game
+    # CRITICAL: Clean up old trails from previous sessions to prevent artifacting
+    # This ensures every new game starts with a clean slate for the player.
+    from sqlalchemy import delete
+    from app.models.player import PlayerTrail
+    await db.execute(delete(PlayerTrail).where(PlayerTrail.player_id == player.id))
+
     # Check if already in this game via GameParticipant
     from app.models.game import GameParticipant
     
@@ -75,12 +81,11 @@ async def confirm_join(
     )
     participant = result.scalar_one_or_none()
 
-    if participant:
-        return {"status": "success", "message": "Player already in game"}
-        
-    # Create new participation
-    participant = GameParticipant(player_id=player.id, game_id=game_id)
-    db.add(participant)
+    if not participant:
+        # Create new participation
+        participant = GameParticipant(player_id=player.id, game_id=game_id)
+        db.add(participant)
+    
     await db.commit()
 
-    return {"status": "success", "message": "Player added to game"}
+    return {"status": "success", "message": "Player added to game", "player_id": str(player.id)}

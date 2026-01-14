@@ -36,6 +36,7 @@ class PlayerStats(Base):
     longest_trail = Column(Float, default=0.0)
     biggest_loop = Column(Float, default=0.0)
     current_streak = Column(Integer, default=0)
+    last_daily_reward_claimed_at = Column(DateTime, nullable=True)
 
     player = relationship("Player", back_populates="stats")
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Header from '@/components/layout/Header';
@@ -25,7 +25,17 @@ const Index = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadingText, setLoadingText] = React.useState('INITIALIZING GRID PROTOCOL...');
 
+  const logoRef = React.useRef(null);
+  const navigate = useNavigate();
+
   React.useEffect(() => {
+    // Check for auth
+    const wallet = localStorage.getItem('loopin_wallet');
+    if (wallet) {
+      navigate('/dashboard');
+      return;
+    }
+
     const timer1 = setTimeout(() => setLoadingText('ESTABLISHING SATELLITE LINK...'), 800);
     const timer2 = setTimeout(() => setLoadingText('CALIBRATING SENSORS...'), 1600);
     const timer3 = setTimeout(() => setIsLoading(false), 2400);
@@ -35,7 +45,7 @@ const Index = () => {
       clearTimeout(timer2);
       clearTimeout(timer3);
     };
-  }, []);
+  }, [navigate]);
 
   if (isLoading) {
     return (
@@ -561,21 +571,25 @@ const Index = () => {
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-16">
             <Button
+              asChild
               variant="default"
               size="xl"
               className="h-20 px-12 text-xl bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-bold rounded-full shadow-[0_0_40px_rgba(212,255,0,0.3)] transition-transform hover:scale-105"
             >
-              CONNECT WALLET
+              <Link to="/register">
+                CONNECT WALLET
+              </Link>
             </Button>
-            <Link to="/how-to-play">
-              <Button
-                variant="outline"
-                size="xl"
-                className="h-20 px-12 text-xl border-white/20 text-white hover:bg-white/10 font-display font-bold rounded-full"
-              >
+            <Button
+              asChild
+              variant="outline"
+              size="xl"
+              className="h-20 px-12 text-xl border-white/20 text-white hover:bg-white/10 font-display font-bold rounded-full"
+            >
+              <Link to="/how-to-play">
                 HOW IT WORKS
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
 
           {/* Live Stats */}

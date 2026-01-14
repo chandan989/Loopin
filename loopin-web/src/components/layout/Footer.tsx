@@ -8,6 +8,13 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ className }) => {
+  const [isSignedIn, setIsSignedIn] = React.useState(false);
+
+  React.useEffect(() => {
+    const loopinWallet = localStorage.getItem('loopin_wallet');
+    setIsSignedIn(!!loopinWallet);
+  }, []);
+
   return (
     <footer className={cn("bg-[#09090B] border-t border-white/10 text-white relative overflow-hidden", className)}>
       {/* Decorative Grid Background */}
@@ -59,10 +66,15 @@ export const Footer: React.FC<FooterProps> = ({ className }) => {
                   Leaderboard
                 </Link>
               </li>
+              {/* Only show Dashboard if signed in, otherwise show Connect or similar if we wanted, 
+                  but user asked to remove "Connect Wallet" option when signed in. 
+                  Actually, the footer links are generic. Let's make "Mission Control" go to Dashboard if signed in, 
+                  or Register if not. 
+              */}
               <li>
-                <Link to="/dashboard" className="text-gray-400 hover:text-[#D4FF00] transition-colors font-medium text-sm flex items-center gap-2 group">
+                <Link to={isSignedIn ? "/dashboard" : "/register"} className="text-gray-400 hover:text-[#D4FF00] transition-colors font-medium text-sm flex items-center gap-2 group">
                   <span className="w-1 h-1 bg-transparent group-hover:bg-[#D4FF00] rounded-full transition-colors" />
-                  Mission Control
+                  {isSignedIn ? "Mission Control" : "Join the Grid"}
                 </Link>
               </li>
             </ul>

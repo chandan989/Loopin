@@ -5,6 +5,7 @@ export interface UserProfile {
     level: number;
     joinedDate: string;
     balance: string; // STX
+    inventory?: Record<string, number>;
 }
 
 export interface UserStats {
@@ -209,3 +210,27 @@ export const MOCK_SYSTEM_STATUS: SystemStatus = {
     lastPayout: '125.5 STX',
     status: 'ONLINE',
 };
+
+// --- NEW API MOCKS ---
+
+export const MOCK_PLAYER_PROFILE: any = {
+    id: 'user-123',
+    wallet_address: 'ST1PQHQKBV3YX530PXHXSMXE7SXQ8D5X8AKQNMQM',
+    username: 'SPEEDRUNNER',
+    avatar_seed: 'S',
+    level: 12,
+    joined_at: '2025-12-01T00:00:00Z',
+    inventory: {
+        'shield': 1,
+        'ghost': 0
+    }
+};
+
+export const MOCK_REWARD_STATUS = {
+    streak: 3,
+    claimable: true,
+    next_reward: 200,
+    claimed_today: false,
+    last_claimed_at: '2026-01-13T10:00:00Z',
+};
+

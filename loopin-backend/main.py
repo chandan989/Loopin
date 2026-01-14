@@ -14,6 +14,12 @@ app.include_router(ads.router, prefix="/api/v1/ads", tags=["ads"])
 from app.api.v1 import powerups
 app.include_router(powerups.router, prefix="/api/v1/powerups", tags=["powerups"])
 
+from app.api.v1 import rewards
+app.include_router(rewards.router, prefix="/api/v1/rewards", tags=["rewards"])
+
+from app.api.v1 import players
+app.include_router(players.router, prefix="/api/v1/players", tags=["players"])
+
 @app.get("/")
 async def root():
     return {"message": "Loopin Backend Online", "docs": "/docs"}
