@@ -110,6 +110,14 @@ CREATE TABLE IF NOT EXISTS sponsored_locations (
     bid_price FLOAT DEFAULT 0.0
 );
 
+-- Create safe_points table
+CREATE TABLE IF NOT EXISTS safe_points (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    location GEOGRAPHY(POINT, 4326) NOT NULL,
+    radius FLOAT DEFAULT 5.0, -- meters
+    type VARCHAR(20) DEFAULT 'standard' -- standard, bunker, etc.
+);
+
 -- Create leaderboard_all_time view
 CREATE OR REPLACE VIEW leaderboard_all_time AS
 SELECT

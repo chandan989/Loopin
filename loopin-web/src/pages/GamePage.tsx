@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Polygon, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -28,9 +28,8 @@ const createPulseIcon = (color: string) => L.divIcon({
   iconSize: [16, 16],
   iconAnchor: [8, 8]
 });
-
-// --- GAME CONFIG ---
 const START_POS: [number, number] = [40.785091, -73.968285]; // Central Park
+const SAFE_POINT: [number, number] = [40.7855, -73.9680]; // Nearby
 const GAME_DURATION = 1500; // 25 mins
 
 const GamePage = () => {
@@ -41,6 +40,7 @@ const GamePage = () => {
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [myPos, setMyPos] = useState<[number, number]>(START_POS);
   const [myTrail, setMyTrail] = useState<[number, number][]>([START_POS]);
+  const [myTerritory, setMyTerritory] = useState<[number, number][][]>([]); // Array of polygons
   const [stats, setStats] = useState({ distance: 0, calories: 0, conquered: 0.0 });
 
   // Powerup State
@@ -68,7 +68,28 @@ const GamePage = () => {
         const latChange = (Math.random() - 0.5) * 0.0001;
         const lngChange = (Math.random() - 0.5) * 0.0001;
         const newPos: [number, number] = [prev[0] + latChange, prev[1] + lngChange];
-        setMyTrail(trail => [...trail, newPos]);
+
+        // CHECK SAFE POINT LOGIC
+        const distToSafe = Math.sqrt(Math.pow(newPos[0] - SAFE_POINT[0], 2) + Math.pow(newPos[1] - SAFE_POINT[1], 2));
+
+        // Mock Distance threshold (approx)
+        if (distToSafe < 0.0003) {
+          // we are safe!
+          // If we have a trail, bank it
+          setMyTrail((currentTrail) => {
+            if (currentTrail.length > 5) {
+              // Bank it!
+              // Add current trail as a fake polygon
+              setMyTerritory(terr => [...terr, [...currentTrail, currentTrail[0]]]); // Close the loop mockly
+              return [newPos]; // Reset trail
+            }
+            return [...currentTrail, newPos];
+          });
+        } else {
+          // Normal Move
+          setMyTrail(trail => [...trail, newPos]);
+        }
+
         setStats(s => ({
           distance: s.distance + 0.005,
           calories: s.calories + 0.2,
@@ -86,11 +107,7 @@ const GamePage = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const RecenterMap = ({ pos }: { pos: [number, number] }) => {
-    const map = useMap();
-    useEffect(() => { map.flyTo(pos, map.getZoom()); }, [pos, map]);
-    return null;
-  };
+
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-white font-sans text-black touch-none">
@@ -109,11 +126,45 @@ const GamePage = () => {
             maxZoom={20}
           />
 
+          {/* Territories (Banked Polygons) */}
+          {myTerritory.map((poly, idx) => (
+            <Polygon
+              key={idx}
+              positions={poly}
+              pathOptions={{
+                color: '#D4FF00',
+                fillColor: '#D4FF00',
+                fillOpacity: 0.4,
+                weight: 1,
+                stroke: false
+              }}
+            />
+          ))}
+
+          {/* Safe Points (Fixed Geographically) */}
+          <Circle
+            center={SAFE_POINT}
+            radius={30} // 30 meters
+            pathOptions={{
+              color: '#0047FF',
+              fillColor: '#0047FF',
+              fillOpacity: 0.1,
+              weight: 1,
+              dashArray: '5, 5'
+            }}
+          >
+            {/* Inner Solid Core */}
+            <Circle center={SAFE_POINT} radius={5} pathOptions={{ color: '#0047FF', fillColor: '#0047FF', fillOpacity: 0.8, weight: 0 }} />
+          </Circle>
+
           {/* Trails */}
           <Polyline
             positions={myTrail}
             pathOptions={{ color: '#09090B', weight: 4, opacity: 0.8, lineCap: 'round' }}
           />
+
+          {/* Visual Safe Line Connect (Optional hint) */}
+          {/* If near safe point, maybe show a line? Nah, let's keep it simple. */}
 
           {/* Markers */}
           <Marker position={myPos} icon={createPulseIcon('#09090B')} />
@@ -121,7 +172,7 @@ const GamePage = () => {
           {/* Fake Enemies */}
           <Marker position={[START_POS[0] + 0.003, START_POS[1] + 0.001]} icon={createPulseIcon('#EF4444')} />
 
-          <RecenterMap pos={myPos} />
+          {/* <RecenterMap pos={myPos} />  -- Disabled to prevent map wobble/drift */}
         </MapContainer>
       </div>
 

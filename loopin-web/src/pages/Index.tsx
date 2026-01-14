@@ -316,21 +316,21 @@ const Index = () => {
               </div>
             </SlideUp>
 
-            {/* Feature 4: Session Based */}
+            {/* Feature 4: Safe Points (Replaces Blitz) */}
             <SlideUp className="group relative h-full">
               <div className="absolute inset-0 bg-gray-100 rounded-[32px] transform group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300 -z-10" />
               <div className="bg-white border border-gray-200 group-hover:border-black rounded-[32px] p-8 h-full flex flex-col justify-between transition-all duration-300 hover:-translate-y-1">
                 <div>
                   <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center mb-8 group-hover:bg-[#D4FF00] transition-colors duration-300">
-                    <Clock size={28} className="text-black" />
+                    <MapPin size={28} className="text-black" />
                   </div>
-                  <h3 className="font-display text-2xl font-bold mb-3">15-Min Blitz</h3>
+                  <h3 className="font-display text-2xl font-bold mb-3">Safe Points</h3>
                   <p className="text-gray-500 font-medium leading-relaxed">
-                    No endless grinding. High stakes rounds.
+                    Bank your trail at designated bunkers. Secure your progress.
                   </p>
                 </div>
-                <div className="mt-6 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-black w-3/4 h-full rounded-full" />
+                <div className="mt-6 flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-[#0047FF]">
+                  <span className="w-2 h-2 rounded-full bg-[#0047FF]" /> Checkpoint Active
                 </div>
               </div>
             </SlideUp>
