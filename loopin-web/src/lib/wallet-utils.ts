@@ -32,47 +32,31 @@ export const connectWalletMobile = (
     onFinish?: () => void
 ) => {
     try {
-        console.log('[Mobile Wallet] Starting connection...');
+        console.log('[Mobile Wallet] Starting mobile connection with Stacks Connect...');
 
-        // For mobile, we create a deep link to Leather app
-        const appName = "Loopin";
-        const appIcon = encodeURIComponent(window.location.origin + "/logo.svg");
-        const returnUrl = encodeURIComponent(window.location.origin + "/");
+        // On mobile, we need to use Stacks Connect's authenticate method
+        // but it will automatically redirect to the mobile app
+        authenticate({
+            appDetails: {
+                name: "Loopin",
+                icon: window.location.origin + "/logo.svg",
+            },
+            redirectTo: window.location.origin + "/",
+            onFinish: () => {
+                console.log('[Mobile Wallet] Authentication finished!');
+                if (onFinish) {
+                    onFinish();
+                } else {
+                    window.location.reload();
+                }
+            },
+            onCancel: () => {
+                console.log('[Mobile Wallet] User cancelled');
+            },
+            userSession,
+        });
 
-        // Try custom URL scheme first (works if app is installed)
-        const customSchemeUrl = `leather://sign-in?appName=${appName}&appIcon=${appIcon}&returnTo=${returnUrl}`;
-
-        // Fallback to HTTPS URL (universal link)
-        const httpsUrl = `https://wallet.leather.io/sign-in?appName=${appName}&appIcon=${appIcon}&returnTo=${returnUrl}`;
-
-        console.log('[Mobile Wallet] Trying custom scheme:', customSchemeUrl);
-
-        // Store callback for when user returns
-        if (onFinish) {
-            sessionStorage.setItem('wallet_connect_callback', 'true');
-        }
-
-        // Try custom scheme first
-        window.location.href = customSchemeUrl;
-
-        // If app doesn't open, try HTTPS fallback and show instructions
-        setTimeout(() => {
-            if (document.hasFocus()) {
-                console.log('[Mobile Wallet] Custom scheme failed, trying HTTPS...');
-                // Try HTTPS URL
-                window.location.href = httpsUrl;
-
-                // If still here after another delay, show instructions
-                setTimeout(() => {
-                    if (document.hasFocus()) {
-                        console.log('[Mobile Wallet] HTTPS also failed, showing instructions');
-                        showMobileWalletInstructions();
-                    }
-                }, 2000);
-            } else {
-                console.log('[Mobile Wallet] App opened successfully!');
-            }
-        }, 1500);
+        console.log('[Mobile Wallet] Authenticate called, waiting for redirect...');
     } catch (error) {
         console.error('[Mobile Wallet] Error:', error);
         showMobileWalletInstructions();
