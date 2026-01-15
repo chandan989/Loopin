@@ -31,31 +31,11 @@ export const connectWalletMobile = (
     userSession: UserSession,
     onFinish?: () => void
 ) => {
-    console.log('[Mobile Wallet] Opening Leather app directly...');
-
-    // For mobile, we bypass Stacks Connect entirely and use a direct deep link
-    // This opens the Leather mobile app if installed
-
-    // Leather mobile app deep link format
-    // The app will handle the authentication and redirect back
-    const appName = encodeURIComponent("Loopin");
-    const returnUrl = encodeURIComponent(window.location.origin + "/");
-
-    // Try the Leather mobile app URL
-    const leatherAppUrl = `https://wallet.leather.io/sign-in?origin=${returnUrl}&appName=${appName}`;
-
-    console.log('[Mobile Wallet] Redirecting to:', leatherAppUrl);
-
-    // Open Leather app
-    window.location.href = leatherAppUrl;
-
-    // Set a timeout to show instructions if app doesn't open
-    setTimeout(() => {
-        if (document.hasFocus()) {
-            console.log('[Mobile Wallet] App did not open, showing instructions');
-            showMobileWalletInstructions();
-        }
-    }, 2500);
+    // Use the standard Stacks Connect flow
+    // On mobile, it will redirect to the wallet app
+    // handlePendingSignIn() in App.tsx will catch the return
+    console.log('[Mobile Wallet] Using standard Stacks Connect flow...');
+    connectWalletDesktop(authenticate, userSession, onFinish);
 };
 
 export const connectWalletDesktop = (
