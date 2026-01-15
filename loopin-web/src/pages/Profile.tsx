@@ -22,8 +22,10 @@ import { api, PlayerProfile } from '@/lib/api';
 // Still using some mock data for stats until stats API is ready
 import { MOCK_USER_STATS, MOCK_GAME_HISTORY } from '@/data/mockData';
 import { userSession } from '@/lib/stacks-auth';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [player, setPlayer] = useState<PlayerProfile | null>(null);
@@ -47,8 +49,13 @@ const Profile = () => {
       const address = userData.profile.stxAddress.mainnet;
       setWalletAddress(address);
       localStorage.setItem('loopin_wallet', address);
+    } else {
+      // No wallet connected, redirect to home
+      console.log('[Profile] No wallet connected, redirecting to home');
+      setIsLoading(false);
+      navigate('/');
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (walletAddress) {
@@ -112,7 +119,18 @@ const Profile = () => {
     setIsEditing(false);
   };
 
-  if (isLoading || !player) return <div className="min-h-screen bg-white" />;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#D4FF00] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="font-display text-xl font-bold text-gray-400">Loading Profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!player) return <div className="min-h-screen bg-white" />;
 
   return (
     <div className="min-h-screen bg-white text-[#09090B] selection:bg-[#D4FF00] selection:text-black">
