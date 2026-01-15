@@ -34,39 +34,55 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
       setIsScrolled(window.scrollY > 10);
     };
 
-    // Check for our custom auth first
-    const loopinWallet = localStorage.getItem('loopin_wallet');
-    if (loopinWallet) {
-      setIsSignedIn(true);
-      setUserAddress(loopinWallet);
-    } else if (userSession.isUserSignedIn()) {
-      setIsSignedIn(true);
-      setUserAddress(userSession.loadUserData().profile.stxAddress.mainnet);
-    } else if (isConnected()) {
-      // Legacy check or if session was restored
-      setIsSignedIn(true);
-      try {
+    const checkWalletStatus = () => {
+      // Check for our custom auth first
+      const loopinWallet = localStorage.getItem('loopin_wallet');
+      if (loopinWallet) {
+        setIsSignedIn(true);
+        setUserAddress(loopinWallet);
+      } else if (userSession.isUserSignedIn()) {
+        setIsSignedIn(true);
         const userData = userSession.loadUserData();
-        setUserAddress(userData.profile.stxAddress.mainnet);
-      } catch (e) {
-        console.log("No user data found in session");
+        const address = userData.profile.stxAddress.mainnet;
+        setUserAddress(address);
+        // Also store in localStorage for consistency
+        localStorage.setItem('loopin_wallet', address);
+      } else if (isConnected()) {
+        // Legacy check or if session was restored
+        setIsSignedIn(true);
+        try {
+          const userData = userSession.loadUserData();
+          const address = userData.profile.stxAddress.mainnet;
+          setUserAddress(address);
+          localStorage.setItem('loopin_wallet', address);
+        } catch (e) {
+          console.log("No user data found in session");
+        }
+      } else {
+        // No wallet connected
+        setIsSignedIn(false);
+        setUserAddress(null);
       }
-    }
+    };
 
+    checkWalletStatus();
     window.addEventListener('scroll', handleScroll);
+
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [location]); // Re-check on location change
 
   const handleConnect = async () => {
     connectWallet(authenticate, userSession);
   };
 
   const handleDisconnect = () => {
+    // Clear all auth data
     userSession.signUserOut();
     localStorage.removeItem('loopin_wallet');
     setIsSignedIn(false);
     setUserAddress(null);
-    window.location.href = '/'; // Go to home instead of reload
+    // Force reload to clear all state
+    window.location.href = '/';
   };
 
   const truncateAddress = (address: string) => {
