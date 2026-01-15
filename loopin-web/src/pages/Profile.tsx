@@ -21,12 +21,13 @@ import { SlideUp, StaggerContainer, ScaleIn, FadeIn } from '@/components/animati
 import { api, PlayerProfile } from '@/lib/api';
 // Still using some mock data for stats until stats API is ready
 import { MOCK_USER_STATS, MOCK_GAME_HISTORY } from '@/data/mockData';
+import { userSession } from '@/lib/stacks-auth';
 
 const Profile = () => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [player, setPlayer] = useState<PlayerProfile | null>(null);
-  const [mockWallet] = useState("mock_wallet_address_123"); // Simulating auth
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
   // Edit State
   const [editUsername, setEditUsername] = useState('');
@@ -37,21 +38,38 @@ const Profile = () => {
   const recentGames = MOCK_GAME_HISTORY;
 
   useEffect(() => {
-    fetchProfile();
+    // Get real wallet address
+    const loopinWallet = localStorage.getItem('loopin_wallet');
+    if (loopinWallet) {
+      setWalletAddress(loopinWallet);
+    } else if (userSession.isUserSignedIn()) {
+      const userData = userSession.loadUserData();
+      const address = userData.profile.stxAddress.mainnet;
+      setWalletAddress(address);
+      localStorage.setItem('loopin_wallet', address);
+    }
   }, []);
 
+  useEffect(() => {
+    if (walletAddress) {
+      fetchProfile();
+    }
+  }, [walletAddress]);
+
   const fetchProfile = async () => {
+    if (!walletAddress) return;
+
     try {
       // Try getting real profile, fallback if not found (or should register first)
-      const p = await api.getPlayer(mockWallet).catch(() => null);
+      const p = await api.getPlayer(walletAddress).catch(() => null);
       if (p) {
         setPlayer(p);
         setEditUsername(p.username);
       } else {
-        // Mock fallback if user skipped register flow in dev
+        // Fallback if user hasn't registered yet
         setPlayer({
-          id: 'mock-id',
-          wallet_address: mockWallet,
+          id: 'temp-id',
+          wallet_address: walletAddress,
           username: 'Runner',
           avatar_seed: 'Runner',
           level: 1,

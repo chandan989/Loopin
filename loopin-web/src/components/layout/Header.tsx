@@ -89,7 +89,6 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
       // Clear all auth data
       userSession.signUserOut();
       localStorage.removeItem('loopin_wallet');
-      localStorage.clear(); // Clear everything to be safe
 
       console.log('[Logout] Clearing state...');
       setIsSignedIn(false);
