@@ -43,14 +43,26 @@ export const connectWalletDesktop = (
     userSession: UserSession,
     onFinish?: () => void
 ) => {
+    console.log('[Wallet] Starting authentication...');
+    console.log('[Wallet] Is mobile?', isMobileDevice());
+    console.log('[Wallet] User agent:', navigator.userAgent);
+
     authenticate({
         appDetails: {
             name: "Loopin",
             icon: window.location.origin + "/logo.svg",
         },
-        onFinish: onFinish || (() => {
-            window.location.reload();
-        }),
+        onFinish: (data: any) => {
+            console.log('[Wallet] onFinish called with data:', data);
+            if (onFinish) {
+                onFinish();
+            } else {
+                window.location.reload();
+            }
+        },
+        onCancel: () => {
+            console.log('[Wallet] User cancelled connection');
+        },
         userSession,
     });
 };
