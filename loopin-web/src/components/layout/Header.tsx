@@ -175,7 +175,10 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleDisconnect} className="cursor-pointer text-red-600 focus:text-red-600 pointer-events-auto">
+                    <DropdownMenuItem
+                      onClick={handleDisconnect}
+                      className="cursor-pointer text-red-600 focus:text-red-600"
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </DropdownMenuItem>
@@ -256,7 +259,8 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
               </div>
             </nav >
           </div >
-        )}
+        )
+      }
     </header >
   );
 };

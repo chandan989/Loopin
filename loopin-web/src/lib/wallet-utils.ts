@@ -54,9 +54,23 @@ export const connectWalletDesktop = (
         },
         onFinish: (data: any) => {
             console.log('[Wallet] onFinish called with data:', data);
+
+            // Save wallet address to localStorage
+            try {
+                if (userSession.isUserSignedIn()) {
+                    const userData = userSession.loadUserData();
+                    const walletAddress = userData.profile.stxAddress.mainnet;
+                    console.log('[Wallet] Saving wallet address:', walletAddress);
+                    localStorage.setItem('loopin_wallet', walletAddress);
+                }
+            } catch (error) {
+                console.error('[Wallet] Error saving wallet address:', error);
+            }
+
             if (onFinish) {
                 onFinish();
             } else {
+                // Reload to update UI
                 window.location.reload();
             }
         },
