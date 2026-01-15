@@ -14,8 +14,7 @@ import {
     ChevronUp,
     Zap
 } from 'lucide-react';
-import { isConnected, getLocalStorage } from '@stacks/connect';
-import { useConnect } from '@stacks/connect-react';
+import { isConnected, connect } from '@stacks/connect';
 import { userSession } from '@/lib/stacks-auth';
 import { cn } from '@/lib/utils';
 import { MOCK_FAQS, MOCK_POWERUPS } from '@/data/mockData';
@@ -24,7 +23,6 @@ import { SlideUp, StaggerContainer, ScaleIn, GlitchText } from '@/components/ani
 const HowToPlay = () => {
     const [openFaq, setOpenFaq] = React.useState<number | null>(null);
     const [isSignedIn, setIsSignedIn] = React.useState(false);
-    const { authenticate } = useConnect();
 
     const faqs = MOCK_FAQS;
     const powerUps = MOCK_POWERUPS;
@@ -34,12 +32,8 @@ const HowToPlay = () => {
         const loopinWallet = localStorage.getItem('loopin_wallet');
         if (loopinWallet) {
             setIsSignedIn(true);
-        } else if (isConnected()) {
-            // Fallback to Stacks auth if we use it later
-            const storageData = getLocalStorage() as any;
-            if (storageData && storageData.addresses && storageData.addresses.stx && storageData.addresses.stx.length > 0) {
-                setIsSignedIn(true);
-            }
+        } else if (userSession.isUserSignedIn()) {
+            setIsSignedIn(true);
         }
     }, []);
 
@@ -263,16 +257,49 @@ const HowToPlay = () => {
                                         variant="default"
                                         size="xl"
                                         className="h-16 px-10 text-lg bg-[#D4FF00] text-black hover:bg-[#b8dd00] font-display font-bold rounded-full shadow-[0_0_20px_rgba(212,255,0,0.3)] transition-transform hover:scale-105"
-                                        onClick={() => authenticate({
-                                            appDetails: {
-                                                name: "Loopin",
-                                                icon: window.location.origin + "/logo.svg",
-                                            },
-                                            onFinish: () => {
-                                                window.location.reload();
-                                            },
-                                            userSession,
-                                        })}
+                                        onClick={async () => {
+                                            try {
+                                                const response = await connect({
+                                                    network: 'mainnet',
+                                                    appDetails: {
+                                                        name: "Loopin",
+                                                        icon: "https://loopin.game/logo.svg",
+                                                    },
+                                                    walletConnect: {
+                                                        projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
+                                                        metadata: {
+                                                            name: "Loopin",
+                                                            description: "Loopin Game",
+                                                            url: "https://loopin.game",
+                                                            icons: ["https://loopin.game/logo.svg"],
+                                                        },
+                                                    },
+                                                } as any);
+
+                                                if (response && response.addresses) {
+                                                    const stxAddress = response.addresses.find((a: any) => a.symbol === 'STX' || a.address.startsWith('S'))?.address;
+
+                                                    if (stxAddress) {
+                                                        const sessionData = userSession.store.getSessionData();
+                                                        const userData = sessionData.userData || { profile: {} };
+                                                        userData.profile = userData.profile || {};
+                                                        userData.profile.stxAddress = {
+                                                            mainnet: stxAddress,
+                                                            testnet: stxAddress
+                                                        };
+
+                                                        userSession.store.setSessionData({
+                                                            ...sessionData,
+                                                            userData
+                                                        });
+
+                                                        window.location.reload();
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                console.error("Connect error:", e);
+                                            }
+                                        }}
                                     >
                                         CONNECT WALLET
                                     </Button>
