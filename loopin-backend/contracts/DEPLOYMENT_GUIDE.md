@@ -243,9 +243,10 @@ client.call_contract(
 ## 🔒 Security Considerations
 
 ### Owner-Only Functions
-- `submit-player-result` - Only contract owner
-- `distribute-prize` - Only contract owner
+- `submit-player-result` - Contract owner **or Oracle**
+- `distribute-prize` - Contract owner **or Oracle**
 - `set-platform-fee` - Only contract owner
+- `set-game-oracle` - Only contract owner
 - `emergency-withdraw` - Only contract owner
 
 ### Game Creator Functions
@@ -255,6 +256,59 @@ client.call_contract(
 ### Public Functions
 - `create-game` - Anyone
 - `join-game` - Anyone (with entry fee)
+
+## 🔑 Oracle Setup (IMPORTANT for Production)
+
+### Why Use an Oracle?
+
+Instead of using your deployer's private key in the backend (security risk!), create a separate "Oracle" wallet:
+
+1. **Deployer Wallet** (Cold Storage)
+   - Deploys the contract
+   - Holds owner privileges
+   - Kept offline/secure
+   - Only used for admin functions
+
+2. **Oracle Wallet** (Hot Wallet)
+   - Used by Python backend
+   - Can submit results and distribute prizes
+   - If compromised, just rotate it
+   - Limited permissions
+
+### Setup Steps
+
+1. **Create Oracle Wallet:**
+   ```bash
+   # Generate a new Stacks wallet
+   # Save the private key securely
+   ```
+
+2. **Set Oracle Address (After Deployment):**
+   ```clarity
+   ;; Call from deployer wallet
+   (contract-call? .loopin-game set-game-oracle 'ST2ORACLE_ADDRESS_HERE)
+   ```
+
+3. **Use Oracle in Backend:**
+   ```env
+   # In blockchain-service/.env
+   PRIVATE_KEY=oracle-wallet-private-key-here
+   ```
+
+4. **Rotate if Compromised:**
+   ```clarity
+   ;; Call from deployer wallet to change oracle
+   (contract-call? .loopin-game set-game-oracle 'ST2NEW_ORACLE_ADDRESS)
+   ```
+
+### Oracle Permissions
+
+The Oracle can:
+- ✅ Submit player results
+- ✅ Distribute prizes
+- ❌ Change platform fee
+- ❌ Set new oracle
+- ❌ Emergency withdraw
 
 ## 💡 Best Practices
 

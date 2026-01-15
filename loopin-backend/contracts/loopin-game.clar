@@ -16,6 +16,7 @@
 ;; Data Variables
 (define-data-var next-game-id uint u0)
 (define-data-var platform-fee-percent uint u5) ;; 5% platform fee
+(define-data-var game-oracle principal tx-sender) ;; Oracle address for backend operations
 
 ;; Game Types and Entry Fees (in microSTX)
 (define-constant CASUAL-FEE u0)
@@ -240,8 +241,8 @@
             (game (unwrap! (get-game game-id) err-not-found))
             (participant (unwrap! (get-participant game-id player) err-not-found))
         )
-        ;; Only contract owner can submit results
-        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        ;; Only contract owner or oracle can submit results
+        (asserts! (or (is-eq tx-sender contract-owner) (is-eq tx-sender (var-get game-oracle))) err-owner-only)
         
         ;; Check if game has ended
         (asserts! (is-eq (get status game) "ended") err-game-not-ended)
@@ -282,15 +283,16 @@
         (
             (game (unwrap! (get-game game-id) err-not-found))
             (participant (unwrap! (get-participant game-id player) err-not-found))
+            (current-pool (get prize-pool game))
         )
-        ;; Only contract owner can distribute
-        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        ;; Only contract owner or oracle can distribute
+        (asserts! (or (is-eq tx-sender contract-owner) (is-eq tx-sender (var-get game-oracle))) err-owner-only)
         
         ;; Check if game has ended
         (asserts! (is-eq (get status game) "ended") err-game-not-ended)
         
         ;; Check if prize amount is valid
-        (asserts! (<= prize-amount (get prize-pool game)) err-insufficient-funds)
+        (asserts! (<= prize-amount current-pool) err-insufficient-funds)
         
         ;; Calculate platform fee
         (let
@@ -298,16 +300,23 @@
                 (platform-fee (/ (* prize-amount (var-get platform-fee-percent)) u100))
                 (player-prize (- prize-amount platform-fee))
             )
-            ;; Transfer prize to player
+            ;; 1. Transfer prize to player
             (try! (as-contract (stx-transfer? player-prize tx-sender player)))
             
-            ;; Update participant prize
+            ;; 2. Update participant prize
             (map-set game-participants
                 { game-id: game-id, player: player }
                 (merge participant { prize-won: player-prize })
             )
             
-            ;; Update player total earnings
+            ;; 3. CRITICAL FIX: Update the game's prize pool
+            ;; Subtract the distributed amount so it can't be double-spent
+            (map-set games
+                { game-id: game-id }
+                (merge game { prize-pool: (- current-pool prize-amount) })
+            )
+            
+            ;; 4. Update player total earnings
             (let
                 (
                     (stats (get-player-stats player))
@@ -331,6 +340,20 @@
         (var-set platform-fee-percent new-fee)
         (ok true)
     )
+)
+
+;; Admin function to update oracle address
+(define-public (set-game-oracle (new-oracle principal))
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (var-set game-oracle new-oracle)
+        (ok true)
+    )
+)
+
+;; Read-only function to get oracle address
+(define-read-only (get-game-oracle)
+    (var-get game-oracle)
 )
 
 ;; Emergency withdraw (only owner)
