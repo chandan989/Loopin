@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Polyline, Polygon, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -40,6 +40,17 @@ const GamePage = () => {
   const [timeLeft, setTimeLeft] = useState(1500); // 25 min default
   const [myPos, setMyPos] = useState<[number, number]>(DEFAULT_POS);
 
+  // DEBUG STATE
+  const [debugInfo, setDebugInfo] = useState({
+    rawLat: 0,
+    rawLng: 0,
+    accuracy: 0,
+    updateCount: 0,
+    lastError: '',
+    droppedUpdates: 0,
+    lastDist: 0
+  });
+
   // Local Game State (Offline Mode)
   const [myTrail, setMyTrail] = useState<[number, number][]>([DEFAULT_POS]);
   const [localTerritories, setLocalTerritories] = useState<any[]>([]); // { owner_id, points }
@@ -54,84 +65,142 @@ const GamePage = () => {
 
   const mapRef = useRef<L.Map | null>(null);
 
+  // Helper: Distance in meters
+  const distMeters = (p1: [number, number], p2: [number, number]) => {
+    const dLat = (p2[0] - p1[0]) * ONE_DEG_IN_METERS;
+    const dLng = (p2[1] - p1[1]) * ONE_DEG_IN_METERS * Math.cos(p1[0] * Math.PI / 180);
+    return Math.sqrt(dLat * dLat + dLng * dLng);
+  };
+
+  // Shared Position Logic (Extracted for Simulation)
+  const handlePositionUpdate = useCallback((lat: number, lng: number, accuracy: number, source: string) => {
+    const newPos: [number, number] = [lat, lng];
+
+    setMyPos(prevPos => {
+      const d = distMeters(prevPos, newPos);
+
+      // Update Debug Info inside callback to access latest calculations if needed, 
+      // but simpler to do it here.
+      setDebugInfo(prev => ({
+        ...prev,
+        rawLat: lat,
+        rawLng: lng,
+        accuracy: accuracy,
+        updateCount: prev.updateCount + 1,
+        lastDist: d,
+        droppedUpdates: d < 0.5 ? prev.droppedUpdates + 1 : prev.droppedUpdates,
+        lastError: source
+      }));
+
+      // Allow smaller movements for marker smoothness
+      if (d < 0.5) return prevPos;
+      return newPos;
+    });
+
+    setMyTrail(prevTrail => {
+      // 1. FIRST FIX RESET
+      const isDefaultStart = prevTrail.length === 1 &&
+        prevTrail[0][0] === DEFAULT_POS[0] &&
+        prevTrail[0][1] === DEFAULT_POS[1];
+
+      if (isDefaultStart) return [newPos];
+
+      // 2. DISTANCE THRESHOLD
+      const lastPoint = prevTrail[prevTrail.length - 1];
+      if (distMeters(lastPoint, newPos) < 2.0) return prevTrail;
+
+      const currentTrail = [...prevTrail, newPos];
+
+      // LOOP DETECTION
+      const captureThreshold = 10.0;
+      let loopIndex = -1;
+      for (let i = currentTrail.length - 10; i >= 0; i--) {
+        if (distMeters(currentTrail[i], newPos) < captureThreshold) {
+          loopIndex = i;
+          break;
+        }
+      }
+
+      if (loopIndex !== -1) {
+        const polyPoints = currentTrail.slice(loopIndex);
+        setLocalTerritories(prev => [...prev, {
+          owner_id: 'me',
+          points: polyPoints.map(p => ({ lat: p[0], lng: p[1] })),
+          area: 0
+        }]);
+        console.log("LOOP CLOSED! Territory captured.");
+        return [newPos];
+      }
+
+      return currentTrail;
+    });
+  }, []); // Logic is mostly functional updates, safe to be stable
+
+
   // 1. OFFLINE MODE: Geolocation & Local Logic
   useEffect(() => {
-    let watchId: number;
+    let watchId: number | null = null;
+    let isHighAccuracy = true;
 
-    // Helper: Distance in meters
-    const distMeters = (p1: [number, number], p2: [number, number]) => {
-      const dLat = (p2[0] - p1[0]) * ONE_DEG_IN_METERS;
-      const dLng = (p2[1] - p1[1]) * ONE_DEG_IN_METERS * Math.cos(p1[0] * Math.PI / 180);
-      return Math.sqrt(dLat * dLat + dLng * dLng);
-    };
+    const startWatching = (useHighAction: boolean) => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      isHighAccuracy = useHighAction;
 
-    if (navigator.geolocation) {
+      console.log(`Starting Geo Watcher. High Accuracy: ${useHighAction}`);
+
       watchId = navigator.geolocation.watchPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
-          const newPos: [number, number] = [latitude, longitude];
-
-          setMyPos(prevPos => {
-            const d = distMeters(prevPos, newPos);
-            if (d < 1.0) return prevPos; // Too small movement, ignore drift
-            return newPos;
-          });
-
-          // UPDATE TRAIL & CHECK LOOP
-          setMyTrail(prevTrail => {
-            // Add new point
-            const currentTrail = [...prevTrail, newPos];
-
-            // LOOP DETECTION
-            // Check if newPos matches any existing point in trail (excluding last 5 points)
-            // Threshold: 10 meters
-            const captureThreshold = 10.0;
-
-            // We search backwards from end-10
-            let loopIndex = -1;
-            for (let i = currentTrail.length - 10; i >= 0; i--) {
-              if (distMeters(currentTrail[i], newPos) < captureThreshold) {
-                loopIndex = i;
-                break;
-              }
-            }
-
-            if (loopIndex !== -1) {
-              // Captured!
-              // Extract polygon points: trail[loopIndex:] + newPos
-              const polyPoints = currentTrail.slice(loopIndex);
-
-              // Add to territories
-              setLocalTerritories(prev => [...prev, {
-                owner_id: 'me',
-                points: polyPoints.map(p => ({ lat: p[0], lng: p[1] })),
-                area: 0 // Mock
-              }]);
-
-              // Reset Trail to just the current pos
-              console.log("LOOP CLOSED! Territory captured.");
-              return [newPos];
-            }
-
-            return currentTrail;
-          });
-
+          handlePositionUpdate(
+            position.coords.latitude,
+            position.coords.longitude,
+            position.coords.accuracy,
+            useHighAction ? 'High Acc OK' : 'Low Acc OK'
+          );
         },
         (err) => {
           console.error("Geo Error", err);
+          setDebugInfo(prev => ({ ...prev, lastError: `${err.message} (Code ${err.code})` }));
+
+          // FALLBACK LOGIC
+          if (isHighAccuracy && (err.code === 2 || err.code === 3)) {
+            console.warn("High Accuracy failed, switching to Low Accuracy...");
+            startWatching(false);
+          }
         },
         {
-          enableHighAccuracy: true,
-          maximumAge: 0,
-          timeout: 5000
+          enableHighAccuracy: useHighAction,
+          maximumAge: 1000,
+          timeout: 20000
         }
       );
+    };
+
+    if (navigator.geolocation) {
+      startWatching(true);
     }
 
     return () => {
-      if (watchId) navigator.geolocation.clearWatch(watchId);
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
     };
-  }, []); // Run once on mount
+  }, [handlePositionUpdate]);
+
+
+  // SIMULATION HANDLER
+  const simulateMove = () => {
+    // Generate a new position 5 meters "North-East" roughly
+    // 0.00005 deg is approx 5 meters
+    const latChange = 0.00005;
+    const lngChange = 0.00005;
+
+    // Use current myPos to generate next step
+    // Note: myPos is state, so this closure captures current render's myPos.
+    // Ensure we aren't using stale closure if this function isn't re-created?
+    // GamePage re-renders on myPos change, so this is fine.
+    const newLat = myPos[0] + latChange;
+    const newLng = myPos[1] + lngChange;
+
+    handlePositionUpdate(newLat, newLng, 10, 'Simulation');
+  };
 
 
   // 2. OFFLINE MODE: Simulate Bots
@@ -383,6 +452,23 @@ const GamePage = () => {
 
           </div>
         </div>
+      </div>
+
+      {/* DEBUG OVERLAY */}
+      <div className="absolute bottom-32 left-4 z-50 bg-black/80 text-[#D4FF00] p-4 rounded font-mono text-xs pointer-events-auto">
+        <div>Updates: {debugInfo.updateCount}</div>
+        <div>Dropped: {debugInfo.droppedUpdates}</div>
+        <div>Lat: {debugInfo.rawLat.toFixed(6)}</div>
+        <div>Lng: {debugInfo.rawLng.toFixed(6)}</div>
+        <div>Acc: {debugInfo.accuracy.toFixed(1)}m</div>
+        <div>Dist: {debugInfo.lastDist.toFixed(2)}m</div>
+        {debugInfo.lastError && <div className="text-red-500">{debugInfo.lastError}</div>}
+        <Button
+          className="mt-2 text-[10px] h-6 px-2 bg-yellow-600 hover:bg-yellow-500 text-white border-none"
+          onClick={simulateMove}
+        >
+          Simulate Move
+        </Button>
       </div>
 
     </div>
