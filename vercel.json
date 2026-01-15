@@ -1,10 +1,7 @@
 {
-    "version": 2,
-    "buildCommand": "npm run build",
-    "outputDirectory": "dist",
-    "installCommand": "npm install",
-    "framework": null,
-    "cwd": "loopin-web",
+    "buildCommand": "cd loopin-web && npm run build",
+    "outputDirectory": "loopin-web/dist",
+    "installCommand": "cd loopin-web && npm install",
     "rewrites": [
         {
             "source": "/(.*)",
