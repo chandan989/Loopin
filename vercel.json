@@ -1,6 +1,13 @@
 {
-    "buildCommand": "cd loopin-web && npm run build",
+    "version": 2,
+    "buildCommand": "cd loopin-web && npm install && npm run build",
     "outputDirectory": "loopin-web/dist",
-    "framework": "vite",
-    "installCommand": "cd loopin-web && npm install"
+    "installCommand": "npm install --prefix loopin-web",
+    "framework": null,
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
 }
