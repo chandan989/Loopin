@@ -64,16 +64,35 @@ const Profile = () => {
   }, [walletAddress]);
 
   const fetchProfile = async () => {
-    if (!walletAddress) return;
+    if (!walletAddress) {
+      setIsLoading(false);
+      return;
+    }
+
+    console.log('[Profile] Fetching profile for wallet:', walletAddress);
 
     try {
-      // Try getting real profile, fallback if not found (or should register first)
-      const p = await api.getPlayer(walletAddress).catch(() => null);
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      );
+
+      // Try getting real profile with timeout
+      const profilePromise = api.getPlayer(walletAddress);
+
+      const p = await Promise.race([profilePromise, timeoutPromise])
+        .catch((error) => {
+          console.log('[Profile] API call failed or timed out:', error);
+          return null;
+        }) as PlayerProfile | null;
+
       if (p) {
+        console.log('[Profile] Profile loaded from API:', p);
         setPlayer(p);
         setEditUsername(p.username);
       } else {
-        // Fallback if user hasn't registered yet
+        // Fallback if user hasn't registered yet or API failed
+        console.log('[Profile] Using fallback profile for wallet:', walletAddress);
         setPlayer({
           id: 'temp-id',
           wallet_address: walletAddress,
@@ -85,8 +104,19 @@ const Profile = () => {
         setEditUsername('Runner');
       }
     } catch (e) {
-      console.error(e);
+      console.error('[Profile] Error fetching profile:', e);
+      // Still create fallback profile on error
+      setPlayer({
+        id: 'temp-id',
+        wallet_address: walletAddress,
+        username: 'Runner',
+        avatar_seed: 'Runner',
+        level: 1,
+        joined_at: new Date().toISOString()
+      } as PlayerProfile);
+      setEditUsername('Runner');
     } finally {
+      console.log('[Profile] Setting loading to false');
       setIsLoading(false);
     }
   };
