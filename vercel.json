@@ -1,11 +1,17 @@
 {
-    "buildCommand": "cd loopin-web && npm run build",
-    "outputDirectory": "loopin-web/dist",
-    "installCommand": "cd loopin-web && npm install",
-    "rewrites": [
+    "builds": [
         {
-            "source": "/(.*)",
-            "destination": "/index.html"
+            "src": "loopin-web/package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "loopin-web/dist"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/index.html"
         }
     ]
 }
