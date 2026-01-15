@@ -75,14 +75,37 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
     connectWallet(authenticate, userSession);
   };
 
-  const handleDisconnect = () => {
-    // Clear all auth data
-    userSession.signUserOut();
-    localStorage.removeItem('loopin_wallet');
-    setIsSignedIn(false);
-    setUserAddress(null);
-    // Force reload to clear all state
-    window.location.href = '/';
+  const handleDisconnect = (e?: React.MouseEvent) => {
+    console.log('[Logout] Disconnect button clicked');
+
+    // Prevent any default behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    try {
+      console.log('[Logout] Signing out user...');
+      // Clear all auth data
+      userSession.signUserOut();
+      localStorage.removeItem('loopin_wallet');
+      localStorage.clear(); // Clear everything to be safe
+
+      console.log('[Logout] Clearing state...');
+      setIsSignedIn(false);
+      setUserAddress(null);
+      setIsMenuOpen(false);
+
+      console.log('[Logout] Redirecting to home...');
+      // Force reload to clear all state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+    } catch (error) {
+      console.error('[Logout] Error during logout:', error);
+      // Force redirect anyway
+      window.location.href = '/';
+    }
   };
 
   const truncateAddress = (address: string) => {
@@ -176,8 +199,11 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={handleDisconnect}
-                      className="cursor-pointer text-red-600 focus:text-red-600"
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        handleDisconnect();
+                      }}
+                      className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
