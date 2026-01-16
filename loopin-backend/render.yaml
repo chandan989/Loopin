@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: loopin-backend
+    runtime: node
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        value: https://whssxsnrukuarrhcufsu.supabase.co
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CONTRACT_ADDRESS
+        value: ST36BMEQDCRCKYF8HPPDMN1BCSY6TR2NG0BZSQPYG
+      - key: CONTRACT_NAME
+        value: loopin-game
+      - key: NETWORK
+        value: testnet
+      - key: ORACLE_PRIVATE_KEY
+        value: placeholder_will_add_later
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: API_PREFIX
+        value: /api
+    healthCheckPath: /health
