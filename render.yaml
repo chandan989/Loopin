@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: loopin-backend
+    runtime: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: loopin-backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        value: https://whssxsnrukuarrhcufsu.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indoc3N4c25ydWt1YXJyaGN1ZnN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMDc3NjgsImV4cCI6MjA4Mzc4Mzc2OH0.PG94_YRK38HR3UTB3yQg5mT5nafUW4nmejJY8jUQgM8
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indoc3N4c25ydWt1YXJyaGN1ZnN1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODIwNzc2OCwiZXhwIjoyMDgzNzgzNzY4fQ.yjAc6EsrqzqGaG0d4i9RJfbFm68_DnGlWlR9I9m6hZY
+      - key: CONTRACT_ADDRESS
+        value: ST36BMEQDCRCKYF8HPPDMN1BCSY6TR2NG0BZSQPYG
+      - key: CONTRACT_NAME
+        value: loopin-game
+      - key: NETWORK
+        value: testnet
+      - key: ORACLE_PRIVATE_KEY
+        value: placeholder_will_add_later
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: JWT_SECRET
+        value: loopin-production-secret-2026
+      - key: API_PREFIX
+        value: /api
+    healthCheckPath: /health
