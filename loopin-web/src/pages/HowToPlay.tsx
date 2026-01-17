@@ -28,12 +28,13 @@ const HowToPlay = () => {
     const powerUps = MOCK_POWERUPS;
 
     React.useEffect(() => {
-        // Check for our custom auth first
-        const loopinWallet = localStorage.getItem('loopin_wallet');
-        if (loopinWallet) {
+        // Check for Stacks session first - this is the source of truth
+        if (userSession.isUserSignedIn()) {
             setIsSignedIn(true);
-        } else if (userSession.isUserSignedIn()) {
-            setIsSignedIn(true);
+        } else {
+            setIsSignedIn(false);
+            // Clear stale data if any
+            localStorage.removeItem('loopin_wallet');
         }
     }, []);
 

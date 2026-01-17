@@ -35,33 +35,20 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
     };
 
     const checkWalletStatus = () => {
-      // Check for our custom auth first
-      const loopinWallet = localStorage.getItem('loopin_wallet');
-      if (loopinWallet) {
-        setIsSignedIn(true);
-        setUserAddress(loopinWallet);
-      } else if (userSession.isUserSignedIn()) {
+      // Check for Stacks session first - this is the source of truth
+      if (userSession.isUserSignedIn()) {
         setIsSignedIn(true);
         const userData = userSession.loadUserData();
         const address = userData.profile.stxAddress.mainnet;
         setUserAddress(address);
-        // Also store in localStorage for consistency
+        // Sync to localStorage
         localStorage.setItem('loopin_wallet', address);
-      } else if (isConnected()) {
-        // Legacy check or if session was restored
-        setIsSignedIn(true);
-        try {
-          const userData = userSession.loadUserData();
-          const address = userData.profile.stxAddress.mainnet;
-          setUserAddress(address);
-          localStorage.setItem('loopin_wallet', address);
-        } catch (e) {
-          console.log("No user data found in session");
-        }
       } else {
-        // No wallet connected
+        // Not signed in via Stacks
         setIsSignedIn(false);
         setUserAddress(null);
+        // Clear stale data
+        localStorage.removeItem('loopin_wallet');
       }
     };
 
