@@ -59,8 +59,8 @@ export const connectWalletDesktop = (
             try {
                 if (userSession.isUserSignedIn()) {
                     const userData = userSession.loadUserData();
-                    const walletAddress = userData.profile.stxAddress.mainnet;
-                    console.log('[Wallet] Saving wallet address:', walletAddress);
+                    const walletAddress = userData.profile.stxAddress.testnet;
+                    console.log('[Wallet] Saving TESTNET wallet address:', walletAddress);
                     localStorage.setItem('loopin_wallet', walletAddress);
                 }
             } catch (error) {
