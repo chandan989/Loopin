@@ -8,19 +8,8 @@
     ],
     "routes": [
         {
-            "src": "/api/(.*)",
-            "dest": "loopin-backend/src/index.js"
-        },
-        {
-            "src": "/health",
-            "dest": "loopin-backend/src/index.js"
-        },
-        {
             "src": "/(.*)",
             "dest": "loopin-backend/src/index.js"
         }
-    ],
-    "env": {
-        "NODE_ENV": "production"
-    }
+    ]
 }
