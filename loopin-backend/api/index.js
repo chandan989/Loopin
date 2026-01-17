@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -76,3 +77,12 @@ app.use((err, req, res, next) => {
 
 // Export for Vercel serverless
 export default app;
+
+// Start server if run directly (e.g. node api/index.js or npm start)
+// This allows the app to run on VPS, Render, Railway, or locally without Vercel CLI
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
