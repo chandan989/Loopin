@@ -2,14 +2,20 @@
     "version": 2,
     "builds": [
         {
-            "src": "loopin-backend/src/index.js",
+            "src": "loopin-backend/api/index.js",
             "use": "@vercel/node"
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "loopin-backend/src/index.js"
+            "dest": "loopin-backend/api/index.js"
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/loopin-backend/api/index.js"
         }
     ]
 }
