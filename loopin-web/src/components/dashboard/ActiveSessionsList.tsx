@@ -1,15 +1,62 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Users, Clock, ArrowUpRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Users, Clock, ArrowUpRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SlideUp, StaggerContainer } from '@/components/animation/MotionWrapper';
 import { Game } from '@/lib/api';
+import { payEntryFee } from '@/lib/transaction-utils';
 
 interface ActiveSessionsListProps {
     activeSessions: Game[];
 }
 
 const ActiveSessionsList: React.FC<ActiveSessionsListProps> = ({ activeSessions }) => {
+    const navigate = useNavigate();
+    const [joiningGame, setJoiningGame] = useState<string | null>(null);
+
+    const handleJoinGame = async (session: Game) => {
+        const walletAddress = localStorage.getItem('loopin_wallet');
+
+        if (!walletAddress) {
+            alert('Please connect your wallet first!');
+            return;
+        }
+
+        setJoiningGame(session.id);
+
+        try {
+            console.log('[Join Game] Paying entry fee:', session.entry_fee, 'STX');
+
+            // Get contract details from env
+            const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+            const contractName = import.meta.env.VITE_CONTRACT_NAME;
+
+            // Pay entry fee via smart contract
+            const result = await payEntryFee(
+                session.id,
+                session.entry_fee,
+                contractAddress,
+                contractName
+            );
+
+            if (result.success) {
+                console.log('[Join Game] ✅ Payment successful! TX:', result.txId);
+                alert(`✅ Payment successful!\n\nTransaction ID: ${result.txId}\n\nJoining game...`);
+
+                // Navigate to game page
+                navigate(`/game/${session.id}`);
+            } else {
+                console.error('[Join Game] ❌ Payment failed:', result.error);
+                alert(`❌ Payment failed: ${result.error}`);
+            }
+        } catch (error: any) {
+            console.error('[Join Game] Error:', error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            setJoiningGame(null);
+        }
+    };
+
     return (
         <div>
             <div className="flex items-center justify-between mb-8 md:mb-12">
@@ -55,11 +102,23 @@ const ActiveSessionsList: React.FC<ActiveSessionsListProps> = ({ activeSessions 
                                             <div className="font-display text-lg md:text-xl font-bold">{session.entry_fee} STX</div>
                                         </div>
 
-                                        <Link to={`/game/${session.id}`} className="block">
-                                            <Button className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#09090B] hover:bg-[#D4FF00] hover:text-black p-0 flex items-center justify-center transition-colors">
-                                                <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6 text-[#D4FF00]" />
-                                            </Button>
-                                        </Link>
+                                        <Button
+                                            onClick={() => handleJoinGame(session)}
+                                            disabled={joiningGame === session.id}
+                                            className="h-12 px-6 md:h-14 md:px-8 rounded-full bg-[#D4FF00] hover:bg-[#b8dd00] text-black font-display font-bold text-sm md:text-base transition-colors disabled:opacity-50"
+                                        >
+                                            {joiningGame === session.id ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                    PAYING...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ArrowUpRight className="w-4 h-4 mr-2" />
+                                                    PAY & JOIN
+                                                </>
+                                            )}
+                                        </Button>
                                     </div>
                                 </div>
                             </div>

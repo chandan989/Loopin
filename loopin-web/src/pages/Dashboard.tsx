@@ -14,8 +14,45 @@ const Dashboard = () => {
   // Real Data State
   const [activeSessions, setActiveSessions] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [walletAddress] = useState(localStorage.getItem('loopin_wallet') || "mock_wallet_address_123");
-  const [currentBalance, setCurrentBalance] = useState(245.3);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [currentBalance, setCurrentBalance] = useState(0);
+  const [userStats, setUserStats] = useState({
+    totalArea: '0 km²',
+    gamesPlayed: 0,
+    gamesWon: 0,
+    totalEarnings: '0 STX',
+  });
+  const [recentGames, setRecentGames] = useState<any[]>([]);
+
+  // Fetch real wallet address and balance
+  useEffect(() => {
+    const wallet = localStorage.getItem('loopin_wallet');
+    setWalletAddress(wallet);
+
+    if (wallet) {
+      // Fetch real balance
+      import('@/lib/stacks-utils').then(({ getSTXBalance }) => {
+        getSTXBalance(wallet).then(balanceData => {
+          setCurrentBalance(balanceData.total);
+        });
+      });
+
+      // Fetch player stats
+      api.getPlayer(wallet).then(response => {
+        if (response) {
+          // Player exists - stats will be 0 until they play games
+          setUserStats({
+            totalArea: '0 km²',
+            gamesPlayed: 0,
+            gamesWon: 0,
+            totalEarnings: '0 STX',
+          });
+        }
+      }).catch(err => {
+        console.log('[Dashboard] Player not registered yet');
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const fetchLobby = async () => {
@@ -30,20 +67,6 @@ const Dashboard = () => {
     };
     fetchLobby();
   }, []);
-
-  // Mock data for user stats (still mock for now as requested API was only lobby)
-  const userStats = {
-    totalArea: '2.4 km²',
-    gamesPlayed: 23,
-    gamesWon: 7,
-    totalEarnings: '156.8 STX',
-  };
-
-  const recentGames = [
-    { date: 'Jan 4', area: '0.15 km²', rank: 2, prize: null },
-    { date: 'Jan 3', area: '0.42 km²', rank: 1, prize: '25 STX' },
-    { date: 'Jan 2', area: '0.08 km²', rank: 5, prize: null },
-  ];
 
   return (
     <div className="min-h-screen bg-white text-[#09090B] selection:bg-[#D4FF00] selection:text-black font-sans">

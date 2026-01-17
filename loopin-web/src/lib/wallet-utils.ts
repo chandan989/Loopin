@@ -53,24 +53,52 @@ export const connectWalletDesktop = (
             icon: window.location.origin + "/logo.svg",
         },
         onFinish: (data: any) => {
-            console.log('[Wallet] onFinish called with data:', data);
+            console.log('[Wallet] ✅ onFinish called!');
+            console.log('[Wallet] Data:', data);
 
             // Save wallet address to localStorage
             try {
                 if (userSession.isUserSignedIn()) {
                     const userData = userSession.loadUserData();
-                    const walletAddress = userData.profile.stxAddress.testnet;
-                    console.log('[Wallet] Saving TESTNET wallet address:', walletAddress);
+
+                    // Get network from environment variable or default to testnet
+                    const network = import.meta.env.VITE_NETWORK || 'testnet';
+
+                    console.log('[Wallet] 🌐 Network from env:', network);
+                    console.log('[Wallet] 📋 Available addresses:', {
+                        mainnet: userData.profile.stxAddress.mainnet,
+                        testnet: userData.profile.stxAddress.testnet
+                    });
+
+                    // Use the appropriate network address
+                    const walletAddress = network === 'mainnet'
+                        ? userData.profile.stxAddress.mainnet
+                        : userData.profile.stxAddress.testnet;
+
+                    console.log(`[Wallet] ✅ Selected ${network.toUpperCase()} address:`, walletAddress);
+
+                    // Save both the address and network
                     localStorage.setItem('loopin_wallet', walletAddress);
+                    localStorage.setItem('loopin_network', network);
+
+                    // Also save both addresses for reference
+                    localStorage.setItem('loopin_wallet_mainnet', userData.profile.stxAddress.mainnet);
+                    localStorage.setItem('loopin_wallet_testnet', userData.profile.stxAddress.testnet);
+
+                    console.log('[Wallet] 💾 Saved to localStorage:', {
+                        loopin_wallet: walletAddress,
+                        loopin_network: network
+                    });
                 }
             } catch (error) {
-                console.error('[Wallet] Error saving wallet address:', error);
+                console.error('[Wallet] ❌ Error saving wallet address:', error);
             }
 
             if (onFinish) {
                 onFinish();
             } else {
                 // Reload to update UI
+                console.log('[Wallet] 🔄 Reloading page...');
                 window.location.reload();
             }
         },

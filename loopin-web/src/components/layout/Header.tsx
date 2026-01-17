@@ -35,20 +35,40 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
     };
 
     const checkWalletStatus = () => {
-      // Check for Stacks session first - this is the source of truth
-      if (userSession.isUserSignedIn()) {
+      console.log('[Header] Checking wallet status...');
+
+      // First check localStorage (most reliable after connection)
+      const storedWallet = localStorage.getItem('loopin_wallet');
+      const storedNetwork = localStorage.getItem('loopin_network');
+
+      if (storedWallet) {
+        console.log('[Header] ✅ Found wallet in localStorage:', storedWallet);
+        console.log('[Header] Network:', storedNetwork);
         setIsSignedIn(true);
+        setUserAddress(storedWallet);
+        return;
+      }
+
+      // Fallback: Check Stacks session
+      if (userSession.isUserSignedIn()) {
+        console.log('[Header] ✅ Found Stacks session');
         const userData = userSession.loadUserData();
-        const address = userData.profile.stxAddress.mainnet;
+        const network = import.meta.env.VITE_NETWORK || 'testnet';
+        const address = network === 'mainnet'
+          ? userData.profile.stxAddress.mainnet
+          : userData.profile.stxAddress.testnet;
+
+        console.log('[Header] Using', network, 'address:', address);
+        setIsSignedIn(true);
         setUserAddress(address);
         // Sync to localStorage
         localStorage.setItem('loopin_wallet', address);
+        localStorage.setItem('loopin_network', network);
       } else {
-        // Not signed in via Stacks
+        // Not signed in
+        console.log('[Header] ❌ No wallet found');
         setIsSignedIn(false);
         setUserAddress(null);
-        // Clear stale data
-        localStorage.removeItem('loopin_wallet');
       }
     };
 

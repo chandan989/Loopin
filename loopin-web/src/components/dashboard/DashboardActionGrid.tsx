@@ -19,38 +19,43 @@ const DashboardActionGrid: React.FC<DashboardActionGridProps> = ({
     onBalanceUpdate,
     onRewardClaimed
 }) => {
-    return (
-        <div className="grid grid-cols-2 gap-3 md:gap-6 mb-8">
-            {/* Daily Reward Trigger */}
-            <Dialog>
-                <DialogTrigger asChild>
-                    <div className="cursor-pointer group h-full">
-                        <SlideUp className="h-full bg-white border border-gray-200 hover:border-black rounded-[32px] p-6 md:p-8 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
-                            <div className="flex items-start justify-between mb-6">
-                                <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-black group-hover:bg-[#D4FF00] transition-colors">
-                                    <Gift className="w-6 h-6" />
-                                </div>
-                                <div className="text-[10px] font-bold bg-gray-100 px-3 py-1.5 rounded-full text-gray-500 uppercase tracking-widest group-hover:bg-black group-hover:text-[#D4FF00] transition-colors">
-                                    Free
-                                </div>
-                            </div>
+    // Check if on testnet (free rewards only on testnet)
+    const isTestnet = import.meta.env.VITE_NETWORK === 'testnet';
 
-                            <div>
-                                <h3 className="font-display text-xl font-bold uppercase leading-none mb-2">Daily Drop</h3>
-                                <p className="text-gray-400 text-sm font-medium line-clamp-1">Claim STX supply.</p>
-                            </div>
-                        </SlideUp>
-                    </div>
-                </DialogTrigger>
-                <DialogContent className="w-[95vw] max-w-[425px] p-0 bg-transparent border-none shadow-none focus:outline-none [&>button]:hidden">
-                    <div className="bg-white rounded-[32px] overflow-hidden p-1 shadow-2xl relative">
-                        <DialogClose className="absolute right-4 top-4 z-50 p-2 bg-gray-100 hover:bg-[#D4FF00] rounded-full transition-colors">
-                            <X className="w-4 h-4 text-black" />
-                        </DialogClose>
-                        <DailyRewardCard walletAddress={walletAddress} onRewardClaimed={onRewardClaimed} variant="modal" />
-                    </div>
-                </DialogContent>
-            </Dialog>
+    return (
+        <div className={`grid ${isTestnet ? 'grid-cols-2' : 'grid-cols-1'} gap-3 md:gap-6 mb-8`}>
+            {/* Daily Reward - ONLY ON TESTNET */}
+            {isTestnet && (
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <div className="cursor-pointer group h-full">
+                            <SlideUp className="h-full bg-white border border-gray-200 hover:border-black rounded-[32px] p-6 md:p-8 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+                                <div className="flex items-start justify-between mb-6">
+                                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-black group-hover:bg-[#D4FF00] transition-colors">
+                                        <Gift className="w-6 h-6" />
+                                    </div>
+                                    <div className="text-[10px] font-bold bg-gray-100 px-3 py-1.5 rounded-full text-gray-500 uppercase tracking-widest group-hover:bg-black group-hover:text-[#D4FF00] transition-colors">
+                                        Free
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="font-display text-xl font-bold uppercase leading-none mb-2">Daily Drop</h3>
+                                    <p className="text-gray-400 text-sm font-medium line-clamp-1">Claim STX supply.</p>
+                                </div>
+                            </SlideUp>
+                        </div>
+                    </DialogTrigger>
+                    <DialogContent className="w-[95vw] max-w-[425px] p-0 bg-transparent border-none shadow-none focus:outline-none [&>button]:hidden">
+                        <div className="bg-white rounded-[32px] overflow-hidden p-1 shadow-2xl relative">
+                            <DialogClose className="absolute right-4 top-4 z-50 p-2 bg-gray-100 hover:bg-[#D4FF00] rounded-full transition-colors">
+                                <X className="w-4 h-4 text-black" />
+                            </DialogClose>
+                            <DailyRewardCard walletAddress={walletAddress} onRewardClaimed={onRewardClaimed} variant="modal" />
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
 
             {/* Arsenal Trigger */}
             <Dialog>

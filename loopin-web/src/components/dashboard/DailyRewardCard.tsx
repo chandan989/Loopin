@@ -20,7 +20,21 @@ const DailyRewardCard: React.FC<DailyRewardCardProps> = ({ walletAddress, onRewa
         const fetchStatus = async () => {
             try {
                 const res = await api.getDailyRewardStatus(walletAddress);
-                setStatus(res);
+
+                // Check localStorage for last claim date as backup
+                const lastClaimDate = localStorage.getItem(`daily_drop_${walletAddress}`);
+                const today = new Date().toDateString();
+
+                if (lastClaimDate === today) {
+                    // Already claimed today (localStorage backup)
+                    setStatus({
+                        ...res,
+                        claimable: false,
+                        claimed_today: true
+                    });
+                } else {
+                    setStatus(res);
+                }
             } catch (error) {
                 console.error("Failed to fetch reward status", error);
             } finally {
@@ -36,10 +50,23 @@ const DailyRewardCard: React.FC<DailyRewardCardProps> = ({ walletAddress, onRewa
     const handleClaim = async () => {
         if (!status?.claimable) return;
 
+        // Double-check localStorage before claiming
+        const lastClaimDate = localStorage.getItem(`daily_drop_${walletAddress}`);
+        const today = new Date().toDateString();
+
+        if (lastClaimDate === today) {
+            // Already claimed - just update UI state
+            setStatus(prev => prev ? { ...prev, claimable: false, claimed_today: true } : null);
+            return;
+        }
+
         setClaiming(true);
         try {
             const res = await api.claimDailyReward(walletAddress);
             if (res.success) {
+                // Save claim date to localStorage
+                localStorage.setItem(`daily_drop_${walletAddress}`, today);
+
                 setStatus(prev => prev ? {
                     ...prev,
                     claimable: false,
@@ -91,7 +118,15 @@ const DailyRewardCard: React.FC<DailyRewardCardProps> = ({ walletAddress, onRewa
                     {status.claimable
                         ? `You have a pending reward of ${status.next_reward} STX waiting for you. Claim it to keep your streak alive!`
                         : status.claimed_today
-                            ? "You've dominated the daily drop today. Return tomorrow for more supplies."
+                            ? (() => {
+                                const now = new Date();
+                                const tomorrow = new Date(now);
+                                tomorrow.setDate(tomorrow.getDate() + 1);
+                                tomorrow.setHours(0, 0, 0, 0);
+                                const hoursLeft = Math.floor((tomorrow.getTime() - now.getTime()) / (1000 * 60 * 60));
+                                const minutesLeft = Math.floor(((tomorrow.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60));
+                                return `You've dominated the daily drop today. Next claim in ${hoursLeft}h ${minutesLeft}m.`;
+                            })()
                             : "Reward available soon."}
                 </p>
 

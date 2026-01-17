@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { SlideUp, StaggerContainer, ScaleIn, FadeIn } from '@/components/animation/MotionWrapper';
 import { api, PlayerProfile } from '@/lib/api';
+import { getSTXBalance, formatSTX } from '@/lib/stacks-utils';
 // Still using some mock data for stats until stats API is ready
 import { MOCK_USER_STATS, MOCK_GAME_HISTORY } from '@/data/mockData';
 import { userSession } from '@/lib/stacks-auth';
@@ -30,6 +31,8 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [player, setPlayer] = useState<PlayerProfile | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number>(0);
+  const [loadingBalance, setLoadingBalance] = useState(true);
 
   // Edit State
   const [editUsername, setEditUsername] = useState('');
@@ -60,8 +63,24 @@ const Profile = () => {
   useEffect(() => {
     if (walletAddress) {
       fetchProfile();
+      fetchBalance();
     }
   }, [walletAddress]);
+
+  const fetchBalance = async () => {
+    if (!walletAddress) return;
+
+    setLoadingBalance(true);
+    try {
+      const balanceData = await getSTXBalance(walletAddress);
+      setBalance(balanceData.total);
+      console.log('[Profile] Balance fetched:', balanceData);
+    } catch (error) {
+      console.error('[Profile] Error fetching balance:', error);
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
 
   const fetchProfile = async () => {
     if (!walletAddress) {
@@ -260,10 +279,16 @@ const Profile = () => {
                 <div className="relative z-10">
                   <p className="text-gray-400 font-bold tracking-widest text-sm mb-2">TOTAL BALANCE</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="font-display text-5xl md:text-6xl font-black text-[#D4FF00] tracking-tighter">
-                      245.3
-                    </span>
-                    <span className="font-bold text-xl text-white">STX</span>
+                    {loadingBalance ? (
+                      <span className="font-display text-3xl font-bold text-gray-500">Loading...</span>
+                    ) : (
+                      <>
+                        <span className="font-display text-5xl md:text-6xl font-black text-[#D4FF00] tracking-tighter">
+                          {formatSTX(balance)}
+                        </span>
+                        <span className="font-bold text-xl text-white">STX</span>
+                      </>
+                    )}
                   </div>
                   <div className="w-full h-px bg-white/10 my-6" />
                   <div className="flex justify-between items-center">
