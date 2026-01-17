@@ -1,17 +1,26 @@
 {
+    "version": 2,
     "builds": [
         {
-            "src": "loopin-web/package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "loopin-web/dist"
-            }
+            "src": "loopin-backend/src/index.js",
+            "use": "@vercel/node"
         }
     ],
     "routes": [
         {
+            "src": "/api/(.*)",
+            "dest": "loopin-backend/src/index.js"
+        },
+        {
+            "src": "/health",
+            "dest": "loopin-backend/src/index.js"
+        },
+        {
             "src": "/(.*)",
-            "dest": "/index.html"
+            "dest": "loopin-backend/src/index.js"
         }
-    ]
+    ],
+    "env": {
+        "NODE_ENV": "production"
+    }
 }
