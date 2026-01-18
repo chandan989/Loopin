@@ -1,73 +1,75 @@
-# Welcome to your Lovable project
+# Loopin Web
 
-## Project info
+**Loopin** is a "Move-to-Earn" territorial conquest game built on the **Stacks Blockchain**. Players physically move in the real world to leave trails, close loops to capture territory, and compete for STX prizes. This repository contains the **Frontend Web Application**.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Features
 
-## How can I edit this code?
+* **Real-time Gameplay**: Visualizes player position, trails, and territories on a map using Leaflet.
+* **Wallet Integration**: Connect with Xverse/Leather wallets via Stacks.js to manage identity and earnings.
+* **Dashboard**: View game history, active sessions, leaderboard, and inventory.
+* **Powerups**: Shop for and use in-game items like Shields and Cloaking devices.
+* **Move-to-Earn**: Tracks geospatial data to award territory and crypto prizes.
 
-There are several ways of editing your application.
+## 🛠 Tech Stack
 
-**Use Lovable**
+* **Framework**: React (Vite)
+* **Language**: TypeScript
+* **UI**: Tailwind CSS, shadcn/ui
+* **Maps**: React Leaflet, OpenStreetMap
+* **Blockchain**: Stacks.js, Clarigen
+* **State**: React Hooks, Local Storage (Identity)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 📦 Installation
 
-Changes made via Lovable will be committed automatically to this repo.
+1. **Clone the repository**:
 
-**Use your preferred IDE**
+    ```bash
+    git clone <repo-url>
+    cd loopin-web
+    ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. **Install dependencies**:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+    ```bash
+    npm install
+    ```
 
-Follow these steps:
+3. **Setup Environment Variables**:
+    Create a `.env` file in the root directory:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+    ```bash
+    VITE_API_BASE="http://localhost:8000/api"
+    VITE_WS_URL="ws://localhost:8000/ws/game"
+    ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+4. **Run the Development Server**:
 
-# Step 3: Install the necessary dependencies.
-npm i
+    ```bash
+    npm run dev
+    ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+    Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
 
-**Edit a file directly in GitHub**
+## 🔗 Backend Integration
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+This frontend requires the `loopin-backend` service including:
 
-**Use GitHub Codespaces**
+* **blockchain-service**: Node.js/Supabase backend for game mechanics.
+* **Supabase**: For database and real-time logic.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+See [INTEGRATION.md](./INTEGRATION.md) for detailed instructions on connecting the frontend to the backend.
 
-## What technologies are used for this project?
+## 📂 Project Structure
 
-This project is built with:
+* `src/pages`: Main views (GamePage, Dashboard, etc.)
+* `src/components`: UI components (HUD, Map layers)
+* `src/lib`: API clients and blockchain utilities.
+* `src/data`: Mock data and configurations.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🤝 Contributing
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request

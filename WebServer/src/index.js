@@ -7,6 +7,7 @@ import gameRoutes from './routes/game.js';
 import playerRoutes from './routes/player.js';
 import powerupRoutes from './routes/powerup.js';
 import adsRoutes from './routes/ads.js';
+import authRoutes from './routes/auth.js';
 import { setupWebSocket } from './websocket/server.js';
 
 // Load environment variables
@@ -53,6 +54,7 @@ app.use(`${apiPrefix}/game`, gameRoutes);
 app.use(`${apiPrefix}/player`, playerRoutes);
 app.use(`${apiPrefix}/powerup`, powerupRoutes);
 app.use(`${apiPrefix}/ads`, adsRoutes);
+app.use(`${apiPrefix}/auth`, authRoutes);
 
 // 404 handler
 app.use((req, res) => {

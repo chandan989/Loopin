@@ -100,10 +100,13 @@ export const setupWebSocket = (server) => {
 
 // Customized Broadcast
 const broadcastGameState = (wss, baseState, states) => {
+    // console.log(`Broadcasting state to ${wss.clients.size} clients`);
     wss.clients.forEach((client) => {
         if (client.readyState === 1) {
             const recipientState = states.get(client);
-            const recipientId = recipientState ? recipientState.playerId : null;
+            const recipientId = recipientState ? recipientState.playerId : 'anon';
+
+            // console.log(`Sending to ${recipientId}`);
 
             // Filter Players
             // baseState.players contains basic info. 
@@ -145,6 +148,12 @@ const broadcastGameState = (wss, baseState, states) => {
                 }
             };
 
+            // try {
+            //     console.log(`Payload for ${recipientId}: trails=${visibleTrails.length}`);
+            //     client.send(JSON.stringify(payload));
+            // } catch (err) {
+            //     console.error(`Send Failed to ${recipientId}:`, err);
+            // }
             client.send(JSON.stringify(payload));
         }
     });
