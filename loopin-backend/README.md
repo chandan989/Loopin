@@ -285,7 +285,6 @@ This server relies on PostGIS for all core game logic and ad management.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | `UUID` (PK) | Unique identifier for the game session. |
-| `on_chain_id` | `Integer` | The game ID from the Stacks smart contract. |
 | `status` | `String(20)` | "lobby", "active", "ended", "cancelled". |
 | `start_time` | `Timestamp` | Time the game moved from "lobby" to "active". |
 | `end_time` | `Timestamp` | Time the game is scheduled to end. |

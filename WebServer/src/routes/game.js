@@ -42,61 +42,33 @@ router.post('/create', async (req, res) => {
             });
         }
 
+        // Create Game Session with UUID (DB Generated or manually passed if needed)
+        // We no longer rely on chain ID integer.
+        // We will just create the session and return the UUID.
+
         try {
-            // Hack for testing without Stacks Node
-            let result = { success: true, txId: 'mock_tx_id' };
-            try {
-                // result = await contractService.createGame(gameType, maxPlayers);
-                // Commented out to force mock for verification script success
-            } catch (e) {
-                console.warn("Contract create failed", e);
-            }
-        } catch (e) {
-            console.warn('Contract call failed, proceeding with DB creation for testing:', e.message);
-        }
-
-        // For testing/mocking, we might want to ensure a game exists even if contract fails
-        // But createGameSession logic below relied on contract success or next ID.
-
-        const result = { success: true, txId: 'mock_tx_id' }; // Fake it for test
-
-        // SYNC DB:
-        // We speculatively create the game session in DB.
-        // We need the ID that WILL be assigned. 
-        // We can get predicted ID from contractService or just create it with a provisional ID.
-        // Let's rely on getNextGameId() 
-        try {
-            const nextIdData = await contractService.getNextGameId();
-            const predictedId = nextIdData.value ? parseInt(nextIdData.value) : 0; // Assuming CV structure
-
-            // Note: If tx fails, this might be stale. 
-            // Better approach: Indexer listens to 'print' event. 
-            // But for this Service approach, we do best effort.
-
-            // However, result.txId is returned.
-            // We can assume the predictedId is correct if no race condition.
-
-            // Actually, getNextGameId returns the CURRENT counter (e.g. 0 if none).
-            // So if 0 games exist, next is 0? Or 1?
-            // Usually "next-id" var is the one to assign.
-
-            await gameService.createGameSession(
-                predictedId, // on_chain_id
+            // We don't pass an ID, let DB generate UUID
+            const newGameId = await gameService.createGameSession(
+                null, // id is auto-generated or we could pass one if we wanted
                 gameType,
                 maxPlayers,
                 0, // entryFee
                 0  // prizePool
             );
 
-            console.log(`Created DB session for game ${predictedId}`);
-        } catch (e) {
-            console.error("Failed to sync game to DB", e);
-        }
+            console.log(`Created DB session ${newGameId}`);
 
-        res.json({
-            success: true,
-            data: result
-        });
+            res.json({
+                success: true,
+                data: {
+                    gameId: newGameId,
+                    txId: 'mock_tx_uuid_mode' // Frontend might expect this or we can remove usage
+                }
+            });
+        } catch (e) {
+            console.error("Failed to create game session", e);
+            throw e;
+        }
     } catch (error) {
         console.error('Error creating game:', error);
         res.status(500).json({
@@ -114,22 +86,23 @@ router.post('/start', async (req, res) => {
     try {
         const { gameId } = req.body;
 
-        if (gameId === undefined) {
+        if (!gameId) {
             return res.status(400).json({
                 success: false,
                 error: 'gameId is required'
             });
         }
 
-        const result = await contractService.startGame(gameId);
+        // We skip contract call 'startGame' if it expects int ID, 
+        // OR we adapt it if we still want blockchain sync. 
+        // For now, assuming pure UUID DB mode based on request:
 
         // Update DB
-        gameService.updateGameStatus(gameId, 'active')
-            .catch(e => console.error("DB update failed", e));
+        await gameService.updateGameStatus(gameId, 'active');
 
         res.json({
             success: true,
-            data: result
+            data: { success: true, gameId }
         });
     } catch (error) {
         console.error('Error starting game:', error);
@@ -148,22 +121,19 @@ router.post('/end', async (req, res) => {
     try {
         const { gameId } = req.body;
 
-        if (gameId === undefined) {
+        if (!gameId) {
             return res.status(400).json({
                 success: false,
                 error: 'gameId is required'
             });
         }
 
-        const result = await contractService.endGame(gameId);
-
         // Update DB
-        gameService.updateGameStatus(gameId, 'ended')
-            .catch(e => console.error("DB update failed", e));
+        await gameService.updateGameStatus(gameId, 'ended');
 
         res.json({
             success: true,
-            data: result
+            data: { success: true, gameId }
         });
     } catch (error) {
         console.error('Error ending game:', error);
@@ -182,21 +152,14 @@ router.post('/submit-results', async (req, res) => {
     try {
         const { gameId, playerAddress, areaCaptured, rank } = req.body;
 
-        if (gameId === undefined || !playerAddress || areaCaptured === undefined || rank === undefined) {
+        if (!gameId || !playerAddress || areaCaptured === undefined || rank === undefined) {
             return res.status(400).json({
                 success: false,
                 error: 'gameId, playerAddress, areaCaptured, and rank are required'
             });
         }
 
-        const result = await contractService.submitPlayerResult(
-            gameId,
-            playerAddress,
-            areaCaptured,
-            rank
-        );
-
-        // SYNC DB:
+        // Sync DB Only
         try {
             // We need player UUID and Game UUID
             const player = await gameService.ensurePlayer(playerAddress);
@@ -204,8 +167,7 @@ router.post('/submit-results', async (req, res) => {
 
             if (player && session) {
                 // prize calc is complex, simpler to pass 0 or estimate if we don't know from contract
-                // Assuming 0 for now unless we fetch event
-                const prize = rank === 1 ? session.prize_pool : 0; // Simplified assumption
+                const prize = rank === 1 ? session.prize_pool : 0;
 
                 await gameService.recordGameResult(
                     session.id,
@@ -217,11 +179,12 @@ router.post('/submit-results', async (req, res) => {
             }
         } catch (e) {
             console.error("DB Sync failed for submit-result", e);
+            throw e;
         }
 
         res.json({
             success: true,
-            data: result
+            data: { success: true }
         });
     } catch (error) {
         console.error('Error submitting results:', error);
@@ -318,23 +281,23 @@ router.get('/:gameId', async (req, res) => {
     try {
         const { gameId } = req.params;
 
-        // Fetch from Chain
-        let contractData = {};
+        // Skip Contract Data (which relied on Int ID)
+        // Fetch from Local DB (Game State)
+
+        let session = null;
         try {
-            contractData = await contractService.getGame(parseInt(gameId));
+            session = await gameService.getGameSession(gameId);
         } catch (e) {
-            console.warn("Could not fetch contract data", e);
+            console.warn("Session not found", e);
         }
 
-        // Fetch from Local DB (Game State)
-        // Note: gameService.getGameState currently returns ALL state, 
-        // we might want to filter by gameId in future if we support multiple games
+        // This originally fetched GLOBAL state, not per game?
         const localState = await gameService.getGameState();
 
         res.json({
             success: true,
             data: {
-                ...contractData,
+                ...session, // combine session details
                 localState
             }
         });

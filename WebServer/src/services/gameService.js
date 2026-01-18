@@ -4,7 +4,6 @@ export const createGameSession = async (gameId, gameType, maxPlayers, entryFee, 
     const { data, error } = await supabase
         .from('game_sessions')
         .insert([{
-            on_chain_id: gameId,
             game_type: gameType,
             max_players: maxPlayers,
             entry_fee: entryFee,
@@ -39,20 +38,20 @@ export const joinGame = async (playerUuid, gameUuid) => {
     if (error) throw new Error(error.message);
 };
 
-export const updateGameStatus = async (onChainId, status) => {
+export const updateGameStatus = async (gameId, status) => {
     const { error } = await supabase
         .from('game_sessions')
         .update({ status: status })
-        .eq('on_chain_id', onChainId);
+        .eq('id', gameId);
 
     if (error) throw new Error(error.message);
 };
 
-export const getGameSession = async (onChainId) => {
+export const getGameSession = async (gameId) => {
     const { data, error } = await supabase
         .from('game_sessions')
         .select('*')
-        .eq('on_chain_id', onChainId)
+        .eq('id', gameId)
         .single();
 
     if (error && error.code !== 'PGRST116') throw new Error(error.message); // PGRST116 is 'not found'

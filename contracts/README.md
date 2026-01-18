@@ -3,6 +3,7 @@
 ## Contract Overview
 
 The `loopin-game.clar` smart contract handles:
+
 - ✅ Game session creation and management
 - ✅ Player joins with entry fees
 - ✅ Prize pool accumulation
@@ -14,55 +15,73 @@ The `loopin-game.clar` smart contract handles:
 ### Public Functions (User-Callable)
 
 #### 1. `create-game`
+
 ```clarity
 (create-game (game-type (string-ascii 20)) (max-players uint))
 ```
+
 Creates a new game session.
+
 - **game-type**: "CASUAL" (free), "BLITZ" (1 STX), or "ELITE" (10 STX)
 - **max-players**: Maximum number of players (e.g., 10)
 - **Returns**: Game ID
 
 #### 2. `join-game`
+
 ```clarity
 (join-game (game-id uint))
 ```
+
 Player joins a game and pays entry fee if required.
+
 - Transfers STX to contract if entry fee > 0
 - Adds player to game participants
 - Updates prize pool
 
 #### 3. `start-game`
+
 ```clarity
 (start-game (game-id uint))
 ```
+
 Starts a game (only creator or contract owner).
+
 - Changes status from "lobby" to "active"
 - Records start block height
 
 ### Admin Functions (Backend-Callable)
 
 #### 4. `end-game`
+
 ```clarity
 (end-game (game-id uint))
 ```
+
 Ends an active game.
+
 - Changes status to "ended"
 - Records end block height
 
 #### 5. `submit-player-result`
+
 ```clarity
 (submit-player-result (game-id uint) (player principal) (area-captured uint) (rank uint))
 ```
+
 Submits final results for a player after game ends.
+
 - **area-captured**: Area in square meters × 1000 (for precision)
 - **rank**: Player's final ranking (1 = winner)
 - Updates player stats (total area, games played, games won)
 
 #### 6. `distribute-prize`
+
 ```clarity
 (distribute-prize (game-id uint) (player principal) (prize-amount uint))
 ```
+
 Distributes prize to a player.
+
 - Deducts 5% platform fee
 - Transfers STX to player
 - Updates player total earnings
@@ -98,11 +117,9 @@ async def create_game_on_chain(game_type: str, max_players: int):
         ]
     )
     
-    on_chain_id = contract_call.result
     
-    # Store in database
+    # Store in database with UUID (not using on-chain ID)
     game = GameSession(
-        on_chain_id=on_chain_id,
         game_type=game_type,
         max_players=max_players,
         status="lobby"
@@ -110,6 +127,7 @@ async def create_game_on_chain(game_type: str, max_players: int):
     db.add(game)
     await db.commit()
     
+    # Note: Database uses UUID for id, not the on-chain integer ID
     return game
 ```
 
@@ -192,6 +210,7 @@ Player Receives: 9.5 STX
 You can implement different distribution strategies in your backend:
 
 ### Winner Takes All
+
 ```python
 def calculate_prizes(results, prize_pool):
     winner = results[0]  # Rank 1
@@ -199,6 +218,7 @@ def calculate_prizes(results, prize_pool):
 ```
 
 ### Top 3 Split (60/30/10)
+
 ```python
 def calculate_prizes(results, prize_pool):
     return {
@@ -230,28 +250,33 @@ async def sync_game_state(game_id: UUID, tx_id: str):
 ### Local Testing with Clarinet
 
 1. Install Clarinet:
+
 ```bash
 brew install clarinet
 ```
 
-2. Initialize project:
+1. Initialize project:
+
 ```bash
 cd loopin-backend/contracts
 clarinet new loopin
 ```
 
-3. Add contract to `Clarinet.toml`:
+1. Add contract to `Clarinet.toml`:
+
 ```toml
 [contracts.loopin-game]
 path = "contracts/loopin-game.clar"
 ```
 
-4. Run tests:
+1. Run tests:
+
 ```bash
 clarinet test
 ```
 
 ### Example Test
+
 ```clarity
 ;; tests/loopin-game_test.clar
 
@@ -274,12 +299,14 @@ clarinet test
 ## Deployment
 
 ### Testnet Deployment
+
 ```bash
 clarinet deployments generate --testnet
 clarinet deployments apply -p testnet
 ```
 
 ### Mainnet Deployment
+
 ```bash
 clarinet deployments generate --mainnet
 clarinet deployments apply -p mainnet
@@ -301,12 +328,14 @@ clarinet deployments apply -p mainnet
 ## Next Steps
 
 1. **Install Stacks.js** in your backend:
+
 ```bash
 cd loopin-backend
 pip install stacks-blockchain
 ```
 
-2. **Create Stacks client wrapper**:
+1. **Create Stacks client wrapper**:
+
 ```python
 # app/core/stacks_client.py
 from stacks_blockchain import StacksClient
@@ -317,9 +346,9 @@ client = StacksClient(
 )
 ```
 
-3. **Update game creation endpoint** to call smart contract
+1. **Update game creation endpoint** to call smart contract
 
-4. **Add transaction confirmation webhooks** to sync database
+2. **Add transaction confirmation webhooks** to sync database
 
 ---
 

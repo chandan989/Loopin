@@ -95,12 +95,11 @@ async function runTests() {
         return;
     }
 
-    game_id = games[0].on_chain_id; // API expects on_chain_id usually?
-    const game_uuid = games[0].id;
-    console.log(`👉 Using Game: ${game_id} (UUID: ${game_uuid})`);
+    game_id = games[0].id;
+    console.log(`👉 Using Game UUID: ${game_id}`);
 
     // Join
-    const joinRes = await request('POST', `/game/${game_uuid}/confirm-join`, { walletAddress: PLAYER_1.wallet_address });
+    const joinRes = await request('POST', `/game/${game_id}/confirm-join`, { walletAddress: PLAYER_1.wallet_address });
     if (joinRes.data.success) {
         console.log('✅ Player 1 Joined Game');
     } else {

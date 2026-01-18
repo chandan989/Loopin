@@ -4,7 +4,6 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 -- Create game_sessions table
 CREATE TABLE IF NOT EXISTS game_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    on_chain_id INTEGER,
     status VARCHAR(20) NOT NULL DEFAULT 'lobby',
     game_type VARCHAR(20) DEFAULT 'CASUAL', -- BLITZ, ELITE, CASUAL
     max_players INTEGER DEFAULT 10,
