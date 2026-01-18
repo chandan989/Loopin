@@ -101,13 +101,17 @@ export const updatePlayerPosition = async (gameId, playerId, lat, lng, shieldedP
     try {
         // Calls the complex PostGIS logic via RPC
         const { data, error } = await withRetry(async () => {
-            return await supabase.rpc('update_player_position_rpc', {
+            const res = await supabase.rpc('update_player_position_rpc', {
                 p_game_id: gameId,
                 p_player_id: playerId,
                 p_lat: lat,
                 p_lng: lng,
                 p_shielded_ids: shieldedPlayerIds
             });
+
+            // Force retry if there's an error (e.g. network timeout returned as error object)
+            if (res.error) throw res.error;
+            return res;
         });
 
         if (error) {
