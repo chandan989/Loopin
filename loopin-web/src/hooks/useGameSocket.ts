@@ -25,14 +25,14 @@ export interface GameState {
     }>;
 }
 
-export const useGameSocket = (playerId: string | null) => {
+export const useGameSocket = (gameId: string | undefined, playerId: string | null) => {
     const socketRef = useRef<WebSocket | null>(null);
     const [gameState, setGameState] = useState<GameState | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [safePoints, setSafePoints] = useState<any[]>([]);
 
     useEffect(() => {
-        if (!playerId) return;
+        if (!playerId || !gameId) return;
 
         // Clean up previous connection
         if (socketRef.current) {
@@ -46,6 +46,13 @@ export const useGameSocket = (playerId: string | null) => {
         ws.onopen = () => {
             console.log("✅ Connected to Game Server");
             setIsConnected(true);
+
+            // Send Join Message to set context
+            ws.send(JSON.stringify({
+                type: 'join_game_socket',
+                gameId,
+                playerId
+            }));
         };
 
         ws.onmessage = (event) => {
@@ -98,13 +105,14 @@ export const useGameSocket = (playerId: string | null) => {
                 socketRef.current.close();
             }
         };
-    }, [playerId]);
+    }, [playerId, gameId]);
 
     const sendPosition = (lat: number, lng: number) => {
-        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN && playerId) {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN && playerId && gameId) {
             socketRef.current.send(JSON.stringify({
                 type: 'position_update',
                 playerId: playerId,
+                gameId: gameId,
                 lat,
                 lng
             }));
@@ -112,10 +120,11 @@ export const useGameSocket = (playerId: string | null) => {
     };
 
     const usePowerup = (powerupId: string) => {
-        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN && playerId) {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN && playerId && gameId) {
             socketRef.current.send(JSON.stringify({
                 type: 'use_powerup',
                 playerId: playerId,
+                gameId: gameId,
                 powerupId: powerupId
             }));
         }

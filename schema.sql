@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS player_powerups (
 CREATE TABLE IF NOT EXISTS player_trails (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+    game_id UUID NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
     trail GEOGRAPHY(LINESTRING, 4326) NOT NULL
 );
 
@@ -89,6 +90,7 @@ CREATE TABLE IF NOT EXISTS player_trails (
 CREATE TABLE IF NOT EXISTS player_territories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+    game_id UUID NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
     territory GEOGRAPHY(POLYGON, 4326) NOT NULL,
     area_sqm FLOAT NOT NULL
 );

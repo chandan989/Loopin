@@ -86,8 +86,8 @@ END;
 $$;
 
 -- 4. get_active_trails
--- Returns GeoJSON of all trails
-CREATE OR REPLACE FUNCTION get_active_trails()
+-- Returns GeoJSON of all trails for a specific game
+CREATE OR REPLACE FUNCTION get_active_trails(p_game_id UUID)
 RETURNS TABLE (
     player_id UUID,
     path JSON
@@ -95,12 +95,13 @@ RETURNS TABLE (
 LANGUAGE sql
 AS $$
     SELECT player_id, ST_AsGeoJSON(trail)::json
-    FROM player_trails;
+    FROM player_trails
+    WHERE game_id = p_game_id;
 $$;
 
 -- 5. get_active_territories
--- Returns GeoJSON of all territories
-CREATE OR REPLACE FUNCTION get_active_territories()
+-- Returns GeoJSON of all territories for a specific game
+CREATE OR REPLACE FUNCTION get_active_territories(p_game_id UUID)
 RETURNS TABLE (
     player_id UUID,
     polygon JSON,
@@ -109,7 +110,8 @@ RETURNS TABLE (
 LANGUAGE sql
 AS $$
     SELECT player_id, ST_AsGeoJSON(territory)::json, area_sqm
-    FROM player_territories;
+    FROM player_territories
+    WHERE game_id = p_game_id;
 $$;
 
 -- 6. get_safe_points_geojson
@@ -134,6 +136,7 @@ $$;
 -- The heavy lifter: adds point, checks loops, checks collisions.
 -- Returns events table.
 CREATE OR REPLACE FUNCTION update_player_position_rpc(
+    p_game_id UUID,
     p_player_id UUID,
     p_lat FLOAT,
     p_lng FLOAT,
@@ -159,29 +162,25 @@ BEGIN
     -- Construct point
     v_point := ST_Point(p_lng, p_lat)::geography;
 
-    -- Get existing trail
-    SELECT trail INTO v_old_trail FROM player_trails WHERE player_id = p_player_id;
+    -- Get existing trail for THIS game
+    SELECT trail INTO v_old_trail 
+    FROM player_trails 
+    WHERE player_id = p_player_id AND game_id = p_game_id;
 
     IF v_old_trail IS NULL THEN
-        -- Start new trail with 2 points (PostGIS LineString needs >1 point usually, but we can start with repeated)
-        -- Actually, we can start with NULL or just insert 2 points
-        -- Let's assume we append to existing or start new.
+        -- Start new trail with 2 points (approx current pos)
         v_new_trail := ST_MakeLine(v_point::geometry, v_point::geometry)::geography;
-        INSERT INTO player_trails (player_id, trail) VALUES (p_player_id, v_new_trail);
+        INSERT INTO player_trails (player_id, game_id, trail) VALUES (p_player_id, p_game_id, v_new_trail);
         RETURN;
     END IF;
 
     -- Append point to trail
-    -- ST_AddPoint is for Geometry, cast to Geometry then back
-    -- Limit trail length to avoid massive performance hits (e.g. last 500 points)
-    -- For MVP, simple append
     v_new_trail := ST_AddPoint(v_old_trail::geometry, v_point::geometry)::geography;
 
     -- Update trail in DB
-    UPDATE player_trails SET trail = v_new_trail WHERE player_id = p_player_id;
+    UPDATE player_trails SET trail = v_new_trail WHERE player_id = p_player_id AND game_id = p_game_id;
 
     -- 1. Check Loop Closure (Closed Ring OR Self-Intersection)
-    -- Logic: If trail is closed (start=end) OR not simple (crosses itself)
     v_is_valid := ST_IsSimple(v_new_trail::geometry);
     
     IF (NOT v_is_valid) OR (ST_IsClosed(v_new_trail::geometry) AND ST_NumPoints(v_new_trail::geometry) >= 4) THEN
@@ -199,11 +198,13 @@ BEGIN
             
             IF v_area > 10 THEN -- Filter noise
                 -- Insert Territory
-                INSERT INTO player_territories (player_id, territory, area_sqm)
-                VALUES (p_player_id, v_loop_poly, v_area);
+                INSERT INTO player_territories (player_id, game_id, territory, area_sqm)
+                VALUES (p_player_id, p_game_id, v_loop_poly, v_area);
                 
                 -- Reset Trail (Start fresh at current point)
-                UPDATE player_trails SET trail = ST_MakeLine(v_point::geometry, v_point::geometry)::geography WHERE player_id = p_player_id;
+                UPDATE player_trails 
+                SET trail = ST_MakeLine(v_point::geometry, v_point::geometry)::geography 
+                WHERE player_id = p_player_id AND game_id = p_game_id;
                 
                 RETURN QUERY SELECT 'territory_captured'::VARCHAR, p_player_id, NULL::UUID, v_area;
                 RETURN; -- Stop processing for this update
@@ -214,9 +215,12 @@ BEGIN
                 v_loop_poly := ST_ConvexHull(v_new_trail::geometry)::geography;
                 v_area := ST_Area(v_loop_poly);
                 IF v_area > 10 THEN
-                     INSERT INTO player_territories (player_id, territory, area_sqm)
-                     VALUES (p_player_id, v_loop_poly, v_area);
-                     UPDATE player_trails SET trail = ST_MakeLine(v_point::geometry, v_point::geometry)::geography WHERE player_id = p_player_id;
+                     INSERT INTO player_territories (player_id, game_id, territory, area_sqm)
+                     VALUES (p_player_id, p_game_id, v_loop_poly, v_area);
+                     UPDATE player_trails 
+                     SET trail = ST_MakeLine(v_point::geometry, v_point::geometry)::geography 
+                     WHERE player_id = p_player_id AND game_id = p_game_id;
+                     
                      RETURN QUERY SELECT 'territory_captured'::VARCHAR, p_player_id, NULL::UUID, v_area;
                      RETURN;
                 END IF;
@@ -227,19 +231,20 @@ BEGIN
     END IF;
 
     -- 2. Check Collision with Others (Trail Severing)
-    -- Iterate over other players' trails
+    -- Iterate over other players' trails IN THIS GAME ONLY
     FOR r IN 
         SELECT player_id, trail 
         FROM player_trails 
-        WHERE player_id != p_player_id
+        WHERE player_id != p_player_id AND game_id = p_game_id
     LOOP
         -- If intersects
         IF ST_Intersects(v_new_trail, r.trail) THEN
             -- Check Shield
             IF NOT (r.player_id = ANY(p_shielded_ids)) THEN
                 -- Kill Trail!
-                UPDATE player_trails SET trail = ST_MakeLine(ST_PointN(r.trail::geometry, 1), ST_PointN(r.trail::geometry, 1))::geography 
-                WHERE player_id = r.player_id;
+                UPDATE player_trails 
+                SET trail = ST_MakeLine(ST_PointN(r.trail::geometry, 1), ST_PointN(r.trail::geometry, 1))::geography 
+                WHERE player_id = r.player_id AND game_id = p_game_id;
                 
                 RETURN QUERY SELECT 'trail_severed'::VARCHAR, p_player_id, r.player_id, 0.0::FLOAT;
             END IF;

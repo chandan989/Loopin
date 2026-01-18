@@ -34,39 +34,53 @@ export const setupWebSocket = (server) => {
             try {
                 const data = JSON.parse(message);
 
-                if (data.type === 'position_update') {
-                    const { playerId, lat, lng } = data;
-                    if (playerId && lat && lng) {
-                        // Associate WS with PlayerID
-                        const state = connectionStates.get(ws);
-                        if (state) state.playerId = playerId;
+                if (data.type === 'join_game_socket') {
+                    // Explicit join message to set context
+                    const { gameId, playerId } = data;
+                    const state = connectionStates.get(ws);
+                    if (state) {
+                        state.playerId = playerId;
+                        state.gameId = gameId;
+                    }
+                }
+                else if (data.type === 'position_update') {
+                    const { playerId, gameId, lat, lng } = data;
 
-                        // Gather Shielded Players
+                    // Allow gameId from message or fallback to state
+                    const state = connectionStates.get(ws);
+                    const activeGameId = gameId || (state ? state.gameId : null);
+
+                    if (playerId && lat && lng && activeGameId) {
+                        // Update State
+                        if (state) {
+                            state.playerId = playerId;
+                            state.gameId = activeGameId;
+                        }
+
+                        // Gather Shielded Players IN THIS GAME
                         const shieldedPlayerIds = [];
                         for (const [sWs, sState] of connectionStates.entries()) {
-                            if (sState.playerId && sState.activePowerups.has('shield')) {
+                            if (sState.gameId === activeGameId && sState.playerId && sState.activePowerups.has('shield')) {
                                 shieldedPlayerIds.push(sState.playerId);
                             }
                         }
 
                         // Process Game Mechanics
-                        const events = await updatePlayerPosition(playerId, lat, lng, shieldedPlayerIds);
+                        const events = await updatePlayerPosition(activeGameId, playerId, lat, lng, shieldedPlayerIds);
 
-                        // Broadcast State (Customized per client for Stealth)
-                        // We fetch the full fresh state once
-                        const baseGameState = await getGameState();
-                        broadcastGameState(wss, baseGameState, connectionStates);
+                        // Broadcast State (Scoped to Game)
+                        await broadcastGameUpdate(wss, activeGameId, connectionStates);
 
-                        // Broadcast events (like captured) to all
+                        // Broadcast events to players in this game
                         if (events && events.length > 0) {
                             events.forEach(event => {
-                                broadcastToAll(wss, event);
+                                broadcastToGame(wss, activeGameId, event, connectionStates);
                             });
                         }
                     }
                 }
                 else if (data.type === 'use_powerup') {
-                    const { playerId, powerupId } = data;
+                    const { playerId, gameId, powerupId } = data;
                     // Validate and Decrement Inventory
                     const success = await usePowerup(playerId, powerupId);
 
@@ -78,12 +92,17 @@ export const setupWebSocket = (server) => {
                             setTimeout(() => {
                                 if (connectionStates.has(ws)) {
                                     connectionStates.get(ws).activePowerups.delete(powerupId);
+                                    // Trigger update to refresh visibility
+                                    if (state.gameId) broadcastGameUpdate(wss, state.gameId, connectionStates);
                                 }
                             }, 60000);
                         }
 
                         // Notify user
                         ws.send(JSON.stringify({ type: 'powerup_activated', powerupId }));
+
+                        // Refresh state for others (if stealth used)
+                        if (state && state.gameId) broadcastGameUpdate(wss, state.gameId, connectionStates);
                     }
                 }
             } catch (err) {
@@ -98,70 +117,68 @@ export const setupWebSocket = (server) => {
     });
 };
 
-// Customized Broadcast
-const broadcastGameState = (wss, baseState, states) => {
-    // console.log(`Broadcasting state to ${wss.clients.size} clients`);
-    wss.clients.forEach((client) => {
-        if (client.readyState === 1) {
-            const recipientState = states.get(client);
-            const recipientId = recipientState ? recipientState.playerId : 'anon';
+// Broadcast state to all clients in a specific game
+const broadcastGameUpdate = async (wss, gameId, states) => {
+    try {
+        // Fetch fresh state for this game
+        const baseState = await getGameState(gameId);
 
-            // console.log(`Sending to ${recipientId}`);
-
-            // Filter Players
-            // baseState.players contains basic info. 
-            // We need to merge with activePowerups from our memory map
-
-            // 1. Create a map of active powerups by player ID
-            const powerupMap = new Map();
-            for (const [ws, s] of states.entries()) {
-                if (s.playerId) powerupMap.set(s.playerId, s.activePowerups);
+        // 1. Create a map of active powerups for players in this game
+        const powerupMap = new Map();
+        for (const [ws, s] of states.entries()) {
+            if (s.gameId === gameId && s.playerId) {
+                powerupMap.set(s.playerId, s.activePowerups);
             }
-
-            const visiblePlayers = baseState.players.filter(p => {
-                const pPowerups = powerupMap.get(p.id) || new Set();
-                const isInvisible = pPowerups.has('invisibility'); // or 'stealth'
-                const isMe = p.id === recipientId;
-
-                // Show if: It's ME, OR they are NOT invisible
-                return isMe || !isInvisible;
-            }).map(p => ({
-                ...p,
-                powerups: Array.from(powerupMap.get(p.id) || [])
-            }));
-
-            // Filter Trails
-            const visibleTrails = baseState.trails.filter(t => {
-                const pPowerups = powerupMap.get(t.playerId) || new Set();
-                const isInvisible = pPowerups.has('invisibility');
-                const isMe = t.playerId === recipientId;
-                return isMe || !isInvisible;
-            });
-
-            const payload = {
-                type: 'game_state_update',
-                state: {
-                    ...baseState,
-                    players: visiblePlayers,
-                    trails: visibleTrails
-                    // territories are always visible
-                }
-            };
-
-            // try {
-            //     console.log(`Payload for ${recipientId}: trails=${visibleTrails.length}`);
-            //     client.send(JSON.stringify(payload));
-            // } catch (err) {
-            //     console.error(`Send Failed to ${recipientId}:`, err);
-            // }
-            client.send(JSON.stringify(payload));
         }
-    });
+
+        // 2. Send to each client in this game
+        wss.clients.forEach((client) => {
+            const clientState = states.get(client);
+            if (client.readyState === 1 && clientState && clientState.gameId === gameId) {
+                const recipientId = clientState.playerId || 'anon';
+
+                // Filter Players
+                const visiblePlayers = baseState.players.filter(p => {
+                    const pPowerups = powerupMap.get(p.id) || new Set();
+                    const isInvisible = pPowerups.has('invisibility'); // or 'stealth'
+                    const isMe = p.id === recipientId;
+                    return isMe || !isInvisible;
+                }).map(p => ({
+                    ...p,
+                    powerups: Array.from(powerupMap.get(p.id) || [])
+                }));
+
+                // Filter Trails
+                const visibleTrails = baseState.trails.filter(t => {
+                    const pPowerups = powerupMap.get(t.playerId) || new Set();
+                    const isInvisible = pPowerups.has('invisibility');
+                    const isMe = t.playerId === recipientId;
+                    return isMe || !isInvisible;
+                });
+
+                const payload = {
+                    type: 'game_state_update',
+                    state: {
+                        ...baseState,
+                        players: visiblePlayers,
+                        trails: visibleTrails
+                    }
+                };
+
+                client.send(JSON.stringify(payload));
+            }
+        });
+    } catch (e) {
+        console.error(`Error broadcasting game ${gameId}:`, e);
+    }
 };
 
-const broadcastToAll = (wss, data) => {
+const broadcastToGame = (wss, gameId, data, states) => {
     const msg = JSON.stringify(data);
     wss.clients.forEach(client => {
-        if (client.readyState === 1) client.send(msg);
+        const s = states.get(client);
+        if (client.readyState === 1 && s && s.gameId === gameId) {
+            client.send(msg);
+        }
     });
 };

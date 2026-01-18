@@ -291,8 +291,8 @@ router.get('/:gameId', async (req, res) => {
             console.warn("Session not found", e);
         }
 
-        // This originally fetched GLOBAL state, not per game?
-        const localState = await gameService.getGameState();
+        // Fetch scoped game state
+        const localState = await gameService.getGameState(gameId);
 
         res.json({
             success: true,

@@ -86,43 +86,62 @@ export const recordGameResult = async (gameUuid, playerUuid, rank, areaCaptured,
 /**
  * Updates a player's trail and checks for game events (loops, collisions).
  */
-export const updatePlayerPosition = async (playerId, lat, lng, shieldedPlayerIds = []) => {
-    // Calls the complex PostGIS logic via RPC
-    const { data, error } = await supabase.rpc('update_player_position_rpc', {
-        p_player_id: playerId,
-        p_lat: lat,
-        p_lng: lng,
-        p_shielded_ids: shieldedPlayerIds
-    });
-
-    if (error) {
-        console.error('RPC Error:', error);
-        return [];
+// Helper for retrying async operations
+const withRetry = async (fn, retries = 3, delay = 1000) => {
+    try {
+        return await fn();
+    } catch (err) {
+        if (retries === 0) throw err;
+        await new Promise(res => setTimeout(res, delay));
+        return withRetry(fn, retries - 1, delay * 2);
     }
-
-    // RPC returns rows = events
-    // Transform to match event structure if needed
-    // The RPC returns (event_type, attacker_id, victim_id, area_added)
-
-    // We map snake_case from DB to camelCase for WS
-    const events = (data || []).map(evt => {
-        const e = { type: evt.event_type };
-        if (evt.event_type === 'territory_captured') {
-            e.playerId = evt.attacker_id;
-            e.areaAdded = evt.area_added;
-        } else if (evt.event_type === 'trail_severed') {
-            e.attackerId = evt.attacker_id;
-            e.victimId = evt.victim_id;
-        } else if (evt.event_type === 'trail_banked') {
-            e.playerId = evt.attacker_id; // we reused column
-        }
-        return e;
-    });
-
-    return events;
 };
 
-export const getGameState = async () => {
+export const updatePlayerPosition = async (gameId, playerId, lat, lng, shieldedPlayerIds = []) => {
+    try {
+        // Calls the complex PostGIS logic via RPC
+        const { data, error } = await withRetry(async () => {
+            return await supabase.rpc('update_player_position_rpc', {
+                p_game_id: gameId,
+                p_player_id: playerId,
+                p_lat: lat,
+                p_lng: lng,
+                p_shielded_ids: shieldedPlayerIds
+            });
+        });
+
+        if (error) {
+            console.error('RPC Error:', error);
+            return [];
+        }
+
+        // RPC returns rows = events
+        // Transform to match event structure if needed
+        // The RPC returns (event_type, attacker_id, victim_id, area_added)
+
+        // We map snake_case from DB to camelCase for WS
+        const events = (data || []).map(evt => {
+            const e = { type: evt.event_type };
+            if (evt.event_type === 'territory_captured') {
+                e.playerId = evt.attacker_id;
+                e.areaAdded = evt.area_added;
+            } else if (evt.event_type === 'trail_severed') {
+                e.attackerId = evt.attacker_id;
+                e.victimId = evt.victim_id;
+            } else if (evt.event_type === 'trail_banked') {
+                e.playerId = evt.attacker_id; // we reused column
+            }
+            return e;
+        });
+
+        return events;
+    } catch (error) {
+        console.error('RPC Error (after retries):', error);
+        return [];
+    }
+};
+
+export const getGameState = async (gameId) => {
     // We can fetch table data normally. 
     // PostGIS geometries are returned as WKB/HEX by default in Supabase query builder?
     // Actually, Supabase JS client handles GeoJSON if we select it specifically using PostGIS functions in select?
@@ -168,10 +187,11 @@ export const getGameState = async () => {
     // I'll call `get_active_trails` RPC.
 
     const [trailsRes, territoriesRes, playersRes] = await Promise.all([
-        supabase.rpc('get_active_trails'),
-        supabase.rpc('get_active_territories'),
+        supabase.rpc('get_active_trails', { p_game_id: gameId }),
+        supabase.rpc('get_active_territories', { p_game_id: gameId }),
         supabase.from('players')
             .select('id, username, wallet_address, player_stats(total_area, current_streak)')
+        // TODO: Filter players by active game participants ideally
     ]);
 
     const trails = (trailsRes.data || []).map(r => ({ playerId: r.player_id, path: r.path }));

@@ -40,7 +40,7 @@ const GamePage = () => {
   const [walletAddress] = useState(localStorage.getItem('loopin_wallet') || "");
 
   // Real Game State
-  const { gameState, isConnected: wsConnected, sendPosition, usePowerup, safePoints } = useGameSocket(playerId);
+  const { gameState, isConnected: wsConnected, sendPosition, usePowerup, safePoints } = useGameSocket(sessionId, playerId);
 
   // Local State
   const [timeLeft, setTimeLeft] = useState(DEFAULT_GAME_CONFIG.durationSeconds);
@@ -123,7 +123,10 @@ const GamePage = () => {
   useEffect(() => {
     let watchId: number | null = null;
 
-    if (navigator.geolocation) {
+    const startWatching = (highAccuracy: boolean) => {
+      // Clear existing watch if any
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -135,16 +138,24 @@ const GamePage = () => {
           }
         },
         (err) => {
-          console.error("Geolocation Error:", {
-            code: err.code,
-            message: err.message,
-            PERMISSION_DENIED: err.PERMISSION_DENIED,
-            POSITION_UNAVAILABLE: err.POSITION_UNAVAILABLE,
-            TIMEOUT: err.TIMEOUT,
-          });
+          console.warn(`Geolocation Error (${highAccuracy ? 'High' : 'Low'} Accuracy):`, err.message);
+
+          // If high accuracy fails, try low accuracy
+          if (highAccuracy) {
+            console.log("Falling back to low accuracy...");
+            startWatching(false);
+          }
         },
-        { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 }
+        {
+          enableHighAccuracy: highAccuracy,
+          maximumAge: 5000,
+          timeout: 10000
+        }
       );
+    };
+
+    if (navigator.geolocation) {
+      startWatching(true);
     }
 
     return () => {
