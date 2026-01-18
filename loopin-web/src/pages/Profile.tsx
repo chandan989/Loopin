@@ -20,8 +20,6 @@ import {
 import { SlideUp, StaggerContainer, ScaleIn, FadeIn } from '@/components/animation/MotionWrapper';
 import { api, PlayerProfile } from '@/lib/api';
 import { getSTXBalance, formatSTX } from '@/lib/stacks-utils';
-// Still using some mock data for stats until stats API is ready
-import { MOCK_USER_STATS, MOCK_GAME_HISTORY } from '@/data/mockData';
 import { userSession } from '@/lib/stacks-auth';
 import { useNavigate } from 'react-router-dom';
 
@@ -38,9 +36,20 @@ const Profile = () => {
   const [editUsername, setEditUsername] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock stats for now
-  const stats = MOCK_USER_STATS;
-  const recentGames = MOCK_GAME_HISTORY;
+
+  // Real Data State (matches Dashboard)
+  const [stats, setStats] = useState({
+    totalArea: '0 km²',
+    gamesPlayed: 0,
+    gamesWon: 0,
+    totalEarnings: '0 STX',
+    winRate: '0%',
+    currentStreak: 0,
+    longestTrail: '0 m',
+    biggestLoop: '0 m²',
+    rank: 0
+  });
+  const [recentGames, setRecentGames] = useState<any[]>([]);
 
   useEffect(() => {
     // Get real wallet address
@@ -109,6 +118,9 @@ const Profile = () => {
         console.log('[Profile] Profile loaded from API:', p);
         setPlayer(p);
         setEditUsername(p.username);
+
+        // In the future, if p contains stats, we would update them here.
+        // For now, we leave them as defaults (0) to match Dashboard behavior.
       } else {
         // Fallback if user hasn't registered yet or API failed
         console.log('[Profile] Using fallback profile for wallet:', walletAddress);
