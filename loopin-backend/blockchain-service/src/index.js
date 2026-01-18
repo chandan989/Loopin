@@ -1,9 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import http from 'http';
 import { validateConfig } from './config/stacks.js';
 import gameRoutes from './routes/game.js';
 import playerRoutes from './routes/player.js';
+import powerupRoutes from './routes/powerup.js';
+import adsRoutes from './routes/ads.js';
+import { setupWebSocket } from './websocket/server.js';
 
 // Load environment variables
 dotenv.config();
@@ -13,7 +17,11 @@ validateConfig();
 
 // Initialize Express app
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
+
+// Setup WebSocket
+setupWebSocket(server);
 
 // Middleware
 app.use(cors({
@@ -43,6 +51,8 @@ app.get('/health', (req, res) => {
 const apiPrefix = process.env.API_PREFIX || '/api';
 app.use(`${apiPrefix}/game`, gameRoutes);
 app.use(`${apiPrefix}/player`, playerRoutes);
+app.use(`${apiPrefix}/powerup`, powerupRoutes);
+app.use(`${apiPrefix}/ads`, adsRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -63,7 +73,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log('');
     console.log('🚀 Loopin Blockchain Service Started');
     console.log('=====================================');
@@ -71,6 +81,7 @@ app.listen(PORT, () => {
     console.log(`🌐 Network: ${process.env.NETWORK || 'testnet'}`);
     console.log(`📝 Contract: ${process.env.CONTRACT_ADDRESS}.${process.env.CONTRACT_NAME}`);
     console.log(`🔗 API Base: http://localhost:${PORT}${apiPrefix}`);
+    console.log(`⚡ WebSocket: ws://localhost:${PORT}/ws/game`);
     console.log('');
     console.log('Available endpoints:');
     console.log(`  GET  ${apiPrefix}/health`);
@@ -97,3 +108,4 @@ process.on('SIGINT', () => {
     console.log('SIGINT received, shutting down gracefully...');
     process.exit(0);
 });
+

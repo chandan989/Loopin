@@ -234,3 +234,16 @@ export const MOCK_REWARD_STATUS = {
     last_claimed_at: '2026-01-13T10:00:00Z',
 };
 
+export const MOCK_BOTS = [
+    { id: 'bot-1', position: { lat: 40.785091 + 0.001, lng: -73.968285 + 0.001 }, trail: [], is_me: false, color: '#FF4444' },
+    { id: 'bot-2', position: { lat: 40.785091 - 0.001, lng: -73.968285 - 0.0005 }, trail: [], is_me: false, color: '#8844FF' },
+    { id: 'bot-3', position: { lat: 40.785091 + 0.0005, lng: -73.968285 - 0.0015 }, trail: [], is_me: false, color: '#FF8844' }
+];
+
+export const DEFAULT_GAME_CONFIG = {
+    startPos: [40.785091, -73.968285] as [number, number],
+    durationSeconds: 1500, // 25 min
+    degreeToMeters: 111320,
+    captureThreshold: 10.0,
+    trailBankThreshold: 2.0
+};

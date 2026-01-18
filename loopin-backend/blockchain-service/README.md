@@ -1,6 +1,6 @@
 # Loopin Blockchain Service
 
-Node.js service for interacting with the Loopin smart contract on Stacks blockchain.
+Node.js service for interacting with the Loopin smart contract on Stacks blockchain and managing real-time game mechanics (Trails, Safepoints, WebSockets).
 
 ## 🚀 Quick Start
 
@@ -20,38 +20,79 @@ cp .env.example .env
 ```
 
 Edit `.env`:
+
 ```env
 PORT=3001
 NETWORK=testnet
 CONTRACT_ADDRESS=YOUR_CONTRACT_ADDRESS
 CONTRACT_NAME=loopin-game
 PRIVATE_KEY=your-private-key-here
+# PostGIS Database
+DATABASE_URL=postgresql://user:password@localhost:5432/loopin_gis
 ```
 
 ### 3. Run the Service
 
 Development mode (with auto-reload):
+
 ```bash
 npm run dev
 ```
 
 Production mode:
+
 ```bash
 npm start
 ```
 
 The service will start on `http://localhost:3001`
+WebSocket endpoint: `ws://localhost:3001/ws/game`
 
 ## 📡 API Endpoints
 
 ### Health Check
+
 ```bash
 GET /health
+```
+
+### WebSocket API (Real-time Game)
+
+**URL:** `ws://localhost:3001/ws/game`
+
+#### Client -> Server
+
+```json
+{
+  "type": "position_update",
+  "playerId": "UUID",
+  "lat": 12.34,
+  "lng": 56.78
+}
+```
+
+#### Server -> Client
+
+```json
+{
+  "type": "init",
+  "safePoints": [...]
+}
+```
+
+```json
+{
+  "type": "player_moved",
+  "playerId": "UUID",
+  "lat": 12.34,
+  "lng": 56.78
+}
 ```
 
 ### Game Management
 
 #### Create Game
+
 ```bash
 POST /api/game/create
 Content-Type: application/json
@@ -63,6 +104,7 @@ Content-Type: application/json
 ```
 
 #### Start Game
+
 ```bash
 POST /api/game/start
 Content-Type: application/json
@@ -72,7 +114,22 @@ Content-Type: application/json
 }
 ```
 
+#### Confirm Join (Local Game Session)
+
+This registers the player in the local game database to enable real-time mechanics.
+
+```bash
+POST /api/game/:gameId/confirm-join
+Content-Type: application/json
+
+{
+  "playerId": "UUID",
+  "walletAddress": "ST..."
+}
+```
+
 #### End Game
+
 ```bash
 POST /api/game/end
 Content-Type: application/json
@@ -83,6 +140,7 @@ Content-Type: application/json
 ```
 
 #### Submit Player Results
+
 ```bash
 POST /api/game/submit-results
 Content-Type: application/json
@@ -96,6 +154,7 @@ Content-Type: application/json
 ```
 
 #### Distribute Prize
+
 ```bash
 POST /api/game/distribute-prize
 Content-Type: application/json
@@ -110,40 +169,47 @@ Content-Type: application/json
 ### Read-Only Queries
 
 #### Get Game Details
+
 ```bash
 GET /api/game/:gameId
 ```
 
 #### Get Participant Details
+
 ```bash
 GET /api/game/:gameId/participant/:address
 ```
 
 #### Get Player Count
+
 ```bash
 GET /api/game/:gameId/player-count
 ```
 
 #### Get Player Stats
+
 ```bash
 GET /api/player/:address/stats
 ```
 
 ## 🧪 Testing with cURL
 
-### Create a CASUAL game:
+### Create a CASUAL game
+
 ```bash
 curl -X POST http://localhost:3001/api/game/create \
   -H "Content-Type: application/json" \
   -d '{"gameType":"CASUAL","maxPlayers":10}'
 ```
 
-### Get game details:
+### Get game details
+
 ```bash
 curl http://localhost:3001/api/game/0
 ```
 
-### Get player stats:
+### Get player stats
+
 ```bash
 curl http://localhost:3001/api/player/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM/stats
 ```
@@ -209,6 +275,7 @@ async def end_game_and_distribute_prizes(game_id: int, results: list):
 ## 📊 Response Format
 
 ### Success Response
+
 ```json
 {
   "success": true,
@@ -220,6 +287,7 @@ async def end_game_and_distribute_prizes(game_id: int, results: list):
 ```
 
 ### Error Response
+
 ```json
 {
   "success": false,
@@ -238,17 +306,21 @@ async def end_game_and_distribute_prizes(game_id: int, results: list):
 ## 🐛 Troubleshooting
 
 ### Service won't start
+
 - Check if port 3001 is already in use
 - Verify all dependencies are installed
 - Check `.env` file exists and is configured
+- Verify DATABASE_URL is correct and PostGIS is running
 
 ### Transactions failing
+
 - Verify private key is correct
 - Check contract address is deployed
 - Ensure sufficient STX balance
 - Verify network setting (testnet vs mainnet)
 
 ### Read-only calls failing
+
 - Check contract address and name
 - Verify network connectivity
 - Ensure contract is deployed on the network
@@ -256,17 +328,22 @@ async def end_game_and_distribute_prizes(game_id: int, results: list):
 ## 📝 Development
 
 ### Project Structure
+
 ```
 blockchain-service/
 ├── src/
 │   ├── index.js              # Main server
 │   ├── config/
-│   │   └── stacks.js         # Stacks configuration
+│   │   ├── stacks.js         # Stacks configuration
+│   │   └── db.js             # Database configuration
 │   ├── services/
-│   │   └── contract.js       # Contract interactions
+│   │   ├── contract.js       # Contract interactions
+│   │   └── gameService.js    # Game mechanics (Trails, Safepoints)
 │   ├── routes/
 │   │   ├── game.js           # Game endpoints
 │   │   └── player.js         # Player endpoints
+│   ├── websocket/
+│   │   └── server.js         # WebSocket server
 ├── .env                      # Environment config
 ├── .env.example              # Example config
 ├── package.json
@@ -283,6 +360,7 @@ blockchain-service/
 ## 🚀 Deployment
 
 ### Production Checklist
+
 - [ ] Update `.env` with mainnet settings
 - [ ] Set `NETWORK=mainnet`
 - [ ] Use production private key
@@ -293,6 +371,7 @@ blockchain-service/
 - [ ] Set up process manager (PM2)
 
 ### Deploy with PM2
+
 ```bash
 npm install -g pm2
 pm2 start src/index.js --name loopin-blockchain
@@ -303,6 +382,7 @@ pm2 startup
 ## 📞 Support
 
 For issues or questions:
+
 - Check the logs: `pm2 logs loopin-blockchain`
 - Review Stacks.js documentation
 - Check transaction on Stacks Explorer

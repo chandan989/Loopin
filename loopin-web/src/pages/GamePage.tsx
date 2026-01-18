@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 
 // --- ICONS & STYLES ---
+import { MOCK_BOTS, DEFAULT_GAME_CONFIG } from '@/data/mockData';
+
+// --- ICONS & STYLES ---
 const createPulseIcon = (color: string, isMe: boolean) => L.divIcon({
   className: 'custom-pulse-icon',
   html: `<div class="relative flex items-center justify-center">
@@ -25,9 +28,9 @@ const createPulseIcon = (color: string, isMe: boolean) => L.divIcon({
 });
 
 // Default start if geo permission denied
-const DEFAULT_POS: [number, number] = [40.785091, -73.968285];
+const DEFAULT_POS = DEFAULT_GAME_CONFIG.startPos;
 
-const ONE_DEG_IN_METERS = 111320; // Approx
+const ONE_DEG_IN_METERS = DEFAULT_GAME_CONFIG.degreeToMeters; // Approx
 
 const GamePage = () => {
   const { sessionId } = useParams();
@@ -37,7 +40,7 @@ const GamePage = () => {
   const [walletAddress] = useState(localStorage.getItem('loopin_wallet') || "mock_wallet_" + Math.floor(Math.random() * 10000));
 
   // Game State
-  const [timeLeft, setTimeLeft] = useState(1500); // 25 min default
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_GAME_CONFIG.durationSeconds); // 25 min default
   const [myPos, setMyPos] = useState<[number, number]>(DEFAULT_POS);
 
   // DEBUG STATE
@@ -54,11 +57,7 @@ const GamePage = () => {
   // Local Game State (Offline Mode)
   const [myTrail, setMyTrail] = useState<[number, number][]>([DEFAULT_POS]);
   const [localTerritories, setLocalTerritories] = useState<any[]>([]); // { owner_id, points }
-  const [otherPlayers, setOtherPlayers] = useState<any[]>([
-    { id: 'bot-1', position: { lat: DEFAULT_POS[0] + 0.001, lng: DEFAULT_POS[1] + 0.001 }, trail: [], is_me: false, color: '#FF4444' },
-    { id: 'bot-2', position: { lat: DEFAULT_POS[0] - 0.001, lng: DEFAULT_POS[1] - 0.0005 }, trail: [], is_me: false, color: '#8844FF' },
-    { id: 'bot-3', position: { lat: DEFAULT_POS[0] + 0.0005, lng: DEFAULT_POS[1] - 0.0015 }, trail: [], is_me: false, color: '#FF8844' }
-  ]);
+  const [otherPlayers, setOtherPlayers] = useState<any[]>(MOCK_BOTS);
 
   // Powerup State
   const [activePowerup, setActivePowerup] = useState<'shield' | 'invisibility' | null>(null);
