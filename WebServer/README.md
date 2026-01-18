@@ -63,6 +63,13 @@ npm run dev
 npm start
 ```
 
+### Azure Deployment
+
+The WebServer is deployed as an Azure Web App:
+
+- **Base URL:** `https://loopin-server.azurewebsites.net`
+- **WebSocket Endpoint:** `wss://loopin-server.azurewebsites.net/ws/game`
+
 ## API Documentation
 
 ### Authentication

@@ -16,7 +16,6 @@ class GameBase(BaseModel):
     status: str
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
-    on_chain_id: Optional[int] = None
 
 class GameCreate(BaseModel):
     max_players: int = 10

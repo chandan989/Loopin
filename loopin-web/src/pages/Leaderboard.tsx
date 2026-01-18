@@ -10,6 +10,8 @@ import {
   MOCK_LEADERBOARD_WEEKLY,
   MOCK_LEADERBOARD_SESSION
 } from '@/data/mockData';
+import { api } from '@/lib/api';
+
 
 // --- Helper Component for Counting Animation ---
 const CountUpValue = ({ value, className, prefix = '' }: { value: string; className?: string; prefix?: string }) => {
@@ -77,21 +79,29 @@ const CountUpValue = ({ value, className, prefix = '' }: { value: string; classN
 
 const Leaderboard = () => {
   const [activeTab, setActiveTab] = React.useState<'all-time' | 'weekly' | 'session'>('all-time');
+  const [leaderboardData, setLeaderboardData] = useState<any[]>(MOCK_LEADERBOARD_ALL_TIME);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Switch data based on tab
-  const getLeaderboardData = () => {
-    switch (activeTab) {
-      case 'weekly':
-        return MOCK_LEADERBOARD_WEEKLY;
-      case 'session':
-        return MOCK_LEADERBOARD_SESSION;
-      case 'all-time':
-      default:
-        return MOCK_LEADERBOARD_ALL_TIME;
-    }
-  };
-
-  const leaderboardData = getLeaderboardData();
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await api.getLeaderboard(activeTab);
+        // Fallback to mocks if empty for now, or just show empty
+        if (data && data.length > 0) {
+          setLeaderboardData(data);
+        } else {
+          // Keep default or set empty
+          // setLeaderboardData([]); 
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [activeTab]);
 
   const handleTabChange = (tab: 'all-time' | 'weekly' | 'session') => {
     if (activeTab === tab) return;

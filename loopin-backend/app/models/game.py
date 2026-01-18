@@ -9,7 +9,6 @@ class GameSession(Base):
     __tablename__ = "game_sessions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    on_chain_id = Column(Integer, nullable=True)
     status = Column(String(20), nullable=False, default="lobby") # lobby, active, ended, cancelled
     game_type = Column(String(20), default="CASUAL") # BLITZ, ELITE, CASUAL
     max_players = Column(Integer, default=10)

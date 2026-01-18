@@ -13,6 +13,7 @@ import {
     uintCV,
     principalCV,
 } from '@stacks/transactions';
+import { openContractCall, openSTXTransfer } from '@stacks/connect';
 import { STACKS_TESTNET, STACKS_MAINNET } from '@stacks/network';
 import { getCurrentNetwork } from './network-utils';
 import { userSession } from './stacks-auth';
@@ -34,68 +35,55 @@ export async function payEntryFee(
     contractAddress: string,
     contractName: string
 ): Promise<{ success: boolean; txId?: string; error?: string }> {
-    try {
+    return new Promise((resolve) => {
         if (!userSession.isUserSignedIn()) {
-            return { success: false, error: 'Wallet not connected' };
+            resolve({ success: false, error: 'Wallet not connected' });
+            return;
         }
 
-        const userData = userSession.loadUserData();
         const network = getNetwork();
-        const networkType = getCurrentNetwork();
-        const senderAddress = networkType === 'mainnet'
-            ? userData.profile.stxAddress.mainnet
-            : userData.profile.stxAddress.testnet;
 
         console.log('[Transaction] Paying entry fee:', entryFeeSTX, 'STX');
-        console.log('[Transaction] Game ID:', gameId);
-        console.log('[Transaction] Contract:', `${contractAddress}.${contractName}`);
 
         // Convert STX to micro-STX (1 STX = 1,000,000 micro-STX)
         const amountMicroSTX = Math.floor(entryFeeSTX * 1000000);
 
-        // Call the join-game contract function
-        const txOptions = {
+        openContractCall({
             contractAddress,
             contractName,
             functionName: 'join-game',
             functionArgs: [
-                uintCV(parseInt(gameId)), // game-id
+                // Ensure gameId is a valid integer
+                (() => {
+                    const idInt = parseInt(gameId);
+                    if (isNaN(idInt)) {
+                        console.error('[Transaction] Invalid game ID (not an integer):', gameId);
+                        throw new Error(`Invalid game ID: ${gameId}. Expected an integer.`);
+                    }
+                    console.log('[Transaction] Using game ID for contract:', idInt);
+                    return uintCV(idInt);
+                })(),
             ],
-            senderKey: userData.appPrivateKey,
-            validateWithAbi: false,
             network,
-            anchorMode: AnchorMode.Any,
-            postConditionMode: PostConditionMode.Allow,
-            fee: 200000, // 0.2 STX fee
-        };
-
-        const transaction = await makeContractCall(txOptions);
-        const broadcastResponse = await broadcastTransaction({ transaction, network });
-
-        // Check if response is an error
-        if ('error' in broadcastResponse) {
-            console.error('[Transaction] Broadcast error:', broadcastResponse.error);
-            return {
-                success: false,
-                error: broadcastResponse.error as string
-            };
-        }
-
-        console.log('[Transaction] ✅ Success! TX ID:', broadcastResponse.txid);
-        return {
-            success: true,
-            txId: broadcastResponse.txid
-        };
-
-    } catch (error: any) {
-        console.error('[Transaction] Error:', error);
-        return {
-            success: false,
-            error: error.message || 'Transaction failed'
-        };
-    }
+            appDetails: {
+                name: 'Loopin',
+                icon: window.location.origin + '/logo.svg',
+            },
+            onFinish: (data) => {
+                console.log('[Transaction] ✅ Success! TX ID:', data.txId);
+                resolve({ success: true, txId: data.txId });
+            },
+            onCancel: () => {
+                console.log('[Transaction] User cancelled');
+                resolve({ success: false, error: 'User cancelled transaction' });
+            },
+        });
+    });
 }
 
+/**
+ * Send STX to an address (simple transfer)
+ */
 /**
  * Send STX to an address (simple transfer)
  */
@@ -104,43 +92,33 @@ export async function sendSTX(
     amountSTX: number,
     memo?: string
 ): Promise<{ success: boolean; txId?: string; error?: string }> {
-    try {
+    return new Promise((resolve) => {
         if (!userSession.isUserSignedIn()) {
-            return { success: false, error: 'Wallet not connected' };
+            resolve({ success: false, error: 'Wallet not connected' });
+            return;
         }
 
-        const userData = userSession.loadUserData();
         const network = getNetwork();
-        const networkType = getCurrentNetwork();
-        const senderAddress = networkType === 'mainnet'
-            ? userData.profile.stxAddress.mainnet
-            : userData.profile.stxAddress.testnet;
-
         const amountMicroSTX = Math.floor(amountSTX * 1000000);
 
-        const txOptions = {
+        openSTXTransfer({
             recipient: recipientAddress,
-            amount: amountMicroSTX,
-            senderKey: userData.appPrivateKey,
+            amount: JSON.stringify(amountMicroSTX), // openSTXTransfer expects string sometimes, but types might say number. Safe to pass logic. Actually types say string or number.
+            memo,
             network,
-            memo: memo || '',
-            anchorMode: AnchorMode.Any,
-        };
-
-        const transaction = await makeSTXTokenTransfer(txOptions);
-        const broadcastResponse = await broadcastTransaction({ transaction, network });
-
-        // Check if response is an error
-        if ('error' in broadcastResponse) {
-            return { success: false, error: broadcastResponse.error as string };
-        }
-
-        return { success: true, txId: broadcastResponse.txid };
-
-    } catch (error: any) {
-        console.error('[Transaction] Error:', error);
-        return { success: false, error: error.message || 'Transaction failed' };
-    }
+            appDetails: {
+                name: 'Loopin',
+                icon: window.location.origin + '/logo.svg',
+            },
+            onFinish: (data) => {
+                console.log('[Transaction] ✅ Success! TX ID:', data.txId);
+                resolve({ success: true, txId: data.txId });
+            },
+            onCancel: () => {
+                resolve({ success: false, error: 'User cancelled transaction' });
+            },
+        });
+    });
 }
 
 /**

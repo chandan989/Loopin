@@ -10,9 +10,10 @@ interface PowerupShopProps {
     walletAddress: string;
     currentBalance: number;
     onPurchaseCompelte: (newBalance: number) => void;
+    inventory?: Record<string, number>;
 }
 
-const PowerupShop: React.FC<PowerupShopProps> = ({ walletAddress, currentBalance, onPurchaseCompelte }) => {
+const PowerupShop: React.FC<PowerupShopProps> = ({ walletAddress, currentBalance, onPurchaseCompelte, inventory }) => {
     const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
     const getIcon = (id: string) => {
@@ -36,9 +37,17 @@ const PowerupShop: React.FC<PowerupShopProps> = ({ walletAddress, currentBalance
 
         setPurchasingId(powerup.id);
         try {
-            const res = await api.buyPowerup(walletAddress, powerup.id, cost);
+            const playerId = localStorage.getItem('playerId');
+            if (!playerId) {
+                alert("Please reload page - authenticated session missing");
+                return;
+            }
+
+            const res = await api.buyPowerup(playerId, powerup.id);
             if (res.success) {
-                onPurchaseCompelte(res.newBalance);
+                // Manually deduct balance for UI feel, real balance updates on refresh or interval
+                // Or better, trigger a balance refresh callback if we had one
+                onPurchaseCompelte(currentBalance - cost);
             }
         } catch (e) {
             console.error(e);

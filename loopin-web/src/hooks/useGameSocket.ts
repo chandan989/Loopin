@@ -1,54 +1,91 @@
 import { useEffect, useRef, useState } from 'react';
 
-export interface GamePlayer {
-    id: string;
-    is_me: boolean;
-    position: { lat: number; lng: number };
-    trail: { lat: number; lng: number }[];
-    status: string;
-}
-
 export interface GameState {
-    tick: number;
-    players: GamePlayer[];
-    territories: any[]; // Define if needed
+    players: Array<{
+        id: string;
+        username: string;
+        walletAddress: string;
+        score: number;
+        powerups?: string[];
+    }>;
+    trails: Array<{
+        playerId: string;
+        path: {
+            type: string;
+            coordinates: number[][]; // GeoJSON [lng, lat]
+        };
+    }>;
+    territories: Array<{
+        playerId: string;
+        polygon: {
+            type: string;
+            coordinates: number[][][]; // GeoJSON [lng, lat] rings
+        };
+        area: number;
+    }>;
 }
 
-export const useGameSocket = (gameId: string | null, playerId: string | null) => {
+export const useGameSocket = (playerId: string | null) => {
     const socketRef = useRef<WebSocket | null>(null);
     const [gameState, setGameState] = useState<GameState | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [safePoints, setSafePoints] = useState<any[]>([]);
 
     useEffect(() => {
-        if (!gameId || !playerId) return;
+        if (!playerId) return;
 
         // Clean up previous connection
         if (socketRef.current) {
             socketRef.current.close();
         }
 
-        const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
-        const ws = new WebSocket(`${wsUrl}/game/${gameId}?player_id=${playerId}`);
+        const wsUrl = import.meta.env.VITE_WS_URL || 'wss://loopin-k2ph.onrender.com';
+        const ws = new WebSocket(`${wsUrl}/ws/game`);
         socketRef.current = ws;
 
         ws.onopen = () => {
-            console.log("Connected to Game Server");
+            console.log("✅ Connected to Game Server");
             setIsConnected(true);
         };
 
         ws.onmessage = (event) => {
             try {
                 const message = JSON.parse(event.data);
-                if (message.type === 'game_state') {
-                    setGameState({
-                        tick: message.tick,
-                        players: message.players,
-                        territories: message.territories
-                    });
+
+                switch (message.type) {
+                    case 'init':
+                        // Initial state on connection
+                        setSafePoints(message.safePoints || []);
+                        if (message.gameState) {
+                            setGameState(message.gameState);
+                        }
+                        break;
+
+                    case 'game_state_update':
+                        setGameState(message.state);
+                        break;
+
+                    case 'territory_captured':
+                        console.log(`🎉 Territory captured! Area: ${message.areaAdded} sqm`);
+                        break;
+
+                    case 'trail_severed':
+                        if (message.victimId === playerId) {
+                            console.log('❌ Your trail was cut!');
+                        }
+                        break;
+
+                    default:
+                        // console.log('Unknown message type:', message.type);
+                        break;
                 }
             } catch (e) {
                 console.error("WS Parse Error", e);
             }
+        };
+
+        ws.onerror = (error) => {
+            console.error("WebSocket error:", error);
         };
 
         ws.onclose = () => {
@@ -57,19 +94,38 @@ export const useGameSocket = (gameId: string | null, playerId: string | null) =>
         };
 
         return () => {
-            ws.close();
+            if (socketRef.current) {
+                socketRef.current.close();
+            }
         };
-    }, [gameId, playerId]);
+    }, [playerId]);
 
     const sendPosition = (lat: number, lng: number) => {
-        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN && playerId) {
             socketRef.current.send(JSON.stringify({
                 type: 'position_update',
+                playerId: playerId,
                 lat,
                 lng
             }));
         }
     };
 
-    return { gameState, isConnected, sendPosition };
+    const usePowerup = (powerupId: string) => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN && playerId) {
+            socketRef.current.send(JSON.stringify({
+                type: 'use_powerup',
+                playerId: playerId,
+                powerupId: powerupId
+            }));
+        }
+    };
+
+    return {
+        gameState,
+        isConnected,
+        sendPosition,
+        usePowerup,
+        safePoints
+    };
 };

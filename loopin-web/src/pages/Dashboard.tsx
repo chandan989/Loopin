@@ -22,12 +22,32 @@ const Dashboard = () => {
     gamesWon: 0,
     totalEarnings: '0 STX',
   });
+  const [inventory, setInventory] = useState<Record<string, number>>({});
   const [recentGames, setRecentGames] = useState<any[]>([]);
+
+  // Navigate fallback
+  const navigate = (path: string) => { window.location.href = path };
 
   // Fetch real wallet address and balance
   useEffect(() => {
     const wallet = localStorage.getItem('loopin_wallet');
+    const playerId = localStorage.getItem('playerId');
+
     setWalletAddress(wallet);
+
+    if (!playerId) {
+      if (wallet) {
+        api.authenticate(wallet).then(p => {
+          localStorage.setItem('playerId', p.id);
+          // Continue...
+        }).catch(() => {
+          navigate('/register');
+        });
+      } else {
+        navigate('/register');
+      }
+      return;
+    }
 
     if (wallet) {
       // Fetch real balance
@@ -37,19 +57,19 @@ const Dashboard = () => {
         });
       });
 
-      // Fetch player stats
+      // Fetch player stats & inventory
       api.getPlayer(wallet).then(response => {
         if (response) {
-          // Player exists - stats will be 0 until they play games
           setUserStats({
-            totalArea: '0 km²',
-            gamesPlayed: 0,
-            gamesWon: 0,
-            totalEarnings: '0 STX',
+            totalArea: `${(response.stats?.total_area || 0).toFixed(2)} km²`,
+            gamesPlayed: response.stats?.games_played || 0,
+            gamesWon: response.stats?.games_won || 0,
+            totalEarnings: `${(response.stats?.total_earnings || 0).toFixed(1)} STX`,
           });
+          setInventory(response.inventory || {});
         }
       }).catch(err => {
-        console.log('[Dashboard] Player not registered yet');
+        console.log('[Dashboard] Player not registered yet', err);
       });
     }
   }, []);
@@ -84,10 +104,11 @@ const Dashboard = () => {
             <div className="lg:col-span-2 space-y-8">
 
               <DashboardActionGrid
-                walletAddress={walletAddress}
+                walletAddress={walletAddress || ''}
                 currentBalance={currentBalance}
                 onBalanceUpdate={(newBalance) => setCurrentBalance(newBalance)}
                 onRewardClaimed={(amount) => setCurrentBalance(prev => prev + amount)}
+                inventory={inventory}
               />
 
               <ActiveSessionsList activeSessions={activeSessions} />

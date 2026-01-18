@@ -11,13 +11,15 @@ interface DashboardActionGridProps {
     currentBalance: number;
     onBalanceUpdate: (newBalance: number) => void;
     onRewardClaimed: (amount: number) => void;
+    inventory: Record<string, number>;
 }
 
 const DashboardActionGrid: React.FC<DashboardActionGridProps> = ({
     walletAddress,
     currentBalance,
     onBalanceUpdate,
-    onRewardClaimed
+    onRewardClaimed,
+    inventory
 }) => {
     // Check if on testnet (free rewards only on testnet)
     const isTestnet = import.meta.env.VITE_NETWORK === 'testnet';
@@ -103,6 +105,7 @@ const DashboardActionGrid: React.FC<DashboardActionGridProps> = ({
                             walletAddress={walletAddress}
                             currentBalance={currentBalance}
                             onPurchaseCompelte={onBalanceUpdate}
+                            inventory={inventory}
                         />
                     </div>
                 </DialogContent>

@@ -63,15 +63,25 @@ const Register = () => {
         setIsLoading(true);
         setError('');
         try {
-            await api.registerPlayer(walletAddress, username);
-            // Simulate storing auth token/wallet
+            // Use the new authenticate method which handles both login and register
+            const player = await api.authenticate(walletAddress, username);
+
+            // Store critical auth data
+            localStorage.setItem('playerId', player.id);
             localStorage.setItem('loopin_wallet', walletAddress);
+
             navigate('/dashboard');
         } catch (err: any) {
             if (err.message && err.message.includes('already exists')) {
-                // User already exists, treat as login
-                localStorage.setItem('loopin_wallet', walletAddress);
-                navigate('/dashboard');
+                // Should be handled by authenticate, but just in case
+                try {
+                    const player = await api.authenticate(walletAddress);
+                    localStorage.setItem('playerId', player.id);
+                    localStorage.setItem('loopin_wallet', walletAddress);
+                    navigate('/dashboard');
+                } catch (loginErr) {
+                    setError('Account exists but login failed');
+                }
                 return;
             }
             setError(err.message || 'Registration failed');

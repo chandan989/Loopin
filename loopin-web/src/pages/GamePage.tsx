@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Polyline, Polygon, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Polygon, useMap, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -13,8 +13,9 @@ import {
   Ghost
 } from 'lucide-react';
 
-// --- ICONS & STYLES ---
-import { MOCK_BOTS, DEFAULT_GAME_CONFIG } from '@/data/mockData';
+import { DEFAULT_GAME_CONFIG } from '@/data/mockData';
+import { useGameSocket } from '@/hooks/useGameSocket';
+import { cn } from '@/lib/utils';
 
 // --- ICONS & STYLES ---
 const createPulseIcon = (color: string, isMe: boolean) => L.divIcon({
@@ -30,230 +31,165 @@ const createPulseIcon = (color: string, isMe: boolean) => L.divIcon({
 // Default start if geo permission denied
 const DEFAULT_POS = DEFAULT_GAME_CONFIG.startPos;
 
-const ONE_DEG_IN_METERS = DEFAULT_GAME_CONFIG.degreeToMeters; // Approx
-
 const GamePage = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
 
   // Identity
-  const [walletAddress] = useState(localStorage.getItem('loopin_wallet') || "mock_wallet_" + Math.floor(Math.random() * 10000));
+  const playerId = localStorage.getItem('playerId');
+  const [walletAddress] = useState(localStorage.getItem('loopin_wallet') || "");
 
-  // Game State
-  const [timeLeft, setTimeLeft] = useState(DEFAULT_GAME_CONFIG.durationSeconds); // 25 min default
+  // Real Game State
+  const { gameState, isConnected: wsConnected, sendPosition, usePowerup, safePoints } = useGameSocket(playerId);
+
+  // Local State
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_GAME_CONFIG.durationSeconds);
   const [myPos, setMyPos] = useState<[number, number]>(DEFAULT_POS);
 
-  // DEBUG STATE
-  const [debugInfo, setDebugInfo] = useState({
-    rawLat: 0,
-    rawLng: 0,
-    accuracy: 0,
-    updateCount: 0,
-    lastError: '',
-    droppedUpdates: 0,
-    lastDist: 0
-  });
-
-  // Local Game State (Offline Mode)
-  const [myTrail, setMyTrail] = useState<[number, number][]>([DEFAULT_POS]);
-  const [localTerritories, setLocalTerritories] = useState<any[]>([]); // { owner_id, points }
-  const [otherPlayers, setOtherPlayers] = useState<any[]>(MOCK_BOTS);
+  // Render State
+  const [otherPlayers, setOtherPlayers] = useState<any[]>([]);
+  const [trails, setTrails] = useState<any[]>([]);
+  const [territories, setTerritories] = useState<any[]>([]);
+  const [myStats, setMyStats] = useState({ area: 0, kcal: 0 });
 
   // Powerup State
   const [activePowerup, setActivePowerup] = useState<'shield' | 'invisibility' | null>(null);
 
   const mapRef = useRef<L.Map | null>(null);
 
-  // Helper: Distance in meters
-  const distMeters = (p1: [number, number], p2: [number, number]) => {
-    const dLat = (p2[0] - p1[0]) * ONE_DEG_IN_METERS;
-    const dLng = (p2[1] - p1[1]) * ONE_DEG_IN_METERS * Math.cos(p1[0] * Math.PI / 180);
-    return Math.sqrt(dLat * dLat + dLng * dLng);
-  };
-
-  // Shared Position Logic (Extracted for Simulation)
-  const handlePositionUpdate = useCallback((lat: number, lng: number, accuracy: number, source: string) => {
-    const newPos: [number, number] = [lat, lng];
-
-    setMyPos(prevPos => {
-      const d = distMeters(prevPos, newPos);
-
-      // Update Debug Info inside callback to access latest calculations if needed, 
-      // but simpler to do it here.
-      setDebugInfo(prev => ({
-        ...prev,
-        rawLat: lat,
-        rawLng: lng,
-        accuracy: accuracy,
-        updateCount: prev.updateCount + 1,
-        lastDist: d,
-        droppedUpdates: d < 0.5 ? prev.droppedUpdates + 1 : prev.droppedUpdates,
-        lastError: source
-      }));
-
-      // Allow smaller movements for marker smoothness
-      if (d < 0.5) return prevPos;
-      return newPos;
-    });
-
-    setMyTrail(prevTrail => {
-      // 1. FIRST FIX RESET
-      const isDefaultStart = prevTrail.length === 1 &&
-        prevTrail[0][0] === DEFAULT_POS[0] &&
-        prevTrail[0][1] === DEFAULT_POS[1];
-
-      if (isDefaultStart) return [newPos];
-
-      // 2. DISTANCE THRESHOLD
-      const lastPoint = prevTrail[prevTrail.length - 1];
-      if (distMeters(lastPoint, newPos) < 2.0) return prevTrail;
-
-      const currentTrail = [...prevTrail, newPos];
-
-      // LOOP DETECTION
-      const captureThreshold = 10.0;
-      let loopIndex = -1;
-      for (let i = currentTrail.length - 10; i >= 0; i--) {
-        if (distMeters(currentTrail[i], newPos) < captureThreshold) {
-          loopIndex = i;
-          break;
-        }
-      }
-
-      if (loopIndex !== -1) {
-        const polyPoints = currentTrail.slice(loopIndex);
-        setLocalTerritories(prev => [...prev, {
-          owner_id: 'me',
-          points: polyPoints.map(p => ({ lat: p[0], lng: p[1] })),
-          area: 0
-        }]);
-        console.log("LOOP CLOSED! Territory captured.");
-        return [newPos];
-      }
-
-      return currentTrail;
-    });
-  }, []); // Logic is mostly functional updates, safe to be stable
-
-
-  // 1. OFFLINE MODE: Geolocation & Local Logic
+  // --- TIMER ---
   useEffect(() => {
-    let watchId: number | null = null;
-    let isHighAccuracy = true;
-
-    const startWatching = (useHighAction: boolean) => {
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-      isHighAccuracy = useHighAction;
-
-      console.log(`Starting Geo Watcher. High Accuracy: ${useHighAction}`);
-
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          handlePositionUpdate(
-            position.coords.latitude,
-            position.coords.longitude,
-            position.coords.accuracy,
-            useHighAction ? 'High Acc OK' : 'Low Acc OK'
-          );
-        },
-        (err) => {
-          console.error("Geo Error", err);
-          setDebugInfo(prev => ({ ...prev, lastError: `${err.message} (Code ${err.code})` }));
-
-          // FALLBACK LOGIC
-          if (isHighAccuracy && (err.code === 2 || err.code === 3)) {
-            console.warn("High Accuracy failed, switching to Low Accuracy...");
-            startWatching(false);
-          }
-        },
-        {
-          enableHighAccuracy: useHighAction,
-          maximumAge: 1000,
-          timeout: 20000
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 0) {
+          clearInterval(timer);
+          return 0;
         }
-      );
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // --- KEYBOARD MOVEMENT (DEV) ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const step = 0.00002; // Roughly 2 meters per keypress
+      let dLat = 0;
+      let dLng = 0;
+
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          dLat = step;
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          dLat = -step;
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          dLng = -step;
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          dLng = step;
+          break;
+        default:
+          return;
+      }
+
+      setMyPos((prev) => {
+        const newLat = prev[0] + dLat;
+        const newLng = prev[1] + dLng;
+
+        if (wsConnected) {
+          sendPosition(newLat, newLng);
+        }
+
+        return [newLat, newLng];
+      });
     };
 
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [wsConnected, sendPosition]);
+
+  // --- POSITION TRACKING ---
+  useEffect(() => {
+    let watchId: number | null = null;
+
     if (navigator.geolocation) {
-      startWatching(true);
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setMyPos([latitude, longitude]);
+
+          // Send to Backend
+          if (wsConnected) {
+            sendPosition(latitude, longitude);
+          }
+        },
+        (err) => {
+          console.error("Geolocation Error:", {
+            code: err.code,
+            message: err.message,
+            PERMISSION_DENIED: err.PERMISSION_DENIED,
+            POSITION_UNAVAILABLE: err.POSITION_UNAVAILABLE,
+            TIMEOUT: err.TIMEOUT,
+          });
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 }
+      );
     }
 
     return () => {
       if (watchId !== null) navigator.geolocation.clearWatch(watchId);
     };
-  }, [handlePositionUpdate]);
+  }, [wsConnected, sendPosition]);
 
-
-  // SIMULATION HANDLER
-  const simulateMove = () => {
-    // Generate a new position 5 meters "North-East" roughly
-    // 0.00005 deg is approx 5 meters
-    const latChange = 0.00005;
-    const lngChange = 0.00005;
-
-    // Use current myPos to generate next step
-    // Note: myPos is state, so this closure captures current render's myPos.
-    // Ensure we aren't using stale closure if this function isn't re-created?
-    // GamePage re-renders on myPos change, so this is fine.
-    const newLat = myPos[0] + latChange;
-    const newLng = myPos[1] + lngChange;
-
-    handlePositionUpdate(newLat, newLng, 10, 'Simulation');
-  };
-
-
-  // 2. OFFLINE MODE: Simulate Bots
+  // --- GAME STATE SYNC ---
   useEffect(() => {
-    const interval = setInterval(() => {
-      setOtherPlayers(prev => prev.map(bot => {
-        // Random Walk
-        const latChange = (Math.random() - 0.5) * 0.00005;
-        const lngChange = (Math.random() - 0.5) * 0.00005;
-        const newPos = {
-          lat: bot.position.lat + latChange,
-          lng: bot.position.lng + lngChange
-        };
+    if (!gameState) return;
 
-        // Bot Trail Logic (Simplified: Grow until 20 points then reset)
-        let newTrail = [...bot.trail, newPos];
-        if (newTrail.length > 20) {
-          // Bot "Banks" it
-          // Effectively just clears trail for visual simplicity
-          newTrail = [];
-        }
+    // 1. Players
+    const others = gameState.players.filter(p => p.id !== playerId);
+    setOtherPlayers(others);
 
-        return {
-          ...bot,
-          position: newPos,
-          trail: newTrail
-        };
-      }));
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
+    // 2. Trails
+    const mappedTrails = gameState.trails.map(t => ({
+      id: t.playerId,
+      isMe: t.playerId === playerId,
+      color: t.playerId === playerId ? '#D4FF00' : '#FF0055',
+      path: t.path.coordinates.map(c => [c[1], c[0]] as [number, number]) // Swap [lng, lat] -> [lat, lng]
+    }));
+    setTrails(mappedTrails);
 
-
-  // Powerup Handler
-  const handlePowerup = (type: 'shield' | 'invisibility') => {
-    if (activePowerup === type) {
-      setActivePowerup(null);
-    } else {
-      setActivePowerup(type);
-      setTimeout(() => setActivePowerup(null), 8000); // Mock Duration
+    // Update my stats based on my trail length (mock kcal)
+    const myTrail = mappedTrails.find(t => t.isMe);
+    if (myTrail) {
+      setMyStats(prev => ({ ...prev, kcal: Math.floor(myTrail.path.length * 0.5) }));
     }
-  };
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
+    // 3. Territories
+    const mappedTerritories = gameState.territories.map(t => ({
+      id: t.playerId,
+      isMe: t.playerId === playerId,
+      color: t.playerId === playerId ? '#D4FF00' : '#333333',
+      path: t.polygon.coordinates[0].map(c => [c[1], c[0]] as [number, number]),
+      area: t.area
+    }));
+    setTerritories(mappedTerritories);
 
-  // Timer Countdown 
-  useEffect(() => {
-    const t = setInterval(() => setTimeLeft(prev => Math.max(0, prev - 1)), 1000);
-    return () => clearInterval(t);
-  }, []);
+    // Update my area
+    const myTotalArea = mappedTerritories.filter(t => t.isMe).reduce((acc, t) => acc + t.area, 0);
+    setMyStats(prev => ({ ...prev, area: myTotalArea }));
+
+  }, [gameState, playerId]);
 
   // Recenter Helper
   const Recenter = ({ pos }: { pos: [number, number] }) => {
@@ -264,10 +200,25 @@ const GamePage = () => {
     return null;
   };
 
-  // Calculate stats
-  const myTerritoryCount = localTerritories.filter(t => t.owner_id === 'me').length;
-  // Mock Area Calc
-  const myTerritoryArea = myTerritoryCount * 1500.5; // Fake sqm
+  const handlePowerupClick = (type: 'shield' | 'invisibility') => {
+    setActivePowerup(type);
+    usePowerup(type);
+    // Reset visual state after mock duration or listen to backend
+    setTimeout(() => setActivePowerup(null), 5000);
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Check Auth
+  useEffect(() => {
+    if (!playerId) {
+      navigate('/register');
+    }
+  }, [playerId, navigate]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-white font-sans text-black touch-none">
@@ -290,13 +241,13 @@ const GamePage = () => {
           <Recenter pos={myPos} />
 
           {/* Territories */}
-          {localTerritories.map((terr: any, idx: number) => (
+          {territories.map((terr, idx) => (
             <Polygon
               key={`terr-${idx}`}
-              positions={terr.points}
+              positions={terr.path}
               pathOptions={{
-                color: terr.owner_id === 'me' ? '#D4FF00' : '#FF0000',
-                fillColor: terr.owner_id === 'me' ? '#D4FF00' : '#FF4444',
+                color: terr.color,
+                fillColor: terr.isMe ? '#D4FF00' : '#FF4444',
                 fillOpacity: 0.4,
                 weight: 1,
                 stroke: false
@@ -304,30 +255,44 @@ const GamePage = () => {
             />
           ))}
 
-          {/* ME: Trail & Marker */}
-          {myTrail.length > 0 && (
+          {/* Trails */}
+          {trails.map((trail, idx) => (
             <Polyline
-              positions={myTrail}
-              pathOptions={{ color: '#09090B', weight: 4, opacity: 0.8, lineCap: 'round' }}
+              key={`trail-${idx}`}
+              positions={trail.path}
+              pathOptions={{
+                color: trail.isMe ? '#09090B' : trail.color,
+                weight: trail.isMe ? 4 : 3,
+                opacity: 0.8,
+                lineCap: 'round'
+              }}
             />
-          )}
+          ))}
+
+          {/* Safe Points (if any) */}
+          {safePoints.map((sp, idx) => (
+            <Circle
+              key={`sp-${idx}`}
+              center={[sp.lat, sp.lng]}
+              radius={sp.radius || 10}
+              pathOptions={{ color: '#D4FF00', fillColor: 'transparent', dashArray: '5,5' }}
+            />
+          ))}
+
+          {/* MINE Marker */}
           <Marker position={myPos} icon={createPulseIcon('#09090B', true)} />
 
-          {/* BOTS: Trail & Marker */}
-          {otherPlayers.map(bot => (
-            <React.Fragment key={bot.id}>
-              {bot.trail.length > 0 && (
-                <Polyline
-                  positions={bot.trail.map((p: any) => [p.lat, p.lng])}
-                  pathOptions={{ color: bot.color, weight: 3, opacity: 0.6, lineCap: 'round' }}
-                />
-              )}
-              <Marker
-                position={[bot.position.lat, bot.position.lng]}
-                icon={createPulseIcon(bot.color, false)}
-              />
-            </React.Fragment>
-          ))}
+          {/* OTHERS Markers (from WebSocket) */}
+          {otherPlayers.map(p => {
+            // Need position from player state if available, assuming backend sends it
+            // If backend structure differs, adjust here. 
+            // NOTE: GameState interface in useGameSocket needs to match backend payload.
+            // Assuming GameState.players includes lat/lng based on INTEGRATION.md if fully detailed, 
+            // but actually INTEGRATION.md says "players" array.
+            // If players array doesn't have pos, we might need to rely on trails last point or separate 'positions' update.
+            // For now, let's assume players[] has { lat, lng } or we use their trail tip.
+            return null;
+          })}
 
         </MapContainer>
       </div>
@@ -343,14 +308,13 @@ const GamePage = () => {
             <X size={24} strokeWidth={2.5} />
           </Button>
 
-          {/* Connection Status Label (Modified for Offline) */}
           <div className="absolute top-16 right-4 bg-gray-800 text-white/50 text-xs px-2 py-1 rounded backdrop-blur">
-            OFFLINE MODE
+            {wsConnected ? 'ONLINE' : 'CONNECTING...'}
           </div>
 
           <div className="flex flex-col items-center">
             <div className="bg-white/80 backdrop-blur-xl border border-black/5 px-6 py-2 rounded-2xl shadow-xl flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#09090B] animate-pulse" />
+              <div className={cn("w-2 h-2 rounded-full animate-pulse", wsConnected ? "bg-[#D4FF00]" : "bg-red-500")} />
               <span className="font-display text-2xl font-bold tracking-tight tabular-nums text-black">
                 {formatTime(timeLeft)}
               </span>
@@ -363,7 +327,7 @@ const GamePage = () => {
                 <div key={i} className="w-6 h-6 rounded-full border border-white bg-gray-200" />
               ))}
             </div>
-            <span className="text-xs font-bold text-black">+{otherPlayers.length + 1}</span>
+            <span className="text-xs font-bold text-black">+{otherPlayers.length}</span>
           </div>
         </div>
       </div>
@@ -375,7 +339,7 @@ const GamePage = () => {
           <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-lg border-l-4 border-[#D4FF00] shadow-sm">
             <span className="text-gray-500 text-xs font-bold uppercase tracking-wider block">Territory</span>
             <span className="font-display text-2xl font-bold text-black">
-              {myTerritoryArea.toFixed(1)} <span className="text-sm text-gray-400">m²</span>
+              {myStats.area.toFixed(1)} <span className="text-sm text-gray-400">m²</span>
             </span>
           </div>
         </div>
@@ -399,7 +363,7 @@ const GamePage = () => {
                 <span className="text-[10px] font-bold uppercase tracking-widest">KCAL</span>
               </div>
               <div className="font-display text-xl font-bold text-black">
-                {Math.floor(myTrail.length * 0.5)}
+                {myStats.kcal}
               </div>
             </div>
           </div>
@@ -410,11 +374,13 @@ const GamePage = () => {
             {/* Shield */}
             <div className="relative group">
               <button
-                onClick={() => handlePowerup('shield')}
-                className={`w-14 h-14 md:w-16 md:h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 relative overflow-hidden ${activePowerup === 'shield'
-                  ? 'bg-[#D4FF00] text-black shadow-[0_0_15px_rgba(212,255,0,0.5)]'
-                  : 'bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white'
-                  }`}
+                onClick={() => handlePowerupClick('shield')}
+                className={cn(
+                  "w-14 h-14 md:w-16 md:h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 relative overflow-hidden",
+                  activePowerup === 'shield'
+                    ? 'bg-[#D4FF00] text-black shadow-[0_0_15px_rgba(212,255,0,0.5)]'
+                    : 'bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white'
+                )}
               >
                 <Shield
                   size={24}
@@ -422,9 +388,6 @@ const GamePage = () => {
                   className={`relative z-10 transition-transform duration-300`}
                 />
               </button>
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] font-bold uppercase px-2 py-1 rounded">
-                Shield
-              </div>
             </div>
 
             <div className="w-px h-8 bg-white/10" />
@@ -432,11 +395,13 @@ const GamePage = () => {
             {/* Stealth */}
             <div className="relative group">
               <button
-                onClick={() => handlePowerup('invisibility')}
-                className={`w-14 h-14 md:w-16 md:h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 relative overflow-hidden ${activePowerup === 'invisibility'
-                  ? 'bg-[#b794f4] text-black shadow-[0_0_15px_rgba(183,148,244,0.5)]'
-                  : 'bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white'
-                  }`}
+                onClick={() => handlePowerupClick('invisibility')}
+                className={cn(
+                  "w-14 h-14 md:w-16 md:h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 relative overflow-hidden",
+                  activePowerup === 'invisibility'
+                    ? 'bg-[#b794f4] text-black shadow-[0_0_15px_rgba(183,148,244,0.5)]'
+                    : 'bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white'
+                )}
               >
                 <Ghost
                   size={24}
@@ -444,30 +409,10 @@ const GamePage = () => {
                   className={`relative z-10 transition-transform duration-300`}
                 />
               </button>
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] font-bold uppercase px-2 py-1 rounded">
-                Stealth
-              </div>
             </div>
 
           </div>
         </div>
-      </div>
-
-      {/* DEBUG OVERLAY */}
-      <div className="absolute bottom-32 left-4 z-50 bg-black/80 text-[#D4FF00] p-4 rounded font-mono text-xs pointer-events-auto">
-        <div>Updates: {debugInfo.updateCount}</div>
-        <div>Dropped: {debugInfo.droppedUpdates}</div>
-        <div>Lat: {debugInfo.rawLat.toFixed(6)}</div>
-        <div>Lng: {debugInfo.rawLng.toFixed(6)}</div>
-        <div>Acc: {debugInfo.accuracy.toFixed(1)}m</div>
-        <div>Dist: {debugInfo.lastDist.toFixed(2)}m</div>
-        {debugInfo.lastError && <div className="text-red-500">{debugInfo.lastError}</div>}
-        <Button
-          className="mt-2 text-[10px] h-6 px-2 bg-yellow-600 hover:bg-yellow-500 text-white border-none"
-          onClick={simulateMove}
-        >
-          Simulate Move
-        </Button>
       </div>
 
     </div>

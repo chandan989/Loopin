@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Users, Clock, ArrowUpRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SlideUp, StaggerContainer } from '@/components/animation/MotionWrapper';
-import { Game } from '@/lib/api';
+import { Game, api } from '@/lib/api';
 import { payEntryFee } from '@/lib/transaction-utils';
 
 interface ActiveSessionsListProps {
@@ -41,6 +41,13 @@ const ActiveSessionsList: React.FC<ActiveSessionsListProps> = ({ activeSessions 
 
             if (result.success) {
                 console.log('[Join Game] ✅ Payment successful! TX:', result.txId);
+
+                // Confirm join with backend
+                const playerId = localStorage.getItem('playerId');
+                if (playerId) {
+                    await api.joinGame(session.id, playerId, walletAddress!);
+                }
+
                 alert(`✅ Payment successful!\n\nTransaction ID: ${result.txId}\n\nJoining game...`);
 
                 // Navigate to game page
