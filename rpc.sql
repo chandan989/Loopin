@@ -51,6 +51,10 @@ RETURNS VOID
 LANGUAGE plpgsql
 AS $$
 BEGIN
+    -- Cleanup previous state for this game if re-joining
+    DELETE FROM player_trails WHERE player_id = p_player_id AND game_id = p_game_id;
+    DELETE FROM player_territories WHERE player_id = p_player_id AND game_id = p_game_id;
+
     INSERT INTO game_participants (game_id, player_id, joined_at)
     VALUES (p_game_id, p_player_id, NOW())
     ON CONFLICT (game_id, player_id) DO NOTHING;
@@ -138,8 +142,7 @@ RETURNS VOID
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    UPDATE player_trails 
-    SET trail = ST_MakeLine(ST_PointN(trail::geometry, 1), ST_PointN(trail::geometry, 1))::geography 
+    DELETE FROM player_trails 
     WHERE player_id = p_player_id AND game_id = p_game_id;
 END;
 $$;
