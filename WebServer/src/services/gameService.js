@@ -238,3 +238,23 @@ export const getSafePoints = async () => {
         location: r.location // is json
     }));
 };
+
+export const cleanupPlayerSession = async (gameId, playerId) => {
+    try {
+        await Promise.all([
+            supabase
+                .from('player_territories')
+                .delete()
+                .eq('game_id', gameId)
+                .eq('player_id', playerId),
+            supabase
+                .from('player_trails')
+                .delete()
+                .eq('game_id', gameId)
+                .eq('player_id', playerId)
+        ]);
+        console.log(`Cleaned up session for player ${playerId} in game ${gameId}`);
+    } catch (error) {
+        console.error(`Error cleaning up player session: ${error.message}`);
+    }
+};

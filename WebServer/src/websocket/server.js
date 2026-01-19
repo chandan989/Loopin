@@ -1,5 +1,5 @@
 import { WebSocketServer } from 'ws';
-import { updatePlayerPosition, getSafePoints, getGameState } from '../services/gameService.js';
+import { updatePlayerPosition, getSafePoints, getGameState, cleanupPlayerSession } from '../services/gameService.js';
 import { usePowerup, getPowerupInventory } from '../services/powerupService.js';
 
 // Connection state: Map<WebSocket, { playerId: string, activePowerups: Set<string> }>
@@ -111,8 +111,20 @@ export const setupWebSocket = (server) => {
             }
         });
 
-        ws.on('close', () => {
+        ws.on('close', async () => {
             console.log('Client disconnected');
+            const state = connectionStates.get(ws);
+
+            if (state && state.gameId && state.playerId) {
+                console.log(`Cleaning up for player ${state.playerId} in game ${state.gameId}`);
+                await cleanupPlayerSession(state.gameId, state.playerId);
+
+                // Optional: Broadcast update so others see them disappear immediately
+                // Note: If the cleanup is slow, this might not reflect immediately unless we wait.
+                // We awaited cleanup above, so DB should be empty now.
+                broadcastGameUpdate(wss, state.gameId, connectionStates);
+            }
+
             connectionStates.delete(ws);
         });
     });
