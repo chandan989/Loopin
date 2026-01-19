@@ -77,6 +77,15 @@ export const useGameSocket = (gameId: string | undefined, playerId: string | nul
                         break;
 
                     case 'trail_severed':
+                        // Immediately remove victim's trail from local state to reflect cut instantly
+                        setGameState(prev => {
+                            if (!prev) return prev;
+                            return {
+                                ...prev,
+                                trails: prev.trails.filter(t => t.playerId !== message.victimId)
+                            };
+                        });
+
                         if (message.victimId === playerId) {
                             console.log('❌ Your trail was cut!');
                         }

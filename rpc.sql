@@ -202,50 +202,70 @@ BEGIN
     -- 1. Check Loop Closure (Closed Ring OR Self-Intersection)
     v_is_valid := ST_IsSimple(v_new_trail::geometry);
     
+    -- We check if it's NOT simple (self-intersecting) OR if it's explicitly closed
     IF (NOT v_is_valid) OR (ST_IsClosed(v_new_trail::geometry) AND ST_NumPoints(v_new_trail::geometry) >= 4) THEN
-        -- It closed!
         BEGIN
-            -- Try strict polygon first
-            IF ST_IsClosed(v_new_trail::geometry) THEN
-                 v_loop_poly := ST_MakePolygon(v_new_trail::geometry)::geography;
-            ELSE
-                 -- Fallback for self-intersecting "mess" -> Convex Hull (Gamey)
-                 v_loop_poly := ST_ConvexHull(v_new_trail::geometry)::geography;
-            END IF;
-
-            v_area := ST_Area(v_loop_poly);
+            -- Logic:
+            -- 1. Node the linework to create intersections
+            -- 2. Polygonize the noded linework
+            -- 3. Extract the polygons
+            -- 4. If we find a polygon > 10sqm, we take it.
             
-            IF v_area > 10 THEN -- Filter noise
-                -- Insert Territory
-                INSERT INTO player_territories (player_id, game_id, territory, area_sqm)
-                VALUES (p_player_id, p_game_id, v_loop_poly, v_area);
+            -- Note: We use a CTE logic structure here for clarity or just direct queries
+            -- Since we are in PL/PGSQL, we can query into variables.
+            
+            DECLARE
+                v_collection GEOMETRY;
+                v_poly GEOMETRY;
+            BEGIN
+                -- Polygonize returns a GeometryCollection of Polygons
+                -- We dump it to find the best one (or union them)
                 
-                -- Reset Trail (Start fresh at current point)
-                UPDATE player_trails 
-                SET trail = ST_MakeLine(v_point::geometry, v_point::geometry)::geography 
-                WHERE player_id = p_player_id AND game_id = p_game_id;
+                -- ST_Node ensures self-intersections become vertices
+                SELECT ST_Polygonize(ST_Node(v_new_trail::geometry)) INTO v_collection;
                 
-                RETURN QUERY SELECT 'territory_captured'::VARCHAR, p_player_id, NULL::UUID, v_area;
-                RETURN; -- Stop processing for this update
-            END IF;
-        EXCEPTION WHEN OTHERS THEN
-            -- If MakePolygon fails, fallback to Hull
-             BEGIN
-                v_loop_poly := ST_ConvexHull(v_new_trail::geometry)::geography;
-                v_area := ST_Area(v_loop_poly);
-                IF v_area > 10 THEN
-                     INSERT INTO player_territories (player_id, game_id, territory, area_sqm)
-                     VALUES (p_player_id, p_game_id, v_loop_poly, v_area);
-                     UPDATE player_trails 
-                     SET trail = ST_MakeLine(v_point::geometry, v_point::geometry)::geography 
-                     WHERE player_id = p_player_id AND game_id = p_game_id;
-                     
-                     RETURN QUERY SELECT 'territory_captured'::VARCHAR, p_player_id, NULL::UUID, v_area;
-                     RETURN;
+                -- Check if we got any polygons
+                IF ST_NumGeometries(v_collection) > 0 THEN
+                    -- Select the largest polygon (or union all valid ones could be better, but let's stick to simple "capture" for now)
+                    -- Actually, if you loop a Figure-8, you might get 2 polygons. Let's capture the Union of valid ones.
+                    
+                    SELECT ST_Union(geom) INTO v_loop_poly
+                    FROM (
+                        SELECT (ST_Dump(v_collection)).geom
+                    ) AS dumps
+                    WHERE ST_Area(dumps.geom::geography) > 10; -- Min area filter
+                    
+                    v_area := ST_Area(v_loop_poly::geography);
+
+                    IF v_loop_poly IS NOT NULL AND v_area > 0 THEN
+                        -- Success! We found a loop.
+                        INSERT INTO player_territories (player_id, game_id, territory, area_sqm)
+                        VALUES (p_player_id, p_game_id, v_loop_poly::geography, v_area);
+                        
+                        -- Reset Trail. 
+                        -- Ideally we keep the "tail" of the trail that wasn't part of the polygon?
+                        -- For this simple game mechanics: Reset to the current point (start fresh).
+                        -- This effectively "banks" the loop.
+                        UPDATE player_trails 
+                        SET trail = ST_MakeLine(v_point::geometry, v_point::geometry)::geography 
+                        WHERE player_id = p_player_id AND game_id = p_game_id;
+                        
+                        RETURN QUERY SELECT 'territory_captured'::VARCHAR, p_player_id, NULL::UUID, v_area;
+                        RETURN; -- Stop processing
+                    END IF;
                 END IF;
-             EXCEPTION WHEN OTHERS THEN
-                NULL; -- Ignore geometry errors
-             END;
+                
+                -- If we are here, Polygonize failed to find a closed ring (it was just a messy self-intersection that didn't enclose space?)
+                -- OR the area was too small.
+                -- In that case, we DO NOTHING. We behave as if it's just a complex line.
+                -- Use wants: "sometimes shaded area is formed even when I have only made 3 slides".
+                -- This fixes it because 3 sides won't Polygonize.
+                
+            EXCEPTION WHEN OTHERS THEN
+                -- Log error or ignore?
+                -- RAISE NOTICE 'Polygonize failed: %', SQLERRM;
+                NULL;
+            END;
         END;
     END IF;
 

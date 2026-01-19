@@ -53,15 +53,18 @@ export async function payEntryFee(
             contractName,
             functionName: 'join-game',
             functionArgs: [
-                // Ensure gameId is a valid integer
+                // Match contract types: supports both uint (legacy) and string-ascii/utf8 (uuid)
                 (() => {
                     const idInt = parseInt(gameId);
-                    if (isNaN(idInt)) {
-                        console.error('[Transaction] Invalid game ID (not an integer):', gameId);
-                        throw new Error(`Invalid game ID: ${gameId}. Expected an integer.`);
+                    // Check if it's a valid integer AND matches the string (to avoid partial parsing like "123-uuid")
+                    if (!isNaN(idInt) && idInt.toString() === gameId) {
+                        console.log('[Transaction] Using integer ID for contract:', idInt);
+                        return uintCV(idInt);
+                    } else {
+                        // Assume UUID or string ID
+                        console.log('[Transaction] Using string ID for contract:', gameId);
+                        return stringUtf8CV(gameId);
                     }
-                    console.log('[Transaction] Using game ID for contract:', idInt);
-                    return uintCV(idInt);
                 })(),
             ],
             network,

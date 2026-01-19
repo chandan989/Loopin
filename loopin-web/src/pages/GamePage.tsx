@@ -280,14 +280,20 @@ const GamePage = () => {
 
           {/* OTHERS Markers (from WebSocket) */}
           {otherPlayers.map(p => {
-            // Need position from player state if available, assuming backend sends it
-            // If backend structure differs, adjust here. 
-            // NOTE: GameState interface in useGameSocket needs to match backend payload.
-            // Assuming GameState.players includes lat/lng based on INTEGRATION.md if fully detailed, 
-            // but actually INTEGRATION.md says "players" array.
-            // If players array doesn't have pos, we might need to rely on trails last point or separate 'positions' update.
-            // For now, let's assume players[] has { lat, lng } or we use their trail tip.
-            return null;
+            // Find this player's trail to get their current position
+            const pTrail = trails.find(t => t.id === p.id);
+            if (!pTrail || pTrail.path.length === 0) return null;
+
+            // The last point in the path is their current position
+            const currentPos = pTrail.path[pTrail.path.length - 1]; // [lat, lng]
+
+            return (
+              <Marker
+                key={p.id}
+                position={currentPos}
+                icon={createPulseIcon(pTrail.color, false)}
+              />
+            );
           })}
 
         </MapContainer>
