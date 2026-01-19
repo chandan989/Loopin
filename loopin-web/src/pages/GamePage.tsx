@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Polyline, Polygon, useMap, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -46,14 +46,48 @@ const GamePage = () => {
   const [timeLeft, setTimeLeft] = useState(DEFAULT_GAME_CONFIG.durationSeconds);
   const [myPos, setMyPos] = useState<[number, number]>(DEFAULT_POS);
 
-  // Render State
-  const [otherPlayers, setOtherPlayers] = useState<any[]>([]);
-  const [trails, setTrails] = useState<any[]>([]);
-  const [territories, setTerritories] = useState<any[]>([]);
-  const [myStats, setMyStats] = useState({ area: 0, kcal: 0 });
+  // --- REFS FOR EVENT LISTENERS ---
+  // We use refs for mutable state accessed in event listeners to avoid re-binding them
+  const myPosRef = useRef(myPos);
+  const wsConnectedRef = useRef(wsConnected);
 
-  // Powerup State
-  const [activePowerup, setActivePowerup] = useState<'shield' | 'invisibility' | null>(null);
+  // Sync refs
+  useEffect(() => { myPosRef.current = myPos; }, [myPos]);
+  useEffect(() => { wsConnectedRef.current = wsConnected; }, [wsConnected]);
+
+  // --- DERIVED STATE (MEMOIZED) ---
+  // No need to copy to local state via useEffect, just derive it.
+
+  const otherPlayers = useMemo(() => {
+    return (gameState?.players || []).filter(p => p.id !== playerId);
+  }, [gameState, playerId]);
+
+  const trails = useMemo(() => {
+    return (gameState?.trails || []).map(t => ({
+      id: t.playerId,
+      isMe: t.playerId === playerId,
+      color: t.playerId === playerId ? '#D4FF00' : '#FF0055',
+      path: t.path.coordinates.map(c => [c[1], c[0]] as [number, number]) // Swap [lng, lat] -> [lat, lng]
+    }));
+  }, [gameState, playerId]);
+
+  const territories = useMemo(() => {
+    return (gameState?.territories || []).map(t => ({
+      id: t.playerId,
+      isMe: t.playerId === playerId,
+      color: t.playerId === playerId ? '#D4FF00' : '#333333',
+      path: t.polygon.coordinates[0].map(c => [c[1], c[0]] as [number, number]),
+      area: t.area
+    }));
+  }, [gameState, playerId]);
+
+  // Derived Stats
+  const myStats = useMemo(() => {
+    const myTrail = trails.find(t => t.isMe);
+    const kcal = myTrail ? Math.floor(myTrail.path.length * 0.5) : 0;
+    const myTotalArea = territories.filter(t => t.isMe).reduce((acc, t) => acc + t.area, 0);
+    return { area: myTotalArea, kcal };
+  }, [trails, territories]);
 
   const mapRef = useRef<L.Map | null>(null);
 
@@ -74,50 +108,37 @@ const GamePage = () => {
   // --- KEYBOARD MOVEMENT (DEV) ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const step = 0.00002; // Roughly 2 meters per keypress
+      const step = 0.00002;
       let dLat = 0;
       let dLng = 0;
 
       switch (e.key) {
-        case 'ArrowUp':
-        case 'w':
-        case 'W':
-          dLat = step;
-          break;
-        case 'ArrowDown':
-        case 's':
-        case 'S':
-          dLat = -step;
-          break;
-        case 'ArrowLeft':
-        case 'a':
-        case 'A':
-          dLng = -step;
-          break;
-        case 'ArrowRight':
-        case 'd':
-        case 'D':
-          dLng = step;
-          break;
-        default:
-          return;
+        case 'ArrowUp': case 'w': case 'W': dLat = step; break;
+        case 'ArrowDown': case 's': case 'S': dLat = -step; break;
+        case 'ArrowLeft': case 'a': case 'A': dLng = -step; break;
+        case 'ArrowRight': case 'd': case 'D': dLng = step; break;
+        default: return;
       }
 
-      setMyPos((prev) => {
-        const newLat = prev[0] + dLat;
-        const newLng = prev[1] + dLng;
+      // Use Refs to get latest state without re-binding listener
+      const currentPos = myPosRef.current;
+      const newLat = currentPos[0] + dLat;
+      const newLng = currentPos[1] + dLng;
 
-        if (wsConnected) {
-          sendPosition(newLat, newLng);
-        }
+      setMyPos([newLat, newLng]);
 
-        return [newLat, newLng];
-      });
+      if (wsConnectedRef.current) {
+        // sendPosition is stable via useCallback now
+        sendPosition(newLat, newLng);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [wsConnected, sendPosition]);
+  }, [sendPosition]); // Only re-bind if sendPosition changes (it shouldn't now)
+
+  // --- POSITION TRACKING ---
+  // ... (keep geolocation logic) ...
 
   // --- POSITION TRACKING ---
   useEffect(() => {
@@ -163,44 +184,8 @@ const GamePage = () => {
     };
   }, [wsConnected, sendPosition]);
 
-  // --- GAME STATE SYNC ---
-  useEffect(() => {
-    if (!gameState) return;
-
-    // 1. Players
-    const others = gameState.players.filter(p => p.id !== playerId);
-    setOtherPlayers(others);
-
-    // 2. Trails
-    const mappedTrails = gameState.trails.map(t => ({
-      id: t.playerId,
-      isMe: t.playerId === playerId,
-      color: t.playerId === playerId ? '#D4FF00' : '#FF0055',
-      path: t.path.coordinates.map(c => [c[1], c[0]] as [number, number]) // Swap [lng, lat] -> [lat, lng]
-    }));
-    setTrails(mappedTrails);
-
-    // Update my stats based on my trail length (mock kcal)
-    const myTrail = mappedTrails.find(t => t.isMe);
-    if (myTrail) {
-      setMyStats(prev => ({ ...prev, kcal: Math.floor(myTrail.path.length * 0.5) }));
-    }
-
-    // 3. Territories
-    const mappedTerritories = gameState.territories.map(t => ({
-      id: t.playerId,
-      isMe: t.playerId === playerId,
-      color: t.playerId === playerId ? '#D4FF00' : '#333333',
-      path: t.polygon.coordinates[0].map(c => [c[1], c[0]] as [number, number]),
-      area: t.area
-    }));
-    setTerritories(mappedTerritories);
-
-    // Update my area
-    const myTotalArea = mappedTerritories.filter(t => t.isMe).reduce((acc, t) => acc + t.area, 0);
-    setMyStats(prev => ({ ...prev, area: myTotalArea }));
-
-  }, [gameState, playerId]);
+  // Powerup State
+  const [activePowerup, setActivePowerup] = useState<'shield' | 'invisibility' | null>(null);
 
   // Recenter Helper
   const Recenter = ({ pos }: { pos: [number, number] }) => {

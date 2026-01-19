@@ -83,6 +83,17 @@ export const recordGameResult = async (gameUuid, playerUuid, rank, areaCaptured,
     if (error) throw new Error(error.message);
 };
 
+export const severPlayerTrail = async (gameId, playerId) => {
+    const { error } = await supabase.rpc('sever_player_trail', {
+        p_game_id: gameId,
+        p_player_id: playerId
+    });
+    if (error) {
+        console.error(`Error severing trail for player ${playerId}:`, error);
+        // We log but don't throw to avoid crashing the main loop
+    }
+};
+
 /**
  * Updates a player's trail and checks for game events (loops, collisions).
  */
@@ -132,6 +143,14 @@ export const updatePlayerPosition = async (gameId, playerId, lat, lng, shieldedP
             } else if (evt.event_type === 'trail_severed') {
                 e.attackerId = evt.attacker_id;
                 e.victimId = evt.victim_id;
+
+                // DEADLOCK RESOLUTION: 
+                // The DB transaction only returned the event. We must now apply the severing.
+                if (evt.victimId) {
+                    // Fire and forget (or await if critical consistency needed)
+                    // We await to ensure the "Severed" state is likely in DB before clients query it
+                    withRetry(() => severPlayerTrail(gameId, evt.victimId)).catch(err => console.error(err));
+                }
             } else if (evt.event_type === 'trail_banked') {
                 e.playerId = evt.attacker_id; // we reused column
             }

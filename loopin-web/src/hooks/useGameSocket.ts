@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 export interface GameState {
     players: Array<{
@@ -107,7 +107,7 @@ export const useGameSocket = (gameId: string | undefined, playerId: string | nul
         };
     }, [playerId, gameId]);
 
-    const sendPosition = (lat: number, lng: number) => {
+    const sendPosition = useCallback((lat: number, lng: number) => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN && playerId && gameId) {
             socketRef.current.send(JSON.stringify({
                 type: 'position_update',
@@ -117,9 +117,9 @@ export const useGameSocket = (gameId: string | undefined, playerId: string | nul
                 lng
             }));
         }
-    };
+    }, [playerId, gameId]);
 
-    const usePowerup = (powerupId: string) => {
+    const usePowerup = useCallback((powerupId: string) => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN && playerId && gameId) {
             socketRef.current.send(JSON.stringify({
                 type: 'use_powerup',
@@ -128,7 +128,7 @@ export const useGameSocket = (gameId: string | undefined, playerId: string | nul
                 powerupId: powerupId
             }));
         }
-    };
+    }, [playerId, gameId]);
 
     return {
         gameState,

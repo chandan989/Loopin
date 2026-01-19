@@ -128,6 +128,22 @@ AS $$
     FROM safe_points;
 $$;
 
+-- 7. sever_player_trail
+-- Resets a player's trail to its start point (used to resolve deadlocks)
+CREATE OR REPLACE FUNCTION sever_player_trail(
+    p_game_id UUID,
+    p_player_id UUID
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE player_trails 
+    SET trail = ST_MakeLine(ST_PointN(trail::geometry, 1), ST_PointN(trail::geometry, 1))::geography 
+    WHERE player_id = p_player_id AND game_id = p_game_id;
+END;
+$$;
+
 -- =============================================
 -- Core Game Logic (PostGIS)
 -- =============================================
@@ -241,10 +257,8 @@ BEGIN
         IF ST_Intersects(v_new_trail, r.trail) THEN
             -- Check Shield
             IF NOT (r.player_id = ANY(p_shielded_ids)) THEN
-                -- Kill Trail!
-                UPDATE player_trails 
-                SET trail = ST_MakeLine(ST_PointN(r.trail::geometry, 1), ST_PointN(r.trail::geometry, 1))::geography 
-                WHERE player_id = r.player_id AND game_id = p_game_id;
+                -- DEADLOCK FIX: Do NOT update victim row here.
+                -- Just return the event, and let the application server call sever_player_trail separately.
                 
                 RETURN QUERY SELECT 'trail_severed'::VARCHAR, p_player_id, r.player_id, 0.0::FLOAT;
             END IF;

@@ -32,6 +32,7 @@ export const setupWebSocket = (server) => {
 
         ws.on('message', async (message) => {
             try {
+                console.log('WS Received:', message.toString());
                 const data = JSON.parse(message);
 
                 if (data.type === 'join_game_socket') {
