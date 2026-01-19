@@ -116,84 +116,79 @@ Unlike traditional "move-to-earn" models that rely on inflationary tokenomics, L
 
 ---
 
-## 🚀 DEPLOYMENT SEQUENCE
+## 🚀 PRODUCTION DEPLOYMENT
 
-### 🔸 SYSTEM REQUIREMENTS
+### 🔹 1. SMART CONTRACT (STACKS COMPONENT)
 
-- 🌐 Modern web browser with GPS capability
-- 💻 Node.js 18+ and npm/yarn
-- 🐍 Python 3.9+
-- 🛡️ Supabase project instance
-- 🪙 Hiro Wallet for Stacks interaction
-- 📍 Physical mobility device (recommended)
+The core game logic and economy live on the Stacks blockchain.
 
-### 🔸 INITIALIZATION PROTOCOL
+- **Contract Address**: `ST36BMEQDCRCKYF8HPPDMN1BCSY6TR2NG0BZSQPYG`
+- **Contract Name**: `loopin-game`
+- **Network**: Stacks Testnet
+- **Explorer**: [View Contract on Explorer](https://explorer.hiro.so/txid/ST36BMEQDCRCKYF8HPPDMN1BCSY6TR2NG0BZSQPYG.loopin-game?chain=testnet)
 
-**Backend Configuration** (`Backend/.env`):
+#### Deployment Status
 
-```bash
-# === IDENTITY MATRIX ===
-SUPABASE_URL="your_supabase_url"
-SUPABASE_ANON_KEY="your_supabase_anon_key"
-SUPABASE_JWT_SECRET="your_jwt_secret"
+✅ **DEPLOYED & ACTIVE**
 
-# === BLOCKCHAIN CONSENSUS ===
-STACKS_NETWORK="testnet"  # or "mainnet"
-STACKS_RPC_URL="https://api.testnet.hiro.so"
-CONTRACT_ADDRESS="your_deployed_contract_address"
-CONTRACT_NAME="loopin-game-v1"
-DEPLOYER_PRIVATE_KEY="your_private_key"
+### 🔹 2. BACKEND ENGINE (AZURE WEB APP)
 
-# === GRID ECONOMICS ===
-ENTRY_FEE_STX="2"
-SHIELD_COST_STX="2"
-STEALTH_COST_STX="5"
+The `WebServer` (Node.js) handles real-time gameplay via WebSockets, player authentication, and PostGIS trail logic.
 
-# === GEOSPATIAL CONFIG ===
-MAX_TRAIL_POINTS="10000"
-TERRITORY_MIN_AREA_SQM="100"
-COLLISION_TOLERANCE_METERS="5"
+- **Live URL**: `https://loopin-server.azurewebsites.net`
+- **WebSocket Endpoint**: `wss://loopin-server.azurewebsites.net/ws/game`
+- **Status**: ✅ **ONLINE**
+
+#### Deployment Instructions
+
+The backend is deployed to **Azure Web Apps**.
+
+1. **Configuration**:
+   Ensure these Environment Variables are set in the Azure Portal:
+   - `SUPABASE_URL`: Your Supabase Project URL
+   - `SUPABASE_KEY`: Your Supabase Service Role Key (for secure DB access)
+   - `PRIVATE_KEY`: Oracle Wallet Private Key (for processing payouts)
+
+2. **Deploy Command**:
+
+   ```bash
+   cd WebServer
+   # Install dependencies
+   npm install
+   # Build (if using TypeScript/build step) or Start directly
+   npm start
+   ```
+
+### 🔹 3. FRONTEND INTERFACE (LOOPIN-WEB)
+
+The client-side React application where players interact with the map and wallet.
+
+- **Recommended Host**: Vercel or Netlify
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+
+#### Environment Configuration
+
+Set these variables in your Vercel/Netlify dashboard:
+
+```env
+# Connects to the Azure Backend
+VITE_API_BASE=https://loopin-server.azurewebsites.net/api
+VITE_WS_URL=wss://loopin-server.azurewebsites.net
+
+# Connects to the Smart Contract
+VITE_CONTRACT_ADDRESS=ST36BMEQDCRCKYF8HPPDMN1BCSY6TR2NG0BZSQPYG
+VITE_CONTRACT_NAME=loopin-game
+VITE_NETWORK=testnet
 ```
 
-### 🔸 BACKEND ACTIVATION
+#### Deployment Steps
 
-```bash
-# Navigate to core systems
-cd Backend/
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Initialize database
-python scripts/init_db.py
-
-# Deploy smart contracts (testnet)
-python scripts/deploy_contracts.py
-
-# Launch backend core
-python main.py
-```
-
-🟢 **BACKEND ONLINE**: `http://localhost:8000`  
-🟢 **API DOCUMENTATION**: `http://localhost:8000/docs`
-
-### 🔸 FRONTEND DEPLOYMENT
-
-```bash
-# Navigate to interface layer
-cd Frontend/
-
-# Install dependencies
-npm install
-
-# Configure environment
-cp .env.example .env
-
-# Launch development server
-npm run dev
-```
-
-🟢 **INTERFACE ONLINE**: `http://localhost:3000`
+1. Connect your GitHub repository to Vercel/Netlify.
+2. Select the `loopin-web` directory as the Root Directory.
+3. Keep the default build command (`npm run build`).
+4. Add the Environment Variables listed above.
+5. Deploy!
 
 ---
 
