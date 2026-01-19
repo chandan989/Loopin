@@ -239,6 +239,47 @@ BEGIN
 
                     IF v_loop_poly IS NOT NULL AND v_area > 0 THEN
                         -- Success! We found a loop.
+                        
+                        -- TERRITORY STEALING MECHANIC
+                        -- 1. Subtract this new polygon from ALL other players' territories that intersect it
+                        --    This effectively "steals" the land.
+                        DECLARE
+                            r_victim RECORD;
+                            v_diff_poly GEOMETRY;
+                            v_victim_area FLOAT;
+                        BEGIN
+                            FOR r_victim IN 
+                                SELECT id, player_id, territory::geometry as geom
+                                FROM player_territories 
+                                WHERE game_id = p_game_id 
+                                  AND player_id != p_player_id
+                                  AND ST_Intersects(territory, v_loop_poly)
+                            LOOP
+                                -- Calculate Difference: Victim - Attacker
+                                v_diff_poly := ST_Difference(r_victim.geom, v_loop_poly::geometry);
+                                
+                                -- Check if anything is left
+                                IF ST_IsEmpty(v_diff_poly) THEN
+                                    -- Totally eaten
+                                    DELETE FROM player_territories WHERE id = r_victim.id;
+                                ELSE
+                                    -- Partial eat
+                                    -- Check if remaining area is valid (e.g. > 1sqm) and update
+                                    -- Also might need to handle MultiPolygon results
+                                    v_victim_area := ST_Area(v_diff_poly::geography);
+                                    
+                                    IF v_victim_area < 1.0 THEN
+                                         DELETE FROM player_territories WHERE id = r_victim.id;
+                                    ELSE
+                                         UPDATE player_territories 
+                                         SET territory = v_diff_poly::geography,
+                                             area_sqm = v_victim_area
+                                         WHERE id = r_victim.id;
+                                    END IF;
+                                END IF;
+                            END LOOP;
+                        END;
+
                         INSERT INTO player_territories (player_id, game_id, territory, area_sqm)
                         VALUES (p_player_id, p_game_id, v_loop_poly::geography, v_area);
                         
@@ -251,15 +292,13 @@ BEGIN
                         WHERE player_id = p_player_id AND game_id = p_game_id;
                         
                         RETURN QUERY SELECT 'territory_captured'::VARCHAR, p_player_id, NULL::UUID, v_area;
-                        RETURN; -- Stop processing
+                        -- Continue to check collisions even if we captured territory
                     END IF;
                 END IF;
                 
                 -- If we are here, Polygonize failed to find a closed ring (it was just a messy self-intersection that didn't enclose space?)
                 -- OR the area was too small.
                 -- In that case, we DO NOTHING. We behave as if it's just a complex line.
-                -- Use wants: "sometimes shaded area is formed even when I have only made 3 slides".
-                -- This fixes it because 3 sides won't Polygonize.
                 
             EXCEPTION WHEN OTHERS THEN
                 -- Log error or ignore?
@@ -277,6 +316,8 @@ BEGIN
         WHERE player_id != p_player_id AND game_id = p_game_id
     LOOP
         -- If intersects
+        -- We check intersection. Note: geographies intersection can be tricky with tolerance.
+        -- But for 'crossing lines' it usually works.
         IF ST_Intersects(v_new_trail, r.trail) THEN
             -- Check Shield
             IF NOT (r.player_id = ANY(p_shielded_ids)) THEN

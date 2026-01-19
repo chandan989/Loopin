@@ -65,8 +65,8 @@ const GamePage = () => {
   const trails = useMemo(() => {
     return (gameState?.trails || []).map(t => ({
       id: t.playerId,
-      isMe: t.playerId === playerId,
-      color: t.playerId === playerId ? '#D4FF00' : '#FF0055',
+      isMe: t.playerId.toLowerCase() === (playerId || '').toLowerCase(),
+      color: t.playerId.toLowerCase() === (playerId || '').toLowerCase() ? '#D4FF00' : '#FF0055',
       path: t.path.coordinates.map(c => [c[1], c[0]] as [number, number]) // Swap [lng, lat] -> [lat, lng]
     }));
   }, [gameState, playerId]);
@@ -74,8 +74,8 @@ const GamePage = () => {
   const territories = useMemo(() => {
     return (gameState?.territories || []).map(t => ({
       id: t.playerId,
-      isMe: t.playerId === playerId,
-      color: t.playerId === playerId ? '#D4FF00' : '#333333',
+      isMe: t.playerId.toLowerCase() === (playerId || '').toLowerCase(),
+      color: t.playerId.toLowerCase() === (playerId || '').toLowerCase() ? '#D4FF00' : '#333333',
       path: t.polygon.coordinates[0].map(c => [c[1], c[0]] as [number, number]),
       area: t.area
     }));
@@ -281,8 +281,11 @@ const GamePage = () => {
           {/* OTHERS Markers (from WebSocket) */}
           {otherPlayers.map(p => {
             // Find this player's trail to get their current position
-            const pTrail = trails.find(t => t.id === p.id);
-            if (!pTrail || pTrail.path.length === 0) return null;
+            // Use case-insensitive check
+            const pTrail = trails.find(t => t.id.toLowerCase() === p.id.toLowerCase());
+
+            // If we don't have a trail, we can't show them (unless we add a fallback position to player object)
+            if (!pTrail || !pTrail.path || pTrail.path.length === 0) return null;
 
             // The last point in the path is their current position
             const currentPos = pTrail.path[pTrail.path.length - 1]; // [lat, lng]

@@ -209,23 +209,44 @@ export const getGameState = async (gameId) => {
 
     // I'll call `get_active_trails` RPC.
 
-    const [trailsRes, territoriesRes, playersRes] = await Promise.all([
+    // We'll query players who are actually in the game
+    const { data: playersData, error: playersError } = await supabase
+        .from('game_participants')
+        .select(`
+            player_id,
+            players:player_id (
+                id,
+                username,
+                wallet_address,
+                player_stats (total_area)
+            )
+        `)
+        .eq('game_id', gameId);
+
+    if (playersError) {
+        console.error("Error fetching game players:", playersError);
+        return { trails: [], territories: [], players: [] };
+    }
+
+    // Parallel fetch for trails and territories
+    const [trailsRes, territoriesRes] = await Promise.all([
         supabase.rpc('get_active_trails', { p_game_id: gameId }),
-        supabase.rpc('get_active_territories', { p_game_id: gameId }),
-        supabase.from('players')
-            .select('id, username, wallet_address, player_stats(total_area, current_streak)')
-        // TODO: Filter players by active game participants ideally
+        supabase.rpc('get_active_territories', { p_game_id: gameId })
     ]);
 
     const trails = (trailsRes.data || []).map(r => ({ playerId: r.player_id, path: r.path }));
     const territories = (territoriesRes.data || []).map(r => ({ playerId: r.player_id, polygon: r.polygon, area: r.area_sqm }));
 
-    const players = (playersRes.data || []).map(p => ({
-        id: p.id,
-        username: p.username,
-        walletAddress: p.wallet_address,
-        score: p.player_stats?.[0]?.total_area || 0
-    }));
+    // Format players list
+    const players = (playersData || []).map(p => {
+        const playerDetails = p.players; // joined data
+        return {
+            id: playerDetails.id,
+            username: playerDetails.username,
+            walletAddress: playerDetails.wallet_address,
+            score: playerDetails.player_stats?.[0]?.total_area || 0
+        };
+    });
 
     return { trails, territories, players };
 };
