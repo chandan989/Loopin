@@ -26,6 +26,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSignedIn, setIsSignedIn] = React.useState(false);
   const [loadingText, setLoadingText] = React.useState('INITIALIZING GRID PROTOCOL...');
+  const [progress, setProgress] = React.useState(0);
 
   const logoRef = React.useRef(null);
   const navigate = useNavigate();
@@ -49,33 +50,91 @@ const Index = () => {
       return;
     }
 
-    const timer1 = setTimeout(() => setLoadingText('ESTABLISHING SATELLITE LINK...'), 800);
-    const timer2 = setTimeout(() => setLoadingText('CALIBRATING SENSORS...'), 1600);
-    const timer3 = setTimeout(() => setIsLoading(false), 2400);
+    // Animation variables
+    const duration = 2400; // 2.4 seconds total loading time
+    const intervalTime = 20; // Update every 20ms
+    const steps = duration / intervalTime;
+    let currentStep = 0;
 
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-    };
+    const interval = setInterval(() => {
+      currentStep++;
+      const newProgress = Math.min(100, Math.floor((currentStep / steps) * 100));
+      setProgress(newProgress);
+
+      // Text updates synced with progress
+      if (currentStep > steps * 0.3 && currentStep < steps * 0.7) {
+        setLoadingText('ESTABLISHING SATELLITE LINK...');
+      } else if (currentStep >= steps * 0.7) {
+        setLoadingText('CALIBRATING SENSORS...');
+      }
+
+      if (currentStep >= steps) {
+        clearInterval(interval);
+        setTimeout(() => setIsLoading(false), 200); // Small buffer at 100%
+      }
+    }, intervalTime);
+
+    return () => clearInterval(interval);
   }, [navigate]);
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-[#09090B] z-50 flex flex-col items-center justify-center font-display">
-        <div className="w-64 space-y-4">
-          <div className="flex justify-between items-end border-b-2 border-[#D4FF00] pb-2 mb-4">
-            <span className="text-[#D4FF00] text-xl font-bold tracking-widest">SYSTEM BOOT</span>
-            <span className="text-white text-xs animate-pulse">v2.0.4</span>
+      <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center font-display overflow-hidden">
+        {/* Grid Background */}
+        <div className="absolute inset-0 z-0 opacity-40 pointer-events-none"
+          style={{
+            backgroundImage: `linear-gradient(#E5E7EB 1px, transparent 1px), linear-gradient(90deg, #E5E7EB 1px, transparent 1px)`,
+            backgroundSize: '40px 40px'
+          }}
+        />
+
+        {/* Corner Brackets */}
+        <div className="absolute top-8 left-8 w-16 h-16 border-t-2 border-l-2 border-black z-10" />
+        <div className="absolute top-8 right-8 w-16 h-16 border-t-2 border-r-2 border-black z-10" />
+        <div className="absolute bottom-8 left-8 w-16 h-16 border-b-2 border-l-2 border-black z-10" />
+        <div className="absolute bottom-8 right-8 w-16 h-16 border-b-2 border-r-2 border-black z-10" />
+
+        <div className="z-20 flex flex-col items-center justify-center space-y-12 w-full max-w-md p-8 relative">
+
+          {/* Top Pill - System Status */}
+          <div className="group relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#D4FF00] to-black opacity-20 blur group-hover:opacity-40 transition duration-1000"></div>
+            <div className="relative flex items-center gap-3 bg-white border border-black px-6 py-2 rounded-full shadow-lg">
+              <div className="w-2 h-2 rounded-full bg-[#D4FF00] animate-[pulse_1s_ease-in-out_infinite]" />
+              <span className="font-bold text-xs tracking-[0.2em] text-black">
+                SYSTEM INITIALIZATION
+              </span>
+            </div>
           </div>
 
-          <div className="font-mono text-sm text-gray-400 h-6">
-            {'>'} {loadingText}
+          {/* Centerpiece - Percentage Counter */}
+          <div className="text-center relative">
+            <h1 className="text-[12rem] leading-none font-black tracking-tighter text-black select-none mix-blend-multiply">
+              {progress}%
+            </h1>
+            <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gray-100 overflow-hidden rounded-full">
+              <div
+                className="h-full bg-[#D4FF00] transition-all duration-75 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
 
-          <div className="w-full bg-white/10 h-1 mt-8 overflow-hidden">
-            <div className="h-full bg-[#D4FF00] animate-[loading_2.4s_ease-in-out_forwards]" style={{ width: '100%' }} />
+          {/* Footer - Glitch Text Logs */}
+          <div className="w-full text-center space-y-2 h-16">
+            <div className="font-mono text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">
+              PROCESS LOG
+            </div>
+            <div className="font-display text-lg font-bold text-black min-h-[1.75rem]">
+              <GlitchText text={loadingText} />
+            </div>
           </div>
+
+        </div>
+
+        {/* Version Watermark */}
+        <div className="absolute bottom-10 text-[10px] font-bold tracking-widest text-gray-300">
+          V2.0.4.BUILD.892
         </div>
       </div>
     );
