@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@stacks/rendezvous": "^0.13.1",
+    "@vitest/coverage-v8": "^4.0.18",
     "fast-check": "^4.5.3"
   }
 }

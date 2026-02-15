@@ -10,8 +10,8 @@ plan:
       transactions:
         - contract-publish:
             contract-name: loopin-game
-            expected-sender: ST36BMEQDCRCKYF8HPPDMN1BCSY6TR2NG0BZSQPYG
-            cost: 110520
+            expected-sender: ST4XJYMD9FCF3PZXAKFRTSXX9CHRSEDS6BJ4ASFQ
+            cost: 110070
             path: contracts/loopin-game.clar
             anchor-block-only: true
             clarity-version: 2

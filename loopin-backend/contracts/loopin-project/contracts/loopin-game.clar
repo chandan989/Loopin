@@ -11,7 +11,7 @@
 (define-constant err-game-not-active (err u105))
 (define-constant err-already-joined (err u106))
 (define-constant err-game-not-ended (err u107))
-(define-constant err-invalid-rank (err u108))
+
 
 ;; Data Variables
 (define-data-var next-game-id uint u0)
