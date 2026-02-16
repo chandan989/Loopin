@@ -1,7 +1,10 @@
 
-import React from 'react';
-import { Gift, Zap, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Gift, Zap, X, MapPin } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { createGame } from '@/lib/contracts';
 import { SlideUp } from '@/components/animation/MotionWrapper';
 import PowerupShop from './PowerupShop';
 import DailyRewardCard from './DailyRewardCard';
@@ -19,8 +22,72 @@ const DashboardActionGrid: React.FC<DashboardActionGridProps> = ({
     onBalanceUpdate,
     onRewardClaimed
 }) => {
+    const [gameType, setGameType] = useState("Standard");
+    const [maxPlayers, setMaxPlayers] = useState(10);
+
+    const handleCreateGame = () => {
+        createGame(gameType, maxPlayers);
+    };
+
     return (
-        <div className="grid grid-cols-2 gap-3 md:gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-8">
+            {/* Create Game Trigger */}
+            <Dialog>
+                <DialogTrigger asChild>
+                    <div className="cursor-pointer group h-full">
+                        <SlideUp delay={0.2} className="h-full bg-black border border-white/20 hover:border-[#D4FF00] rounded-[32px] p-6 md:p-8 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 relative overflow-hidden shadow-xl">
+                            <div className="flex items-start justify-between mb-6">
+                                <div className="w-12 h-12 rounded-2xl bg-[#D4FF00] flex items-center justify-center text-black group-hover:scale-110 transition-transform">
+                                    <MapPin className="w-6 h-6" />
+                                </div>
+                                <div className="text-[10px] font-bold bg-[#D4FF00] text-black px-3 py-1.5 rounded-full uppercase tracking-widest">
+                                    New
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="font-display text-xl font-bold uppercase leading-none mb-2 text-white">Start Grid</h3>
+                                <p className="text-gray-400 text-sm font-medium line-clamp-1">Create a new game.</p>
+                            </div>
+                        </SlideUp>
+                    </div>
+                </DialogTrigger>
+                <DialogContent className="w-[95vw] max-w-[425px] p-0 bg-transparent border-none shadow-none focus:outline-none [&>button]:hidden">
+                    <div className="bg-white rounded-[32px] overflow-hidden p-6 shadow-2xl relative">
+                        <DialogClose className="absolute right-4 top-4 z-50 p-2 bg-gray-100 hover:bg-[#D4FF00] rounded-full transition-colors">
+                            <X className="w-4 h-4 text-black" />
+                        </DialogClose>
+
+                        <h2 className="font-display text-2xl font-black uppercase mb-4">Launch Grid</h2>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold uppercase text-gray-500 mb-1 block">Game Name</label>
+                                <Input
+                                    value={gameType}
+                                    onChange={(e) => setGameType(e.target.value)}
+                                    className="font-bold border-2 border-black h-12 rounded-xl"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold uppercase text-gray-500 mb-1 block">Max Runners</label>
+                                <Input
+                                    type="number"
+                                    value={maxPlayers}
+                                    onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
+                                    className="font-bold border-2 border-black h-12 rounded-xl"
+                                />
+                            </div>
+
+                            <Button
+                                onClick={handleCreateGame}
+                                className="w-full h-14 bg-[#D4FF00] hover:bg-[#bce600] text-black font-black uppercase text-lg rounded-xl mt-4"
+                            >
+                                Deploy Contract
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
             {/* Daily Reward Trigger */}
             <Dialog>
                 <DialogTrigger asChild>

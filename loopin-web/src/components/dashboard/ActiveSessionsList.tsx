@@ -1,15 +1,26 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Users, Clock, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SlideUp, StaggerContainer } from '@/components/animation/MotionWrapper';
 import { Game } from '@/lib/api';
+import { joinGame } from '@/lib/contracts';
 
 interface ActiveSessionsListProps {
     activeSessions: Game[];
 }
 
 const ActiveSessionsList: React.FC<ActiveSessionsListProps> = ({ activeSessions }) => {
+    const navigate = useNavigate();
+
+    const handleJoin = (session: Game) => {
+        // Parse ID as int because contract expects uint
+        // Ensure entry_fee is number
+        joinGame(parseInt(session.id), session.entry_fee, () => {
+            navigate(`/game/${session.id}`);
+        });
+    };
+
     return (
         <div>
             <div className="flex items-center justify-between mb-8 md:mb-12">
@@ -55,11 +66,12 @@ const ActiveSessionsList: React.FC<ActiveSessionsListProps> = ({ activeSessions 
                                             <div className="font-display text-lg md:text-xl font-bold">{session.entry_fee} STX</div>
                                         </div>
 
-                                        <Link to={`/game/${session.id}`} className="block">
-                                            <Button className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#09090B] hover:bg-[#D4FF00] hover:text-black p-0 flex items-center justify-center transition-colors">
-                                                <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6 text-[#D4FF00]" />
-                                            </Button>
-                                        </Link>
+                                        <Button
+                                            onClick={() => handleJoin(session)}
+                                            className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#09090B] hover:bg-[#D4FF00] hover:text-black p-0 flex items-center justify-center transition-colors"
+                                        >
+                                            <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6 text-[#D4FF00]" />
+                                        </Button>
                                     </div>
                                 </div>
                             </div>

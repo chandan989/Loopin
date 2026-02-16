@@ -43,9 +43,7 @@ export const connectWalletDesktop = (
     userSession: UserSession,
     onFinish?: () => void
 ) => {
-    console.log('[Wallet] Starting authentication...');
-    console.log('[Wallet] Is mobile?', isMobileDevice());
-    console.log('[Wallet] User agent:', navigator.userAgent);
+    console.log('[Wallet] 🚀 Starting authentication...');
 
     authenticate({
         appDetails: {
@@ -53,29 +51,46 @@ export const connectWalletDesktop = (
             icon: window.location.origin + "/logo.svg",
         },
         onFinish: (data: any) => {
-            console.log('[Wallet] onFinish called with data:', data);
+            console.log('[Wallet] ✅ Authentication successful!');
+            console.log('[Wallet] Data received:', data);
 
-            // Save wallet address to localStorage
+            // CRITICAL: Save wallet address IMMEDIATELY
             try {
+                // Method 1: Try to get from userSession
                 if (userSession.isUserSignedIn()) {
                     const userData = userSession.loadUserData();
                     const walletAddress = userData.profile.stxAddress.mainnet;
-                    console.log('[Wallet] Saving wallet address:', walletAddress);
+                    console.log('[Wallet] ✅ Got wallet from session:', walletAddress);
                     localStorage.setItem('loopin_wallet', walletAddress);
+
+                    // Trigger storage event for Header to detect
+                    window.dispatchEvent(new StorageEvent('storage', {
+                        key: 'loopin_wallet',
+                        newValue: walletAddress,
+                        url: window.location.href
+                    }));
+
+                    console.log('[Wallet] ✅ Wallet saved to localStorage');
+
+                    // Call callback if provided
+                    if (onFinish) {
+                        onFinish();
+                    }
+
+                    // Force page reload to update all components
+                    setTimeout(() => {
+                        console.log('[Wallet] 🔄 Reloading page...');
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    console.error('[Wallet] ❌ User not signed in after authentication');
                 }
             } catch (error) {
-                console.error('[Wallet] Error saving wallet address:', error);
-            }
-
-            if (onFinish) {
-                onFinish();
-            } else {
-                // Reload to update UI
-                window.location.reload();
+                console.error('[Wallet] ❌ Error saving wallet:', error);
             }
         },
         onCancel: () => {
-            console.log('[Wallet] User cancelled connection');
+            console.log('[Wallet] ❌ User cancelled connection');
         },
         userSession,
     });
