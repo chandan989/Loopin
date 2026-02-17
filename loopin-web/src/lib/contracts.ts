@@ -1,8 +1,8 @@
 import { openContractCall } from '@stacks/connect';
-import { StacksTestnet } from '@stacks/network';
+import { STACKS_TESTNET } from '@stacks/network';
 import { Cl, PostConditionMode } from '@stacks/transactions';
 
-const network = new StacksTestnet();
+const network = STACKS_TESTNET;
 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 const contractName = import.meta.env.VITE_CONTRACT_NAME || 'loopin-game';
 
