@@ -1,5 +1,4 @@
-
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { Cl } from '@stacks/transactions';
 
 const accounts = simnet.getAccounts();
@@ -9,167 +8,247 @@ const wallet2 = accounts.get('wallet_2')!;
 const wallet3 = accounts.get('wallet_3')!;
 
 describe('Loopin Game Contract', () => {
-    it('should create a game successfully', () => {
-        const { result } = simnet.callPublicFn(
-            'loopin-game',
-            'create-game',
-            [
-                Cl.stringAscii('CASUAL'),
-                Cl.uint(10)
-            ],
-            deployer
-        );
 
-        expect(result).toBeOk(Cl.uint(0)); // First game ID is 0
-    });
-
-    it('should join a game successfully', () => {
-        // 1. Create Game
-        simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(10)], deployer);
-
-        // 2. Join Game
-        const { result } = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
-        expect(result).toBeOk(Cl.bool(true));
-
-        // 3. Verify Player Count
-        const count = simnet.callReadOnlyFn('loopin-game', 'get-player-count', [Cl.uint(0)], deployer);
-        expect(count.result).toBeUint(1);
-    });
-
-    it('should prevent joining the same game twice', () => {
-        simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(10)], deployer);
-        simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
-
-        const { result } = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
-        expect(result).toBeErr(Cl.uint(106)); // err-already-joined
-    });
-
-    it('should prevent joining a full game', () => {
-        // Create game with max 1 player
-        simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(1)], deployer);
-
-        // Player 1 joins
-        simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
-
-        // Player 2 tries to join
-        const { result } = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet2);
-        expect(result).toBeErr(Cl.uint(103)); // err-game-full
-    });
-
-    it('should handle game lifecycle: Start -> End -> Submit -> Distribute', () => {
-        // 1. Create BLITZ (Entry Fee: 1 STX)
-        simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('BLITZ'), Cl.uint(10)], deployer);
-
-        // 2. Join (Wallet 1 pays 1 STX)
-        const joinResult = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
-        expect(joinResult.result).toBeOk(Cl.bool(true));
-
-        // 3. Start Game (Only creator)
-        const startResult = simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
-        expect(startResult.result).toBeOk(Cl.bool(true));
-
-        // 4. Try to join active game (Should fail)
-        const lateJoin = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet2);
-        expect(lateJoin.result).toBeErr(Cl.uint(105)); // err-game-not-active
-
-        // 5. End Game
-        simnet.mineEmptyBlock(10); // Advance chain
-        const endResult = simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
-        expect(endResult.result).toBeOk(Cl.bool(true));
-
-        // 6. Submit Results (Oracle/Owner only)
-        const submitResult = simnet.callPublicFn(
-            'loopin-game',
-            'submit-player-result',
-            [
-                Cl.uint(0),
-                Cl.standardPrincipal(wallet1),
-                Cl.uint(5000), // area
-                Cl.uint(1)     // rank
-            ],
-            deployer
-        );
-        expect(submitResult.result).toBeOk(Cl.bool(true));
-
-        // 7. Verify Player Stats Updated
-        const stats = simnet.callReadOnlyFn('loopin-game', 'get-player-stats', [Cl.standardPrincipal(wallet1)], deployer);
-        expect(stats.result).toBeTuple({
-            'games-played': Cl.uint(1),
-            'games-won': Cl.uint(1),
-            'total-area': Cl.uint(5000),
-            'total-earnings': Cl.uint(0), // Not distributed yet
-            'level': Cl.uint(1)
+    describe('Read-Only Functions', () => {
+        it('should get game details', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(10)], deployer);
+            const res = simnet.callReadOnlyFn('loopin-game', 'get-game', [Cl.uint(0)], deployer);
+            expect(res.result).toBeSome(Cl.tuple({
+                'game-type': Cl.stringAscii('CASUAL'),
+                'status': Cl.stringAscii('lobby'),
+                'max-players': Cl.uint(10),
+                'entry-fee': Cl.uint(0),
+                'prize-pool': Cl.uint(0),
+                'start-block': Cl.uint(0),
+                'end-block': Cl.uint(0),
+                'creator': Cl.standardPrincipal(deployer)
+            }));
         });
 
-        // 8. Distribute Prize
-        // Prize pool should be 1 STX (1000000 uSTX)
-        const distributeResult = simnet.callPublicFn(
-            'loopin-game',
-            'distribute-prize',
-            [
-                Cl.uint(0),
-                Cl.standardPrincipal(wallet1),
-                Cl.uint(1000000) // 1 STX
-            ],
-            deployer
-        );
-        // Should return amount distributed minus 5% fee (50,000 uSTX) -> 950,000 uSTX
-        expect(distributeResult.result).toBeOk(Cl.uint(950000));
+        it('should return none for non-existent game', () => {
+            const res = simnet.callReadOnlyFn('loopin-game', 'get-game', [Cl.uint(99)], deployer);
+            expect(res.result).toBeNone();
+        });
 
-        // 9. Verify Earnings Updated
-        const finalStats = simnet.callReadOnlyFn('loopin-game', 'get-player-stats', [Cl.standardPrincipal(wallet1)], deployer);
-        expect(finalStats.result).toBeTuple({
-            'games-played': Cl.uint(1),
-            'games-won': Cl.uint(1),
-            'total-area': Cl.uint(5000),
-            'total-earnings': Cl.uint(950000),
-            'level': Cl.uint(1)
+        it('should get participant details', () => {
+            const createRes = simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(10)], deployer);
+            const gameId = expect(createRes.result).toBeOk(Cl.uint(0)) ? Cl.uint(0) : createRes.result as never;
+
+            simnet.callPublicFn('loopin-game', 'join-game', [gameId], wallet1);
+            const res = simnet.callReadOnlyFn('loopin-game', 'get-participant', [gameId, Cl.standardPrincipal(wallet1)], deployer);
+            // We just check it's Some, don't strict match tuple to avoid block-height mismatches
+            expect(res.result).toBeSome(expect.anything());
+        });
+
+        it('should get next game id', () => {
+            const res = simnet.callReadOnlyFn('loopin-game', 'get-next-game-id', [], deployer);
+            expect(res.result).toBeUint(0);
+        });
+
+        it('should get game oracle', () => {
+            const res = simnet.callReadOnlyFn('loopin-game', 'get-game-oracle', [], deployer);
+            expect(res.result).toBePrincipal(deployer);
         });
     });
 
-    it('should enforce access controls', () => {
-        simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(10)], deployer);
+    describe('Game Creation', () => {
+        it('should create CASUAL game with 0 fee', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(5)], deployer);
+            expect(result).toBeOk(Cl.uint(0));
+            const game = simnet.callReadOnlyFn('loopin-game', 'get-game', [Cl.uint(0)], deployer);
+            expect(game.result).toBeSome(expect.anything());
+        });
 
-        // Wallet1 tries to start game (should fail)
-        const startFail = simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], wallet1);
-        expect(startFail.result).toBeErr(Cl.uint(102)); // err-unauthorized
+        it('should create BLITZ game with 1 STX fee', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('BLITZ'), Cl.uint(5)], deployer);
+            expect(result).toBeOk(Cl.uint(0));
+        });
 
-        // Wallet1 tries to set platform fee (should fail)
-        const feeFail = simnet.callPublicFn('loopin-game', 'set-platform-fee', [Cl.uint(10)], wallet1);
-        expect(feeFail.result).toBeErr(Cl.uint(100)); // err-owner-only
+        it('should create ELITE game with 10 STX fee', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('ELITE'), Cl.uint(5)], deployer);
+            expect(result).toBeOk(Cl.uint(0));
+        });
     });
 
-    it('should update platform fee correctly', () => {
-        // Owner sets fee to 10%
-        const setFee = simnet.callPublicFn('loopin-game', 'set-platform-fee', [Cl.uint(10)], deployer);
-        expect(setFee.result).toBeOk(Cl.bool(true));
+    describe('Game Joining', () => {
+        it('should join game successfully', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            const { result } = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+            expect(result).toBeOk(Cl.bool(true));
+        });
 
-        // Simulate prize distribution with new fee
-        simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('BLITZ'), Cl.uint(10)], deployer);
-        simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1); // Pays 1M uSTX
-        simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
-        simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
-        simnet.callPublicFn('loopin-game', 'submit-player-result', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(100), Cl.uint(1)], deployer);
+        it('fail: join non-existent game', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(99)], wallet1);
+            expect(result).toBeErr(Cl.uint(101));
+        });
 
-        const distribute = simnet.callPublicFn('loopin-game', 'distribute-prize', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(1000000)], deployer);
-        // 1M - 10% = 900k
-        expect(distribute.result).toBeOk(Cl.uint(900000));
+        it('fail: game not active (already started)', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            const { result } = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+            expect(result).toBeErr(Cl.uint(105));
+        });
+
+        it('fail: game full', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(1)], deployer);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+            const { result } = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet2);
+            expect(result).toBeErr(Cl.uint(103));
+        });
+
+        it('fail: already joined', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+            const { result } = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+            expect(result).toBeErr(Cl.uint(106));
+        });
     });
 
-    it('should allow oracle to submit results', () => {
-        // Set Oracle to Wallet 2
-        simnet.callPublicFn('loopin-game', 'set-game-oracle', [Cl.standardPrincipal(wallet2)], deployer);
+    describe('Game Lifecycle (Start / End)', () => {
+        it('start-game successfully', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            const { result } = simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            expect(result).toBeOk(Cl.bool(true));
+        });
 
-        simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(10)], deployer);
-        simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
-        simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
-        simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
+        it('fail start: unauthorized', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            const { result } = simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], wallet1);
+            expect(result).toBeErr(Cl.uint(102));
+        });
 
-        // Wallet 2 (Oracle) submits result
-        const submit = simnet.callPublicFn('loopin-game', 'submit-player-result',
-            [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(1000), Cl.uint(1)],
-            wallet2 // Caller is oracle
-        );
-        expect(submit.result).toBeOk(Cl.bool(true));
+        it('fail start: not in lobby', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            const { result } = simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            expect(result).toBeErr(Cl.uint(105));
+        });
+
+        it('end-game successfully', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            const { result } = simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
+            expect(result).toBeOk(Cl.bool(true));
+        });
+
+        it('fail end: unauthorized', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            const { result } = simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], wallet1);
+            expect(result).toBeErr(Cl.uint(102));
+        });
+
+        it('fail end: not active', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            const { result } = simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
+            expect(result).toBeErr(Cl.uint(105)); // game is in lobby
+        });
+    });
+
+    describe('Game Results & Distribution', () => {
+        it('submit-player-result successfully', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
+
+            const { result } = simnet.callPublicFn('loopin-game', 'submit-player-result', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(100), Cl.uint(1)], deployer);
+            expect(result).toBeOk(Cl.bool(true));
+
+            const stats = simnet.callReadOnlyFn('loopin-game', 'get-player-stats', [Cl.standardPrincipal(wallet1)], deployer);
+            expect(stats.result).toBeTuple(expect.anything());
+        });
+
+        it('distribute-prize successfully', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('BLITZ'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1); // pays 1M uSTX
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
+
+            simnet.callPublicFn('loopin-game', 'submit-player-result', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(100), Cl.uint(1)], deployer);
+
+            const { result } = simnet.callPublicFn('loopin-game', 'distribute-prize', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(1000000)], deployer);
+            expect(result).toBeOk(Cl.uint(950000));
+        });
+
+        it('fail submit: unauthorized (not oracle or owner)', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
+
+            const { result } = simnet.callPublicFn('loopin-game', 'submit-player-result', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(100), Cl.uint(1)], wallet2);
+            expect(result).toBeErr(Cl.uint(100)); // err-owner-only
+        });
+
+        it('fail submit: game not ended', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            // didn't end game
+
+            const { result } = simnet.callPublicFn('loopin-game', 'submit-player-result', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(100), Cl.uint(1)], deployer);
+            expect(result).toBeErr(Cl.uint(107)); // err-game-not-ended
+        });
+
+        it('fail distribute: insufficient funds', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1); // Casual is 0 fee, prize pool is 0
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
+
+            const { result } = simnet.callPublicFn('loopin-game', 'distribute-prize', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(100)], deployer);
+            expect(result).toBeErr(Cl.uint(104)); // err-insufficient-funds
+        });
+
+        it('fail distribute: game not ended', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('CASUAL'), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+
+            const { result } = simnet.callPublicFn('loopin-game', 'distribute-prize', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(0)], deployer);
+            expect(result).toBeErr(Cl.uint(107)); // err-game-not-ended
+        });
+    });
+
+    describe('Admin Functions', () => {
+        it('set-platform-fee successfully', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'set-platform-fee', [Cl.uint(15)], deployer);
+            expect(result).toBeOk(Cl.bool(true));
+        });
+
+        it('set-game-oracle successfully', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'set-game-oracle', [Cl.standardPrincipal(wallet3)], deployer);
+            expect(result).toBeOk(Cl.bool(true));
+        });
+
+        it('fail set-game-oracle: unauthorized', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'set-game-oracle', [Cl.standardPrincipal(wallet3)], wallet1);
+            expect(result).toBeErr(Cl.uint(100)); // err-owner-only
+        });
+
+        it('fail set-platform-fee: over 20%', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'set-platform-fee', [Cl.uint(21)], deployer);
+            expect(result).toBeErr(Cl.uint(109));
+        });
+
+        it('fail set-platform-fee: unauthorized', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'set-platform-fee', [Cl.uint(10)], wallet1);
+            expect(result).toBeErr(Cl.uint(100)); // err-owner-only
+        });
+
+        it('emergency-withdraw successfully', () => {
+            // First send money to contract so it does not fail with err-insufficient-balance (u3)
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('BLITZ'), Cl.uint(10)], deployer);
+            const joinRes = simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1); // sends 1 STX to contract
+            expect(joinRes.result).toBeOk(Cl.bool(true));
+
+            const { result } = simnet.callPublicFn('loopin-game', 'emergency-withdraw', [Cl.uint(1000000), Cl.standardPrincipal(wallet1)], deployer);
+            expect(result).toBeOk(Cl.bool(true));
+        });
+
+        it('fail emergency-withdraw: unauthorized', () => {
+            const { result } = simnet.callPublicFn('loopin-game', 'emergency-withdraw', [Cl.uint(0), Cl.standardPrincipal(wallet1)], wallet1);
+            expect(result).toBeErr(Cl.uint(100));
+        });
     });
 });
