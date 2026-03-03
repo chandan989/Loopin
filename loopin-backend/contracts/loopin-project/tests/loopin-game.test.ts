@@ -159,16 +159,56 @@ describe('Loopin Game Contract', () => {
             expect(stats.result).toBeTuple(expect.anything());
         });
 
-        it('distribute-prize successfully', () => {
+        it('distribute-prize successfully and decrements prize pool', () => {
             simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('BLITZ'), Cl.uint(2)], deployer);
             simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1); // pays 1M uSTX
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet2); // pays 1M uSTX (pool: 2M)
             simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
             simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
 
             simnet.callPublicFn('loopin-game', 'submit-player-result', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(100), Cl.uint(1)], deployer);
 
+            // Wait, we distribute 1M to wallet1
             const { result } = simnet.callPublicFn('loopin-game', 'distribute-prize', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(1000000)], deployer);
-            expect(result).toBeOk(Cl.uint(950000));
+            expect(result).toBeOk(Cl.uint(950000)); // 5% fee is 50k
+
+            // Check pool decreased by exactly 1,000,000
+            let gameAfter = simnet.callReadOnlyFn('loopin-game', 'get-game', [Cl.uint(0)], deployer);
+
+            // Convert to JSON and check the value string
+            const cvJSON = require('@stacks/transactions').cvToJSON(gameAfter.result);
+            expect(cvJSON.value.value['prize-pool'].value).toEqual("1000000");
+        });
+
+        it('handles multiple winners distribution successfully', () => {
+            simnet.callPublicFn('loopin-game', 'create-game', [Cl.stringAscii('ELITE'), Cl.uint(10)], deployer); // 10 STX entry fee
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet1);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet2);
+            simnet.callPublicFn('loopin-game', 'join-game', [Cl.uint(0)], wallet3); // Pool is 30M uSTX
+            simnet.callPublicFn('loopin-game', 'start-game', [Cl.uint(0)], deployer);
+            simnet.callPublicFn('loopin-game', 'end-game', [Cl.uint(0)], deployer);
+
+            simnet.callPublicFn('loopin-game', 'submit-player-result', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(300), Cl.uint(1)], deployer);
+            simnet.callPublicFn('loopin-game', 'submit-player-result', [Cl.uint(0), Cl.standardPrincipal(wallet2), Cl.uint(200), Cl.uint(2)], deployer);
+            simnet.callPublicFn('loopin-game', 'submit-player-result', [Cl.uint(0), Cl.standardPrincipal(wallet3), Cl.uint(100), Cl.uint(3)], deployer);
+
+            // Distribute 1st place: 15M uSTX
+            let res1 = simnet.callPublicFn('loopin-game', 'distribute-prize', [Cl.uint(0), Cl.standardPrincipal(wallet1), Cl.uint(15000000)], deployer);
+            expect(res1.result).toBeOk(Cl.uint(14250000));
+
+            // Distribute 2nd place: 10M uSTX
+            let res2 = simnet.callPublicFn('loopin-game', 'distribute-prize', [Cl.uint(0), Cl.standardPrincipal(wallet2), Cl.uint(10000000)], deployer);
+            expect(res2.result).toBeOk(Cl.uint(9500000));
+
+            // Distribute 3rd place: 5M uSTX
+            let res3 = simnet.callPublicFn('loopin-game', 'distribute-prize', [Cl.uint(0), Cl.standardPrincipal(wallet3), Cl.uint(5000000)], deployer);
+            expect(res3.result).toBeOk(Cl.uint(4750000));
+
+            // Pool should now be 0
+            let gameAfter = simnet.callReadOnlyFn('loopin-game', 'get-game', [Cl.uint(0)], deployer);
+
+            const cvJSON = require('@stacks/transactions').cvToJSON(gameAfter.result);
+            expect(cvJSON.value.value['prize-pool'].value).toEqual("0");
         });
 
         it('fail submit: unauthorized (not oracle or owner)', () => {
