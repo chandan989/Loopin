@@ -47,6 +47,8 @@
 (define-public (test-join-game (game-id uint))
     (let (
             (game-opt (get-game game-id))
+            (participant-opt-before (get-participant game-id tx-sender))
+            (player-count-before (get-player-count game-id))
             (res (join-game game-id))
         )
         (if (is-none game-opt)
@@ -54,15 +56,13 @@
             (asserts! (is-eq res err-not-found) (err u31))
             (let (
                     (game (unwrap-panic game-opt))
-                    (player-count (get-player-count game-id))
-                    (participant-opt (get-participant game-id tx-sender))
                  )
                  ;; Check conditions for failure
                  (if (not (is-eq (get status game) "lobby"))
                      (asserts! (is-eq res err-game-not-active) (err u32))
-                     (if (>= player-count (get max-players game))
+                     (if (>= player-count-before (get max-players game))
                          (asserts! (is-eq res err-game-full) (err u33))
-                         (if (is-some participant-opt)
+                         (if (is-some participant-opt-before)
                              (asserts! (is-eq res err-already-joined) (err u34))
                              ;; Cannot easily assert ok because tx-sender might not have enough STX to pay the entry fee
                              true
